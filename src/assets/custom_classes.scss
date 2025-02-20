@@ -1,0 +1,52 @@
+.d-flex{
+    display: flex;
+}
+
+.flex-wrap{
+    flex-wrap: wrap;
+}
+
+.align-center{
+    align-items: center;
+}
+
+.justify-between{
+    justify-content: space-between;
+}
+
+.justify-end{
+    justify-content: flex-end;
+}
+
+//
+
+.py-1{
+    padding: .5rem 0rem;
+}
+.py-2{
+    padding: 1rem 0rem;
+}
+
+.mx-1{
+    margin: 0 .5rem ;
+}
+
+.mx-2{
+    margin: 0 1rem ;
+}
+
+.ml-2{
+    margin-left: 1rem;
+}
+
+//
+
+.w-100{
+    width: 100%;
+}
+
+//
+.border-vertical{
+    border-top: 1px solid rgb(222, 222, 222);
+    border-bottom: 1px solid rgb(222, 222, 222);
+}
