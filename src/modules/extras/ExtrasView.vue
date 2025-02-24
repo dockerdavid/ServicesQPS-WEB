@@ -139,18 +139,16 @@ const toggle = (event: any) => {
     <BaseLayout>
         <!-- Slot para el título -->
         <template #view-title>
-            Dashboard
+            Extras
         </template>
 
         <!-- Slot para el botón "Create new" -->
         <template #create-new>
-            <Button>Custom Button</Button>
+            <Button>New extra</Button>
         </template>
 
         <!-- Slot para el botón del header -->
-        <template #header-button>
-            <Button icon="pi pi-home" label="Export to excel" />
-        </template>
+
 
         <!-- Slot para la búsqueda -->
         <template #header-search>

@@ -1,9 +1,10 @@
 <template>
-    <RouterLink to="">
-        <div class="sidebar-item">
-            <Icon :class="{ 'mr': sidebarState.isSidebarOpen }" :icon="props.icon ? props.icon : 'material-symbols:circle-outline'" />
-            <span  :class="[sidebarState.isSidebarOpen ? '' : 'none']">{{ label }}</span>
-        </div>
+    <RouterLink :to="props.route"  class="sidebar-item">
+        
+            <Icon :class="{ 'mr': sidebarState.isSidebarOpen }"
+                :icon="props.icon ? props.icon : 'material-symbols:circle-outline'" />
+            <span :class="[sidebarState.isSidebarOpen ? '' : 'none']">{{ label }}</span>
+        
     </RouterLink>
 </template>
 
@@ -36,7 +37,6 @@ const props = defineProps<RouteLink>();
 
     &:hover {
         background-color: #e6e6e6;
-
     }
 
     &:hover>.iconify {
@@ -47,11 +47,19 @@ const props = defineProps<RouteLink>();
         display: none;
     }
 
-    .mr{
+    .mr {
         margin-right: 1rem;
     }
 }
 
-
+.router-link-exact-active  {
+    
+    span{
+        color: red;
+    }
+    .iconify{
+        color: red;
+    }
+}
 
 </style>

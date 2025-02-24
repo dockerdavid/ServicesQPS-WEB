@@ -139,22 +139,23 @@ const toggle = (event: any) => {
     <BaseLayout>
         <!-- Slot para el título -->
         <template #view-title>
-            Dashboard
+            Services
         </template>
 
         <!-- Slot para el botón "Create new" -->
         <template #create-new>
-            <Button>Custom Button</Button>
+            <Button>New service</Button>
         </template>
 
         <!-- Slot para el botón del header -->
-        <template #header-button>
-            <Button icon="pi pi-home" label="Export to excel" />
-        </template>
+
 
         <!-- Slot para la búsqueda -->
         <template #header-search>
-            <InputText placeholder="Search" />
+            <div class="d-flex align-center">
+                <InputText placeholder="Search" />
+                <Icon class="ml-2" icon="ph:user-focus-duotone" />
+            </div>
         </template>
 
         <!-- Slot para el contenido del Card -->

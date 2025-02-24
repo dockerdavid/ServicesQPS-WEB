@@ -139,12 +139,12 @@ const toggle = (event: any) => {
     <BaseLayout>
         <!-- Slot para el título -->
         <template #view-title>
-            Dashboard
+            Costs
         </template>
 
         <!-- Slot para el botón "Create new" -->
         <template #create-new>
-            <Button>Custom Button</Button>
+            <Button>New cost</Button>
         </template>
 
         <!-- Slot para el botón del header -->
@@ -154,7 +154,10 @@ const toggle = (event: any) => {
 
         <!-- Slot para la búsqueda -->
         <template #header-search>
-            <InputText placeholder="Search" />
+            <div class="d-flex align-center">
+                <InputText placeholder="Search" />
+                <Icon class="ml-2" icon="ph:user-focus-duotone" />
+            </div>
         </template>
 
         <!-- Slot para el contenido del Card -->

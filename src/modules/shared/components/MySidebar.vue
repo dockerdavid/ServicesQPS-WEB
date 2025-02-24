@@ -5,16 +5,16 @@ import { useSidebarStore } from '@/modules/shared/store/state';
 import type { RouteLink } from '@/interfaces/routeLink';
 
 const routes: RouteLink[] = [
-  { route: 'w', icon: 'ph:house-line', label: 'dashboard' },
-  { route: 'e', icon: 'ph:calendar-dots', label: 'calendar' },
-  { route: 'r', icon: 'ph:fediverse-logo-duotone', label: 'communities' },
-  { route: 't', icon: 'ph:briefcase-duotone', label: 'companies' },
-  { route: 'y', icon: 'ph:calculator-duotone', label: 'cost' },
-  { route: 'yq', icon: 'ph:stack-plus-duotone', label: 'extras' },
-  { route: '123', icon: 'ph:folder-open-duotone', label: 'services' },
-  { route: 'dq', icon: 'ph:faders-duotone', label: 'statuses' },
-  { route: 'tg', icon: 'ph:shapes-duotone', label: 'types' },
-  { route: 'qp', icon: 'ph:users-three-duotone', label: 'users' },
+  { route: '/', icon: 'ph:house-line', label: 'dashboard' },
+  { route: '/calendar', icon: 'ph:calendar-dots', label: 'calendar' },
+  { route: '/communities', icon: 'ph:fediverse-logo-duotone', label: 'communities' },
+  { route: '/companies', icon: 'ph:briefcase-duotone', label: 'companies' },
+  { route: '/costs', icon: 'ph:calculator-duotone', label: 'cost' },
+  { route: '/extras', icon: 'ph:stack-plus-duotone', label: 'extras' },
+  { route: '/services', icon: 'ph:folder-open-duotone', label: 'services' },
+  { route: '/statuses', icon: 'ph:faders-duotone', label: 'statuses' },
+  { route: '/types', icon: 'ph:shapes-duotone', label: 'types' },
+  { route: '/users', icon: 'ph:users-three-duotone', label: 'users' },
 ]
 
 const store = useSidebarStore();
@@ -90,6 +90,7 @@ window.addEventListener('resize', () => {
     transition: width var(--sidebar-open-transition), transform var(--sidebar-open-transition);
     width: 4.6rem;
   }
+
 }
 
 

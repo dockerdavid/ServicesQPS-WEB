@@ -27,6 +27,14 @@
     padding: 1rem 0rem;
 }
 
+.px-2{
+    padding: 0rem 1rem;
+}
+
+.p-2{
+    padding: 1rem 1rem;
+}
+
 .mx-1{
     margin: 0 .5rem ;
 }
@@ -46,7 +54,6 @@
 }
 
 //
-.border-vertical{
-    border-top: 1px solid rgb(222, 222, 222);
-    border-bottom: 1px solid rgb(222, 222, 222);
+.border-bottom{
+    border-bottom: 1px solid #dedede;
 }

@@ -1,6 +1,12 @@
+.p-card{
+    border: 1px solid #dedede;
+    overflow: hidden;
+}
+
 .p-card-body{
     padding: 0 1rem !important;
     gap: 0 !important;
+   
 }
 
 td{
@@ -9,4 +15,9 @@ td{
 
 .p-chip{
     padding: .3rem 1rem !important;
+}
+ 
+.p-breadcrumb{
+    padding: 0 !important;
+    background-color: transparent !important;
 }
