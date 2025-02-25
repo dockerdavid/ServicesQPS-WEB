@@ -17,7 +17,7 @@
             </Card>
 
             <RouterView />
-            
+
         </main>
     </div>
 </template>
@@ -26,9 +26,9 @@
 import { Avatar } from 'primevue';
 import { Card } from 'primevue';
 
-import MySidebar from '@/modules/shared/components/MySidebar.vue';
+import MySidebar from '@/components/MySidebar.vue';
 
-import { useSidebarStore } from '@/modules/shared/store/state';
+import { useSidebarStore } from '@/store/sidebar.store';
 
 const sidebarState = useSidebarStore();
 
@@ -50,7 +50,7 @@ const sidebarState = useSidebarStore();
             justify-content: space-between;
             align-items: center;
 
-            .iconify{
+            .iconify {
                 cursor: pointer;
             }
 

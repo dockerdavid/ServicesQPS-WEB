@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import DefaultLayout from '@/layouts/DefaultLayout.vue';
+import authGuard from './authGuard';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,6 +8,7 @@ const router = createRouter({
       {
         path: '/',
         component: DefaultLayout,
+       /*  beforeEnter:[authGuard], */
         children:[
           {
             path: '/',

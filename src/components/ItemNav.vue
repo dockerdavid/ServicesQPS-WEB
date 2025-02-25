@@ -1,16 +1,16 @@
 <template>
-    <RouterLink :to="props.route"  class="sidebar-item">
-        
-            <Icon :class="{ 'mr': sidebarState.isSidebarOpen }"
-                :icon="props.icon ? props.icon : 'material-symbols:circle-outline'" />
-            <span :class="[sidebarState.isSidebarOpen ? '' : 'none']">{{ label }}</span>
-        
+    <RouterLink :to="props.route" class="sidebar-item">
+
+        <Icon :class="{ 'mr': sidebarState.isSidebarOpen }"
+            :icon="props.icon ? props.icon : 'material-symbols:circle-outline'" />
+        <span :class="[sidebarState.isSidebarOpen ? '' : 'none']">{{ label }}</span>
+
     </RouterLink>
 </template>
 
 <script setup lang="ts">
 import type { RouteLink } from '@/interfaces/routeLink';
-import { useSidebarStore } from '@/modules/shared/store/state';
+import { useSidebarStore } from '@/store/sidebar.store';
 
 const sidebarState = useSidebarStore();
 
@@ -52,14 +52,14 @@ const props = defineProps<RouteLink>();
     }
 }
 
-.router-link-exact-active  {
-    
-    span{
+.router-link-exact-active {
+
+    span {
         color: red;
     }
-    .iconify{
+
+    .iconify {
         color: red;
     }
 }
-
 </style>

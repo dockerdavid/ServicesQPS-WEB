@@ -10,6 +10,7 @@ export const useSidebarStore = defineStore('sidebar',{
     toggleSidebar(){
       this.isSidebarOpen = !this.isSidebarOpen
     }
-  }
+  },
+
 
 })

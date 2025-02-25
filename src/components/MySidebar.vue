@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ItemNav from './ItemNav.vue';
 import { onMounted, ref, watchEffect } from 'vue';
-import { useSidebarStore } from '@/modules/shared/store/state';
+import { useSidebarStore } from '@/store/sidebar.store';
 import type { RouteLink } from '@/interfaces/routeLink';
 
 const routes: RouteLink[] = [
