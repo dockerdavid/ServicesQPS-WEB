@@ -1,23 +1,31 @@
-.p-card{
+.p-card {
     border: 1px solid #dedede;
     overflow: hidden;
 }
 
-.p-card-body{
-    padding: 0 1rem !important;
-    gap: 0 !important;
-   
+.p-inputtext {
+    height: 36px !important;
 }
 
-td{
+.p-select {
+    height: 36px !important;
+}
+
+.p-card-body {
+    padding: 0 1rem !important;
+    gap: 0 !important;
+
+}
+
+td {
     white-space: nowrap !important;
 }
 
-.p-chip{
+.p-chip {
     padding: .3rem 1rem !important;
 }
- 
-.p-breadcrumb{
+
+.p-breadcrumb {
     padding: 0 !important;
     background-color: transparent !important;
 }

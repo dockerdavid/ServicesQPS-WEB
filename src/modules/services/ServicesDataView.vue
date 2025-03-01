@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import BaseLayout from '@/layouts/BaseLayout.vue';
-import { InputIcon, Button, Card, Chip, Column, DataTable, IconField, InputText, Popover, InputGroupAddon, Breadcrumb } from 'primevue';
+import { Button, Card, Chip, Column, DataTable, IconField, InputText, Popover, InputGroupAddon, Breadcrumb, InputIcon } from 'primevue';
 import { ref } from "vue";
 
 const customers: any = [
@@ -139,22 +139,28 @@ const toggle = (event: any) => {
     <BaseLayout>
         <!-- Slot para el título -->
         <template #view-title>
-            Types
+            Services
         </template>
 
         <!-- Slot para el botón "Create new" -->
         <template #create-new>
-            <Button>New type</Button>
+            <router-link to="/services/create">
+                New service
+            </router-link>
         </template>
 
         <!-- Slot para el botón del header -->
 
+
         <!-- Slot para la búsqueda -->
         <template #header-search>
-            <IconField>
-                <InputIcon class="pi pi-search" />
-                <InputText placeholder="Search" />
-            </IconField>
+            <div class="flex items-center">
+                <IconField>
+                    <InputIcon class="pi pi-search" />
+                    <InputText placeholder="Search" />
+                </IconField>
+                <Icon class="ml-2" icon="ph:user-focus-duotone" />
+            </div>
         </template>
 
         <!-- Slot para el contenido del Card -->

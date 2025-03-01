@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import BaseLayout from '@/layouts/BaseLayout.vue';
-import { Button, Card, Chip, Column, DataTable, IconField, InputText, Popover, InputGroupAddon, Breadcrumb } from 'primevue';
+import { Button, Card, Chip, Column, DataTable, IconField, InputText, Popover, InputGroupAddon, Breadcrumb, InputIcon } from 'primevue';
 import { ref } from "vue";
 
 const customers: any = [
@@ -154,7 +154,10 @@ const toggle = (event: any) => {
 
         <!-- Slot para la búsqueda -->
         <template #header-search>
-            <InputText placeholder="Search" />
+            <IconField>
+                <InputIcon class="pi pi-search" />
+                <InputText placeholder="Search" />
+            </IconField>
         </template>
 
         <!-- Slot para el contenido del Card -->

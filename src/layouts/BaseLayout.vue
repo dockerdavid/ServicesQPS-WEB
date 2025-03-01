@@ -3,11 +3,11 @@ import { Button, Card, Chip, Column, DataTable, IconField, InputText, Popover, I
 </script>
 
 <template>
-    <div class="py-2">
+    <div class="py-6">
         <Breadcrumb :model="[{ label: 'Companies' }, { label: 'Table' }]" />
-        <div class="d-flex justify-between align-center">
+        <div class="flex justify-between items-center">
             <!-- Slot para el título -->
-            <h1>
+            <h1 class="text-3xl"> 
                 <slot name="view-title">
                     Page title
                 </slot>
@@ -25,10 +25,10 @@ import { Button, Card, Chip, Column, DataTable, IconField, InputText, Popover, I
         <template #header>
 
             <slot name="card-header">
-                <div v-if="$slots['header-button']" class="d-flex justify-end p-2 border-bottom">
+                <div v-if="$slots['header-button']" class="flex justify-end p-4 border-b border-gray-300">
                     <slot name="header-button"></slot>
                 </div>
-                <div v-if="$slots['header-search']" class="d-flex justify-end p-2 border-bottom">
+                <div v-if="$slots['header-search']" class="flex justify-end p-4 border-b border-gray-300">
                     <slot name="header-search"></slot>
                 </div>
             </slot>
