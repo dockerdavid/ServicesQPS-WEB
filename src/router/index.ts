@@ -8,32 +8,77 @@ const router = createRouter({
     {
       path: '/',
       component: DefaultLayout,
-      /*  beforeEnter:[authGuard], */
+      /* beforeEnter: [authGuard], */
       children: [
         {
           path: '/',
-          component: () => import('../modules/dashboard/Dashboard.vue')
+          component: () => import('../modules/dashboard/DashboardView.vue'),
         },
         {
           path: '/calendar',
-          component: () => import('../modules/calendar/CalendarView.vue')
+          component: () => import('../modules/calendar/CalendarView.vue'),
         },
+
         {
           path: '/communities',
-          component: () => import('../modules/communities/CommunitiesDataView.vue')
+          component: () => import('../modules/communities/CommunitiesView.vue'),
+          children: [
+            {
+              path: '',
+              component: () => import('../modules/communities/CommunitiesDataView.vue'),
+            },
+            {
+              path: 'create',
+              component: () => import('../modules/communities/CommunitiesCreateView.vue'),
+            },
+          ],
         },
+
         {
           path: '/companies',
-          component: () => import('../modules/companies/CompaniesView.vue')
+          component: () => import('../modules/companies/CompaniesView.vue'),
+          children: [
+            {
+              path: '',
+              component: () => import('../modules/companies/CompaniesDataView.vue'),
+            },
+            {
+              path: 'create',
+              component: () => import('../modules/companies/CompaniesCreateView.vue'),
+            },
+          ],
         },
+
         {
           path: '/costs',
-          component: () => import('../modules/costs/CostsView.vue')
+          component: () => import('../modules/costs/CostsView.vue'),
+          children: [
+            {
+              path: '',
+              component: () => import('../modules/costs/CostsDataView.vue'),
+            },
+            {
+              path: 'create',
+              component: () => import('../modules/costs/CostsCreateView.vue'),
+            },
+          ],
         },
+
         {
           path: '/extras',
-          component: () => import('../modules/extras/ExtrasView.vue')
+          component: () => import('../modules/extras/ExtrasView.vue'),
+          children: [
+            {
+              path: '',
+              component: () => import('../modules/extras/ExtrasDataView.vue'),
+            },
+            {
+              path: 'create',
+              component: () => import('../modules/extras/ExtrasCreateView.vue'),
+            },
+          ],
         },
+
         {
           path: '/services',
           component: () => import('../modules/services/ServicesView.vue'),
@@ -44,27 +89,58 @@ const router = createRouter({
             },
             {
               path: 'create',
-              component: () => import('../modules/services/CreateServiceView.vue'),
+              component: () => import('../modules/services/ServicesCreateView.vue'),
             },
-
-          ]
+          ],
         },
+
         {
           path: '/statuses',
-          component: () => import('../modules/statuses/StatusesView.vue')
+          component: () => import('../modules/statuses/StatusesView.vue'),
+          children: [
+            {
+              path: '',
+              component: () => import('../modules/statuses/StatusesDataView.vue'),
+            },
+            {
+              path: 'create',
+              component: () => import('../modules/statuses/StatusesCreateView.vue'),
+            },
+          ],
         },
+
         {
           path: '/types',
-          component: () => import('../modules/types/TypesView.vue')
+          component: () => import('../modules/types/TypesView.vue'),
+          children: [
+            {
+              path: '',
+              component: () => import('../modules/types/TypesDataView.vue'),
+            },
+            {
+              path: 'create',
+              component: () => import('../modules/types/TypesCreateView.vue'),
+            },
+          ],
         },
+        
         {
           path: '/users',
-          component: () => import('../modules/users/UsersView.vue')
+          component: () => import('../modules/users/UsersView.vue'),
+          children: [
+            {
+              path: '',
+              component: () => import('../modules/users/UsersDataView.vue'),
+            },
+            {
+              path: 'create',
+              component: () => import('../modules/users/UsersCreateView.vue'),
+            },
+          ],
         },
-
-      ]
-    }
+      ],
+    },
   ],
-})
+});
 
-export default router
+export default router;

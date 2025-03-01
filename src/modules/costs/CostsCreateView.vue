@@ -1,0 +1,1 @@
+<template><div>Costs Create View (Formulario)</div></template>

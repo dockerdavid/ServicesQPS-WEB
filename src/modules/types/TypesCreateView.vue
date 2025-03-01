@@ -1,0 +1,1 @@
+<template><div>Types Create View (Formulario)</div></template>
