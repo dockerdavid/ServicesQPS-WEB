@@ -10,7 +10,7 @@ import { Button, DatePicker, FloatLabel, IconField, InputIcon, InputText, Select
         </template>
 
         <template #view-form>
-            <form class="grid grid-cols-2 gap-6">
+            <form class="grid md:grid-cols-2 large:grid-cols-2 sm:grid-cols-1 xm:grid-cols-1 gap-6">
                 <!--Left-->
                 <fieldset>
                     <label for="date">Date</label>
@@ -24,7 +24,7 @@ import { Button, DatePicker, FloatLabel, IconField, InputIcon, InputText, Select
 
                     <label for="community">Community</label>
                     <Select id="community" class="w-full" />
-                
+
                     <label for="status">Status</label>
                     <Select id="status" class="w-full" />
 
@@ -63,4 +63,11 @@ import { Button, DatePicker, FloatLabel, IconField, InputIcon, InputText, Select
     </CreateLayout>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+form {
+
+    label+* {
+        margin-bottom: 1.2rem;
+    }
+}
+</style>

@@ -38,7 +38,7 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: "Lato", serif;
+  font-family: "Poppins", serif;
 }
 
 
@@ -50,8 +50,7 @@ a{
   text-decoration: none;
   color: inherit;
 }
-
-/* h1{
-  margin-bottom: 1.5rem;
-  
-} */
+ h1{
+    margin-top: .3rem;
+    font-weight: 600;
+ }

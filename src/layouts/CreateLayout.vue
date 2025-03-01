@@ -5,7 +5,7 @@ import { Breadcrumb } from 'primevue'
 
 <template>
 
-    <div class="py-4">
+    <div class="py-6">
         <Breadcrumb :model="[{ label: 'page' }, { label: 'page/page' }]" />
         <div>
             <h1 class="text-3xl pb-3">

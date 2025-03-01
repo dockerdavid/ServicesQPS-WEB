@@ -20,7 +20,7 @@ const router = createRouter({
         },
         {
           path: '/communities',
-          component: () => import('../modules/communities/CommunitiesView.vue')
+          component: () => import('../modules/communities/CommunitiesDataView.vue')
         },
         {
           path: '/companies',
