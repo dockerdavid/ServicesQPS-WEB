@@ -1,6 +1,6 @@
 :root {
   --white: #f5f5f5;
-  --transition-soft-3: .3s  cubic-bezier(0.25, 0.8, 0.25, 1);
+  --transition-soft-3: .3s cubic-bezier(0.25, 0.8, 0.25, 1);
 
 }
 
@@ -46,11 +46,19 @@ body {
   font-size: 1.35rem;
 }
 
-a{
+a {
   text-decoration: none;
   color: inherit;
 }
- h1{
-    margin-top: .3rem;
-    font-weight: 600;
- }
+
+h1 {
+  margin-top: .3rem;
+  font-weight: 600;
+}
+
+
+form {
+  label+div {
+    margin-bottom: 1.2rem !important;
+  }
+}

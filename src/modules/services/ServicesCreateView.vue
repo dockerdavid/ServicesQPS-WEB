@@ -1,6 +1,56 @@
 <script lang="ts" setup>
-import CreateLayout from '@/layouts/CreateLayout.vue';
+import { ref } from 'vue';
+
+import moment from 'moment';
+
 import { Button, DatePicker, FloatLabel, IconField, InputIcon, InputText, Select, Textarea } from 'primevue';
+
+import MyInputGroup from '@/components/MyInputGroup.vue';
+import CreateLayout from '@/layouts/CreateLayout.vue';
+
+import type CreateServiceData from '@/interfaces/new-service.interface';
+
+const newService = ref<CreateServiceData>({
+    date: moment().format('YYYY-MM-DD'),
+    schedule: moment().format('HH:mm:ss'),
+    comment: '',
+    communityId: '',
+    extraId: '',
+    statusId: '',
+    typeId: '',
+    unitNumber: '',
+    unitySize: '',
+    userComment: '',
+    userId: ''
+});
+
+const communityOptions = ref([
+    { label: 'Community 1', value: 'community1' },
+    { label: 'Community 2', value: 'community2' },
+    { label: 'Community 3', value: 'community3' },
+]);
+
+const typeOptions = ref([
+    { label: 'Type A', value: 'typeA' },
+    { label: 'Type B', value: 'typeB' },
+    { label: 'Type C', value: 'typeC' },
+]);
+
+const statusOptions = ref([
+    { label: 'Active', value: 'active' },
+    { label: 'Inactive', value: 'inactive' },
+]);
+
+const extrasOptions = ref([
+    { label: 'Extra 1', value: 'extra1' },
+    { label: 'Extra 2', value: 'extra2' },
+]);
+
+const cleanerOptions = ref([
+    { label: 'Cleaner 1', value: 'cleaner1' },
+    { label: 'Cleaner 2', value: 'cleaner2' },
+]);
+
 </script>
 
 <template>
@@ -9,65 +59,44 @@ import { Button, DatePicker, FloatLabel, IconField, InputIcon, InputText, Select
             Create service
         </template>
 
-        <template #view-form>
-            <form class="grid md:grid-cols-2 large:grid-cols-2 sm:grid-cols-1 xm:grid-cols-1 gap-6">
-                <!--Left-->
-                <fieldset>
-                    <label for="date">Date</label>
-                    <IconField>
-                        <DatePicker id="date" class="w-full" />
-                        <InputIcon class="pi pi-calendar" />
-                    </IconField>
+        <template #inputs>
 
-                    <label for="unit-size">Unit size</label>
-                    <Select id="unit-size" class="w-full" />
+            <MyInputGroup inputType="datepicker" label="Date" inputId="date" v-model="newService.date"
+                icon="calendar" />
 
-                    <label for="community">Community</label>
-                    <Select id="community" class="w-full" />
+            <MyInputGroup inputType="datepicker" label="Schedule" inputId="schedule" v-model="newService.schedule"
+                icon="clock" :hourFormat="true" :timeOnly="true" />
 
-                    <label for="status">Status</label>
-                    <Select id="status" class="w-full" />
+            <MyInputGroup inputType="select" label="Unit size" inputId="unit-size" v-model="newService.unitySize" />
 
-                    <label for="cleaner">Cleaner</label>
-                    <Select id="cleaner" class="w-full" />
-                </fieldset>
+            <MyInputGroup inputType="input" label="Unit number" inputId="unit-number" v-model="newService.unitNumber"
+                icon="address-book" />
 
-                <!--Right-->
-                <fieldset>
-                    <label for="schedule">Schedule</label>
-                    <IconField>
-                        <DatePicker timeOnly hourFormat="12" id="schedule" class="w-full" />
-                        <InputIcon class="pi pi-clock" />
-                    </IconField>
+            <MyInputGroup inputType="select" label="Community" inputId="community" v-model="newService.communityId"
+                :options="communityOptions" />
 
-                    <label for="unit-number">Unit number</label>
-                    <IconField>
-                        <InputText id="unit-number" class="w-full" />
-                        <InputIcon class="pi pi-address-book" />
-                    </IconField>
+            <MyInputGroup inputType="select" label="Type" inputId="type" v-model="newService.typeId"
+                :options="typeOptions" />
 
-                    <label for="type">Type</label>
-                    <Select id="type" class="w-full" />
+            <MyInputGroup inputType="select" label="Status" inputId="status" v-model="newService.statusId"
+                :options="statusOptions" />
 
-                    <label for="extras">Extras</label>
-                    <Select id="extras" class="w-full" />
+            <MyInputGroup inputType="select" label="Extras" inputId="extras" v-model="newService.extraId"
+                :options="extrasOptions" />
 
-                    <label for="comment">Comment</label>
-                    <Textarea id="comment" style="resize:none;" class="w-full" />
-                </fieldset>
-            </form>
+            <MyInputGroup inputType="select" label="Cleaner" inputId="cleaner" v-model="newService.userId"
+                :options="cleanerOptions" />
 
-            <Button>Create</Button>
+            <!-- <MyInputGroup inputType="textarea" label="Comment" inputId="comment" v-model="newService.comment"
+                style="resize:none;" /> -->
+
+            <div>
+                <Button>Create</Button>
+            </div>
 
         </template>
+
     </CreateLayout>
 </template>
 
-<style lang="scss" scoped>
-form {
-
-    label+* {
-        margin-bottom: 1.2rem;
-    }
-}
-</style>
+<style lang="scss" scoped></style>

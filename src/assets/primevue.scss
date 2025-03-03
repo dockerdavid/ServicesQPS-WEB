@@ -3,13 +3,16 @@
     overflow: hidden;
 }
 
-.p-inputtext {
+.p-inputtext,
+.p-select, .p-datepicker {
     height: 36px !important;
+    width: 100% !important;
 }
 
-.p-select {
-    height: 36px !important;
+.p-textarea{
+    width: 100% !important;
 }
+
 
 .p-card-body {
     padding: 0 1rem !important;
@@ -17,7 +20,7 @@
 
 }
 
-.p-button{
+.p-button {
     padding: .35rem .7rem !important;
     font-size: .875rem !important;
 }

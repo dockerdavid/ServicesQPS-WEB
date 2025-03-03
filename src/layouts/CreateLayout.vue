@@ -1,10 +1,9 @@
 <script lang="ts" setup>
-import { Breadcrumb } from 'primevue'
+import SharedForm from '@/components/SharedForm.vue';
+import { Breadcrumb } from 'primevue';
 </script>
 
-
 <template>
-
     <div class="py-6">
         <Breadcrumb :model="[{ label: 'page' }, { label: 'page/page' }]" />
         <div>
@@ -13,16 +12,18 @@ import { Breadcrumb } from 'primevue'
                     Page title
                 </slot>
             </h1>
-
         </div>
     </div>
 
 
-    <slot name="view-form">
-
-    </slot>
+    <SharedForm>
+        <template #inputs>
+            <slot name="inputs"></slot>
+        </template>
+    </SharedForm>
 
 </template>
 
+<style lang="scss" scoped>
 
-<style lang="scss" scoped></style>
+</style>
