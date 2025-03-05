@@ -1,25 +1,29 @@
 import { defineStore } from 'pinia';
 
 interface AuthState {
-  token: string;
+  userToken: string;
+}
+
+interface GlobalState {
+  isLoadingState: boolean;
 }
 
 export const useAuthStore = defineStore('auth', {
   state: (): AuthState => ({
-    token: '',
+    userToken: '',
   }),
 
   getters: {
-    getToken: (state): string => state.token,
+    token: (state): string => state.userToken,
   },
 
   actions: {
     setToken(token: string): void {
-      this.token = token;
+      this.userToken = token;
     },
 
     removeToken(): void {
-      this.token = '';
+      this.userToken = '';
     },
   },
 
@@ -27,3 +31,22 @@ export const useAuthStore = defineStore('auth', {
   persist: true
 
 });
+
+
+export const useGlobalStateStore = defineStore('state', {
+  state: (): GlobalState => ({
+    isLoadingState: false
+  }),
+
+  getters: {
+    isLoading: (state): boolean => state.isLoadingState
+  },
+
+  actions: {
+    setIsLoading(isLoading: boolean): void {
+      this.isLoadingState = isLoading;
+    }
+  }
+
+})
+

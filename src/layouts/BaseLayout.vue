@@ -7,15 +7,16 @@ import { Button, Card, Chip, Column, DataTable, IconField, InputText, Popover, I
         <Breadcrumb :model="[{ label: 'Companies' }, { label: 'Table' }]" />
         <div class="flex justify-between items-center">
             <!-- Slot para el título -->
-            <h1 class="text-3xl"> 
+            <h1 class="text-3xl">
                 <slot name="view-title">
                     Page title
                 </slot>
             </h1>
             <!-- Slot para el botón "Create new" -->
             <div v-if="$slots['create-new']">
-                <slot name="create-new">
-                </slot>
+                <Button>
+                    <slot name="create-new"></slot>
+                </Button>
             </div>
 
         </div>

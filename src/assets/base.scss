@@ -58,7 +58,13 @@ h1 {
 
 
 form {
+
   label+div {
-    margin-bottom: 1.2rem !important;
+    margin-bottom: .7rem !important;
+  }
+  
+  label{
+    display:block;
+    margin-bottom: .4rem !important;
   }
 }

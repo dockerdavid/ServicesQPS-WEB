@@ -1,10 +1,8 @@
 <template>
-    <RouterLink :to="props.route" class="sidebar-item">
-
+    <RouterLink :to="{name: props.route}" class="sidebar-item">
         <Icon :class="{ 'mr': sidebarState.isSidebarOpen }"
             :icon="props.icon ? props.icon : 'material-symbols:circle-outline'" />
         <span :class="[sidebarState.isSidebarOpen ? '' : 'none']">{{ label }}</span>
-
     </RouterLink>
 </template>
 

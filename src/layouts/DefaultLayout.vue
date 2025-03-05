@@ -1,3 +1,29 @@
+<script setup>
+import { ref } from 'vue';
+import router from '@/router';
+import { Avatar, Button, Card, Popover } from 'primevue';
+
+
+import MySidebar from '@/modules/shared/components/MySidebar.vue';
+
+import { useSidebarStore } from '@/store/sidebar.store';
+import { useAuthStore } from '@/store/auth.store';
+
+const sidebarState = useSidebarStore();
+
+const op = ref(false);
+
+const toggle = (event) => {
+    op.value.toggle(event);
+};
+
+const signOut = () => {
+    useAuthStore().removeToken();
+    router.push('/auth')
+}
+
+</script>
+
 <template>
     <div class="default-layout">
 
@@ -10,8 +36,16 @@
                     <div class="user-header py-1">
 
                         <Icon icon="ph:arrows-left-right" @click="sidebarState.toggleSidebar()" />
-
-                        <Avatar label="P" class="mr-2" size="normal" shape="circle" />
+                        <div>
+                            <Button class="cursor-pointer" unstyled @click="toggle">
+                                <Avatar label="F" class="mr-2" size="normal" shape="circle" />
+                            </Button>
+                            <Popover ref="op">
+                                <div class="w-[10rem]">
+                                    <Button variant="text" icon="pi pi-sign-out" label="Sign out" @click="signOut" />
+                                </div>
+                            </Popover>
+                        </div>
                     </div>
                 </template>
             </Card>
@@ -22,17 +56,6 @@
     </div>
 </template>
 
-<script setup>
-import { Avatar } from 'primevue';
-import { Card } from 'primevue';
-
-import MySidebar from '@/components/MySidebar.vue';
-
-import { useSidebarStore } from '@/store/sidebar.store';
-
-const sidebarState = useSidebarStore();
-
-</script>
 
 <style lang="scss" scoped>
 .default-layout {

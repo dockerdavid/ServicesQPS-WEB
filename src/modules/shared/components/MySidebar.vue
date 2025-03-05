@@ -5,16 +5,16 @@ import { useSidebarStore } from '@/store/sidebar.store';
 import type { RouteLink } from '@/interfaces/routeLink';
 
 const routes: RouteLink[] = [
-  { route: '/', icon: 'ph:house-line', label: 'dashboard' },
-  { route: '/calendar', icon: 'ph:calendar-dots', label: 'calendar' },
-  { route: '/communities', icon: 'ph:fediverse-logo-duotone', label: 'communities' },
-  { route: '/companies', icon: 'ph:briefcase-duotone', label: 'companies' },
-  { route: '/costs', icon: 'ph:calculator-duotone', label: 'cost' },
-  { route: '/extras', icon: 'ph:stack-plus-duotone', label: 'extras' },
-  { route: '/services', icon: 'ph:folder-open-duotone', label: 'services' },
-  { route: '/statuses', icon: 'ph:faders-duotone', label: 'statuses' },
-  { route: '/types', icon: 'ph:shapes-duotone', label: 'types' },
-  { route: '/users', icon: 'ph:users-three-duotone', label: 'users' },
+  { route: 'dashboard', icon: 'ph:house-line', label: 'dashboard' },
+  { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
+  { route: 'communities-default', icon: 'ph:fediverse-logo-duotone', label: 'communities' },
+  { route: 'companies-default', icon: 'ph:briefcase-duotone', label: 'companies' },
+  { route: 'costs-default', icon: 'ph:calculator-duotone', label: 'cost' },
+  { route: 'extras-default', icon: 'ph:stack-plus-duotone', label: 'extras' },
+  { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
+  { route: 'statuses-default', icon: 'ph:faders-duotone', label: 'statuses' },
+  { route: 'types-default', icon: 'ph:shapes-duotone', label: 'types' },
+  { route: 'users-default', icon: 'ph:users-three-duotone', label: 'users' },
 ]
 
 const store = useSidebarStore();
@@ -39,7 +39,11 @@ window.addEventListener('resize', () => {
 </script>
 
 <template>
-  <aside :class="['sidebar', store.isSidebarOpen ? 'sidebar--open' : 'sidebar--close']">
+  <aside class="relative" :class="['sidebar', store.isSidebarOpen ? 'sidebar--open' : 'sidebar--close']">
+
+    <div class="flex">
+      <Icon @click="store.toggleSidebar" v-if="store.isSidebarOpen" class="absolute right-5 icon-close" icon="ph:x"></Icon>
+    </div>
 
     <!-- <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjsScWYmyfPv3XdkNdEFVJ1wlDKMOgcSWUcg&s"
       alt="qps-logo"> -->
@@ -57,7 +61,7 @@ window.addEventListener('resize', () => {
 <style scoped lang="scss">
 .sidebar {
   position: relative;
-  z-index: 1;
+  z-index: 10;
   height: 100vh;
   padding: 1rem;
   display: flex;
@@ -91,6 +95,10 @@ window.addEventListener('resize', () => {
     width: 4.6rem;
   }
 
+  .icon-close {
+    display: none;
+  }
+
 }
 
 
@@ -106,6 +114,10 @@ window.addEventListener('resize', () => {
     &--open {
       width: 14rem;
       transform: translateX(0);
+    }
+
+    .icon-close {
+      display: block;
     }
   }
 }

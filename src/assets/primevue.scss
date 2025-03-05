@@ -4,15 +4,24 @@
 }
 
 .p-inputtext,
-.p-select, .p-datepicker {
-    height: 36px !important;
+.p-select, .p-datepicker, .p-inputnumber  {
+
     width: 100% !important;
+}
+
+.p-paginator-content{
+    .p-select{
+        width: auto !important;
+    }
 }
 
 .p-textarea{
     width: 100% !important;
 }
 
+.p-breadcrumb-item-link{
+    gap: 0 !important
+}
 
 .p-card-body {
     padding: 0 1rem !important;

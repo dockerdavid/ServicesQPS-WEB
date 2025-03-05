@@ -144,7 +144,7 @@ const toggle = (event: any) => {
 
         <!-- Slot para el botón "Create new" -->
         <template #create-new>
-            <Button>New user</Button>
+            <router-link to="/users/create">New user</router-link>
         </template>
 
         <!-- Slot para el botón del header -->

@@ -19,9 +19,6 @@
     .form-grid {
         grid-template-columns: 1fr;
         grid-auto-flow: dense;
-
-
-
     }
 }
 </style>

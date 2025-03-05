@@ -5,10 +5,10 @@ import moment from 'moment';
 
 import { Button, DatePicker, FloatLabel, IconField, InputIcon, InputText, Select, Textarea } from 'primevue';
 
-import MyInputGroup from '@/components/MyInputGroup.vue';
+import MyInputGroup from '../shared/components/MyInputGroup.vue';
 import CreateLayout from '@/layouts/CreateLayout.vue';
 
-import type CreateServiceData from '@/interfaces/new-service.interface';
+import type CreateServiceData from '@/interfaces/services/new-service.interface';
 
 const newService = ref<CreateServiceData>({
     date: moment().format('YYYY-MM-DD'),
@@ -89,6 +89,9 @@ const cleanerOptions = ref([
 
             <!-- <MyInputGroup inputType="textarea" label="Comment" inputId="comment" v-model="newService.comment"
                 style="resize:none;" /> -->
+
+
+            <div />
 
             <div>
                 <Button>Create</Button>
