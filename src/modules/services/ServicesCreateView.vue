@@ -1,58 +1,3 @@
-<script lang="ts" setup>
-import { ref } from 'vue';
-
-import moment from 'moment';
-
-import { Button, DatePicker, FloatLabel, IconField, InputIcon, InputText, Select, Textarea } from 'primevue';
-
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import CreateLayout from '@/layouts/CreateLayout.vue';
-
-import type CreateServiceData from '@/interfaces/services/services.interface';
-
-const newService = ref<CreateServiceData>({
-    date: moment().format('YYYY-MM-DD'),
-    schedule: moment().format('HH:mm:ss'),
-    comment: '',
-    communityId: '',
-    extraId: '',
-    statusId: '',
-    typeId: '',
-    unitNumber: '',
-    unitySize: '',
-    userComment: '',
-    userId: ''
-});
-
-const communityOptions = ref([
-    { label: 'Community 1', value: 'community1' },
-    { label: 'Community 2', value: 'community2' },
-    { label: 'Community 3', value: 'community3' },
-]);
-
-const typeOptions = ref([
-    { label: 'Type A', value: 'typeA' },
-    { label: 'Type B', value: 'typeB' },
-    { label: 'Type C', value: 'typeC' },
-]);
-
-const statusOptions = ref([
-    { label: 'Active', value: 'active' },
-    { label: 'Inactive', value: 'inactive' },
-]);
-
-const extrasOptions = ref([
-    { label: 'Extra 1', value: 'extra1' },
-    { label: 'Extra 2', value: 'extra2' },
-]);
-
-const cleanerOptions = ref([
-    { label: 'Cleaner 1', value: 'cleaner1' },
-    { label: 'Cleaner 2', value: 'cleaner2' },
-]);
-
-</script>
-
 <template>
     <CreateLayout>
         <template #view-title>
@@ -67,9 +12,9 @@ const cleanerOptions = ref([
             <MyInputGroup inputType="datepicker" label="Schedule" inputId="schedule" v-model="newService.schedule"
                 icon="clock" :hourFormat="true" :timeOnly="true" />
 
-            <MyInputGroup inputType="select" label="Unit size" inputId="unit-size" v-model="newService.unitySize" />
+            <MyInputGroup :options="unitSizeOptions" inputType="select" label="Unit size" inputId="unit-size" v-model="newService.unitySize" />
 
-            <MyInputGroup inputType="input" label="Unit number" inputId="unit-number" v-model="newService.unitNumber"
+            <MyInputGroup inputType="numeric" input-numeric-mode="decimal" label="Unit number" inputId="unit-number" v-model="newService.unitNumber"
                 icon="address-book" />
 
             <MyInputGroup inputType="select" label="Community" inputId="community" v-model="newService.communityId"
@@ -87,14 +32,14 @@ const cleanerOptions = ref([
             <MyInputGroup inputType="select" label="Cleaner" inputId="cleaner" v-model="newService.userId"
                 :options="cleanerOptions" />
 
-            <!-- <MyInputGroup inputType="textarea" label="Comment" inputId="comment" v-model="newService.comment"
-                style="resize:none;" /> -->
+            <MyInputGroup inputType="input" label="Comment" inputId="comment" v-model="newService.comment"
+                style="resize:none;" />
 
 
             <div />
 
             <div>
-                <Button>Create</Button>
+                <LoadingButton @click="createService" />
             </div>
 
         </template>
@@ -102,4 +47,160 @@ const cleanerOptions = ref([
     </CreateLayout>
 </template>
 
-<style lang="scss" scoped></style>
+<script lang="ts" setup>
+import { computed, onMounted, ref } from 'vue';
+
+import moment from 'moment';
+
+import { useToast } from 'primevue';
+
+import MyInputGroup from '../shared/components/MyInputGroup.vue';
+import CreateLayout from '@/layouts/CreateLayout.vue';
+
+import type CreateService from '@/interfaces/services/services.interface';
+import LoadingButton from '../shared/components/LoadingButton.vue';
+import { CleanersServices } from './services.services';
+import { showToast } from '@/utils/show-toast';
+import type { Communities } from '@/interfaces/communities/communities.interface';
+import genericNullObject from '@/utils/null-data-meta';
+import type { Types } from '@/interfaces/types/types.interface';
+import type { Statuses } from '@/interfaces/statuses/statuses.interface';
+import type { Extras } from '@/interfaces/extras/extras.interface';
+import type { Users } from '@/interfaces/users/users.interface';
+import { CommunitiesServices } from '../communities/communities.services';
+import { TypesServices } from '../types/types.services';
+import { StatusesServices } from '../statuses/statuses.services';
+import { ExtrasServices } from '../extras/extras.services';
+import { UsersServices } from '../users/users.services';
+
+const toast = useToast();
+
+const newService = ref<CreateService>({
+    date: moment().format('YYYY-MM-DD'),
+    schedule: moment().format('HH:mm:ss'),
+    comment: '',
+    communityId: '',
+    extraId: '',
+    statusId: '',
+    typeId: '',
+    unitNumber: '',
+    unitySize: '',
+    userComment: '',
+    userId: ''
+});
+
+const communities = ref<Communities>(genericNullObject);
+const types = ref<Types>(genericNullObject);
+const statuses = ref<Statuses>(genericNullObject);
+const extras = ref<Extras>(genericNullObject);
+const cleaners = ref<Users>(genericNullObject);
+
+
+const communityOptions = computed(() => {
+    return communities.value.data.map((community) => {
+        return {
+            label: community.communityName,
+            value: community.id,
+        }
+    })
+})
+const typeOptions = computed(() => {
+    return types.value.data.map((type) => {
+        return {
+            label: `${type.cleaningType} (${type.description})`,
+            value: type.id,
+        }
+    })
+})
+const statusOptions = computed(() => {
+    return statuses.value.data.map((status) => {
+        return {
+            label: status.statusName,
+            value: status.id,
+        }
+    })
+})
+const extrasOptions = computed(() => {
+    return extras.value.data.map((extra) => {
+        return {
+            label: extra.item,
+            value: extra.id,
+        }
+    })
+})
+const cleanerOptions = computed(() => {
+    return cleaners.value.data.map((cleaner) => {
+        return {
+            label: cleaner.name,
+            value: cleaner.id,
+        }
+    })
+})
+const unitSizeOptions = [
+    {
+        label: 'N/A',
+        value: 'N/A',
+    },
+    {
+        label: '1 Bedroom',
+        value: '1 Bedroom',
+    },
+    {
+        label: '2 Bedroom',
+        value: '2 Bedroom',
+    },
+    {
+        label: '3 Bedroom',
+        value: '3 Bedroom',
+    },
+    {
+        label: '4 Bedroom',
+        value: '4 Bedroom',
+    },
+    {
+        label: '5 Bedroom',
+        value: '5 Bedroom',
+    },
+]
+const createService = async () => {
+
+    try {
+        await CleanersServices.createService(newService.value);
+        showToast(toast, { severity: 'success', detail: 'Type was created' })
+        newService.value = {
+            date: moment().format('YYYY-MM-DD'),
+            schedule: moment().format('HH:mm:ss'),
+            comment: '',
+            communityId: '',
+            extraId: '',
+            statusId: '',
+            typeId: '',
+            unitNumber: '',
+            unitySize: '',
+            userComment: '',
+            userId: ''
+        }
+    } catch (error) {
+        showToast(toast, { severity: 'error', summary: "Type wasn't created" })
+    }
+
+}
+
+onMounted(async () => {
+    const [communityResults, typeResults, statusResults, extrasResults, cleanerResults] = await Promise.all([
+        CommunitiesServices.getCommunities(),
+        TypesServices.getTypes(),
+        StatusesServices.getStatuses(),
+        ExtrasServices.getExtras(),
+        UsersServices.getUsers(),
+    ])
+
+    communities.value = communityResults
+    types.value = typeResults
+    statuses.value = statusResults
+    extras.value = extrasResults
+    cleaners.value = cleanerResults
+
+})
+
+</script>

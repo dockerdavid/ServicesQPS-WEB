@@ -6,31 +6,31 @@ export interface Services {
 }
 
 export interface Service {
-    id:          string;
-    date:        Date;
-    schedule:    null;
-    comment:     null;
+    id: string;
+    date: Date;
+    schedule: null;
+    comment: null;
     userComment: null | string;
-    unitySize:   string;
-    unitNumber:  string;
+    unitySize: string;
+    unitNumber: string;
     communityId: string;
-    typeId:      string;
-    statusId:    string;
-    userId:      null | string;
-    createdAt:   Date;
-    updatedAt:   Date;
-    community:   Community;
-    type:        Type;
-    status:      Status;
+    typeId: string;
+    statusId: string;
+    userId: null | string;
+    createdAt: Date;
+    updatedAt: Date;
+    community: Community;
+    type: Type;
+    status: Status;
 }
 
 export interface Community {
-    id:            string;
+    id: string;
     communityName: CommunityName;
-    userId:        string;
-    companyId:     string;
-    createdAt:     Date;
-    updatedAt:     Date;
+    userId: string;
+    companyId: string;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export enum CommunityName {
@@ -40,21 +40,21 @@ export enum CommunityName {
 }
 
 export interface Status {
-    id:         string;
+    id: string;
     statusName: string;
-    createdAt:  Date;
-    updatedAt:  Date;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export interface Type {
-    id:           string;
-    description:  string;
+    id: string;
+    description: string;
     cleaningType: CleaningType;
-    price:        number;
-    commission:   string;
-    communityId:  string;
-    createdAt:    Date;
-    updatedAt:    Date;
+    price: number;
+    commission: string;
+    communityId: string;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 export enum CleaningType {
@@ -62,7 +62,7 @@ export enum CleaningType {
     Housekeeping = "Housekeeping",
 }
 
-export default interface CreateServiceData {
+export default interface CreateService {
     date: string;
     schedule: string;
     comment: string;

@@ -11,7 +11,7 @@
             <Select :placeholder="props.placeholder" v-if="props.inputType === 'select'" v-model="modelValue"
                 :labelId="props.inputId" :options="props.options" option-label="label" option-value="value" />
 
-            <InputNumber :placeholder="props.placeholder" mode="currency" currency="USD"
+            <InputNumber :placeholder="props.placeholder" :mode="props.inputNumericMode" currency="USD"
                 v-if="props.inputType === 'numeric'" v-model="numericValue" :inputId="props.inputId" />
 
             <InputIcon :placeholder="props.placeholder" v-if="props.inputType !== 'select' && props.icon"
@@ -26,6 +26,7 @@ import moment from 'moment';
 import { computed } from 'vue';
 
 type InputType = 'input' | 'select' | 'datepicker' | "numeric";
+type InputNumericMode = 'currency' | 'decimal';
 
 interface InputGroupProps {
     label: string;
@@ -36,9 +37,12 @@ interface InputGroupProps {
     icon?: string;
     timeOnly?: boolean;
     options?: Array<{ label: string; value: string }>;
+    inputNumericMode?: InputNumericMode;
 }
 
-const props = defineProps<InputGroupProps>();
+const props = withDefaults(defineProps<InputGroupProps>(),
+    { inputNumericMode: 'currency' }
+);
 
 
 const model = defineModel<string | number | undefined>();
@@ -76,4 +80,3 @@ const numericValue = computed({
     },
 });
 </script>
-
