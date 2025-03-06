@@ -25,7 +25,7 @@ pinia.use((context) => installPersistedStatePlugin(context))
 
 app.component('Icon', Icon);
 
-app.use(ToastService)
+
 
 app.use(pinia)
    .use(router)
@@ -36,7 +36,9 @@ app.use(pinia)
          darkModeSelector: false || 'none',
        },
      },
-   });
+   }
+  )
+  .use(ToastService);
 
 
 app.mount('#app');

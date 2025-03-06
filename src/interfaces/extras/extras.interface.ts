@@ -14,4 +14,9 @@ export interface Extra {
     updatedAt:  Date;
 }
 
+export interface NewExtra {
+    item:       string;
+    itemPrice:  number;
+    commission: string;
+}
 

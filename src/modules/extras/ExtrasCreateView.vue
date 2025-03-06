@@ -5,14 +5,14 @@
 
         <template #inputs>
 
-            <MyInputGroup label="Item" inputId="item" input-type="input" />
-            <MyInputGroup placeholder="$0.00" label="Item price" inputId="item-price" input-type="numeric" />
-            <MyInputGroup placeholder="$0.00" label="Comission" inputId="commision" input-type="numeric" />
+            <MyInputGroup v-model="newExtra.item" label="Item" inputId="item" input-type="input"/>
+            <MyInputGroup v-model="newExtra.itemPrice" placeholder="$0.00" label="Item price" inputId="item-price" input-type="numeric" />
+            <MyInputGroup v-model="newExtra.commission" placeholder="$0.00" label="Comission" inputId="commision" input-type="numeric" />
 
             <div />
 
             <div>
-                <Button>Create</Button>
+                <LoadingButton @click="createNewExtra" />
             </div>
 
         </template>
@@ -23,9 +23,36 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
+import type { NewExtra } from '@/interfaces/extras/extras.interface';
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
 import CreateLayout from '@/layouts/CreateLayout.vue';
-import { Button } from 'primevue';
+import LoadingButton from '../shared/components/LoadingButton.vue';
+import { showToast } from '@/utils/show-toast';
+import { useToast } from 'primevue';
+import { ExtrasServices } from './extras.services';
+
+const toast = useToast();
+
+const newExtra = ref<NewExtra>({
+    commission: '',
+    item: '',
+    itemPrice: 0
+})
+
+const createNewExtra = async () => {
+    try {
+        await ExtrasServices.createExtra(newExtra.value);
+        showToast(toast, {severity: 'success', summary: 'Extra was created'})
+        newExtra.value = {
+            commission: '',
+            item: '',
+            itemPrice: 0
+        }
+    } catch (error) {
+        showToast(toast, { severity: 'error', summary: "Extra wasn't created" })
+    }
+}
 
 </script>
 

@@ -15,7 +15,7 @@
             <div />
 
             <div>
-                <Button>Create</Button>
+                <LoadingButton @click="createType" />
             </div>
 
         </template>
@@ -25,9 +25,33 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
 import CreateLayout from '@/layouts/CreateLayout.vue';
-import { Button } from 'primevue';
+import { useToast } from 'primevue';
+import LoadingButton from '../shared/components/LoadingButton.vue';
+import { TypesServices } from './types.services';
+import { showToast } from '@/utils/show-toast';
+import { NewType } from '@/interfaces/types/types.interface';
 
+const toast = useToast();
+
+const newType = ref<NewType>({
+
+});
+
+const createType = async() =>{
+
+    try {
+        await TypesServices.createType();
+        showToast(toast, {severity: 'success', detail: 'Type was created'})
+        newType.value = {
+
+        }
+    } catch (error) {
+        showToast(toast, {severity: 'error', summary: "Type wasn't created"})
+    }
+
+}
 
 </script>

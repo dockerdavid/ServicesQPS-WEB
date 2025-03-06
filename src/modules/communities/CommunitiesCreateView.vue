@@ -76,7 +76,7 @@ const createCommunity = async () => {
         }
         toast.add({ severity: 'success', life: 3000, summary: 'Community created' })
     } catch (error) {
-
+        console.log(error)
     }
 }
 

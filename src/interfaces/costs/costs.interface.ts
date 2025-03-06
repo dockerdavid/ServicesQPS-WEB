@@ -14,3 +14,9 @@ export interface Cost {
     updatedAt:   Date;
 }
 
+export interface NewCost {
+    date:        string;
+    description: string;
+    amount:      string;
+}
+

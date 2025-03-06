@@ -1,171 +1,68 @@
 <script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { IconField, InputIcon, InputText, useToast } from 'primevue';
+
 import BaseLayout from '@/layouts/BaseLayout.vue';
-import { InputIcon, Button, Card, Chip, Column, DataTable, IconField, InputText, Popover, InputGroupAddon, Breadcrumb } from 'primevue';
-import { ref } from "vue";
+import EditableDataTable from "../shared/components/EditableDataTable.vue";
+import type { User, Users } from "@/interfaces/users/users.interface";
+import { UsersServices } from "./users.services";
 
-const customers: any = [
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-]
 
-const op = ref();
+const toast = useToast();
 
-const toggle = (event: any) => {
-    op.value.toggle(event);
-}
+const usersList = ref<Users>({
+    data: [],
+    meta: { hasNextPage: false, hasPreviousPage: false, page: 0, pageCount: 0, take: 0, totalCount: 0 }
+});
+
+const headers = ref([
+    { field: 'name', name: 'Name' },
+    { field: 'email', name: 'Email' },
+    { field: 'role.name', name: 'Role' },
+    { field: 'phoneNumber', name: 'Phone number' },
+]);
+
+const editableColumns = ref(['companyName']);
+
+const onDelete = (item: User) => {
+    usersList.value.data = usersList.value.data.filter((company) => company.id !== item.id);
+    toast.add({
+        closable: true,
+        life: 5000,
+        summary: 'User deleted',
+        detail: `User: ${item.name}`,
+        severity: "info"
+    })
+};
+
+const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
+    const { data, newValue, field } = event;
+    data[field] = newValue;
+};
+
+onMounted(async () => {
+    usersList.value = await UsersServices.getUsers();
+})
 
 </script>
 
-
 <template>
     <BaseLayout>
-        <!-- Slot para el título -->
-        <template #view-title>
-            Users
-        </template>
-
-        <!-- Slot para el botón "Create new" -->
+        <template #view-title>Statuses</template>
         <template #create-new>
-            <router-link to="/users/create">New user</router-link>
+            <router-link to="/statuses/create">New status</router-link>
         </template>
-
-        <!-- Slot para el botón del header -->
-
-        <!-- Slot para la búsqueda -->
         <template #header-search>
             <IconField>
                 <InputIcon class="pi pi-search" />
                 <InputText placeholder="Search" />
             </IconField>
         </template>
-
-        <!-- Slot para el contenido del Card -->
         <template #card-content>
-            <DataTable :value="customers" paginator :rows="5" :rowsPerPageOptions="[5, 10, 20, 50]"
-                tableStyle="min-width: 50rem">
-                <Column field="name" header="Name" style="width: 25%"></Column>
-                <Column field="country.name" header="Country" style="width: 25%"></Column>
-                <Column field="company" header="Company" style="width: 25%"></Column>
-                <Column field="representative.name" header="Representative" style="width: 25%"></Column>
-            </DataTable>
+            <EditableDataTable :data="usersList.data" :headers="headers" :editableColumns="editableColumns"
+                :onDelete="onDelete" @update="handleUpdate" />
         </template>
     </BaseLayout>
 </template>
+
+<style scoped></style>

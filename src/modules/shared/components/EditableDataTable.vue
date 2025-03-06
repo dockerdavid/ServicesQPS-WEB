@@ -6,7 +6,7 @@ import MyDeleteToast from "./MyDeleteToast.vue";
 import { useGlobalStateStore } from "@/store/auth.store";
 import { storeToRefs } from "pinia";
 
-interface Props {
+interface TableI {
     data: any[];
     headers: { field: string; name: string; style?: string }[];
     editableColumns: string[];
@@ -14,16 +14,19 @@ interface Props {
 }
 
 const { isLoading } = storeToRefs(useGlobalStateStore());
+const loadingEdit = ref(false);
 
-const props = defineProps<Props>();
+const props = defineProps<TableI>();
 const emit = defineEmits(['update']);
 const toast = useToast();
 
 const simulateRequest = async (): Promise<boolean> => {
+    loadingEdit.value = true
     return new Promise((resolve) => {
         setTimeout(() => {
             const success = Math.random() < 0.8;
             resolve(success);
+            loadingEdit.value = false
         }, 1000);
     });
 };

@@ -1,177 +1,67 @@
 <script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { IconField, InputIcon, InputText, useToast } from 'primevue';
+
 import BaseLayout from '@/layouts/BaseLayout.vue';
-import { Button, Card, Chip, Column, DataTable, IconField, InputText, Popover, InputGroupAddon, Breadcrumb, InputIcon } from 'primevue';
-import { ref } from "vue";
+import EditableDataTable from "../shared/components/EditableDataTable.vue";
 
-const customers: any = [
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-    {
-        name: 'Name',
-        country: {
-            name: 'Name country'
-        },
-        company: "Company",
-        representative: {
-            name: 'Name representative'
-        }
-    },
-]
+import type { Cost, Costs } from "@/interfaces/costs/costs.interface";
+import { CostsServices } from "./costs.services";
 
-const op = ref();
 
-const toggle = (event: any) => {
-    op.value.toggle(event);
-}
+const toast = useToast();
+
+const costsList = ref<Costs>({
+    data: [],
+    meta: { hasNextPage: false, hasPreviousPage: false, page: 0, pageCount: 0, take: 0, totalCount: 0 }
+});
+
+const headers = ref([
+    { field: 'date', name: 'Date' },
+    { field: 'description', name: 'Description' },
+]);
+
+const editableColumns = ref(['date', 'description']);
+
+const onDelete = (item: Cost) => {
+    costsList.value.data = costsList.value.data.filter((cost) => cost.id !== item.id);
+    toast.add({
+        closable: true,
+        life: 5000,
+        summary: 'Costs deleted',
+        detail: `Cost description: ${item.description}`,
+        severity: "info"
+    })
+};
+
+const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
+    const { data, newValue, field } = event;
+    data[field] = newValue;
+};
+
+onMounted(async () => {
+    costsList.value = await CostsServices.getCosts();
+})
 
 </script>
 
-
 <template>
     <BaseLayout>
-        <!-- Slot para el título -->
-        <template #view-title>
-            Costs
-        </template>
-
-        <!-- Slot para el botón "Create new" -->
+        <template #view-title>Costs</template>
         <template #create-new>
             <router-link to="/costs/create">New cost</router-link>
         </template>
-
-        <!-- Slot para el botón del header -->
-        <template #header-button>
-            <Button icon="pi pi-home" label="Export to excel" />
-        </template>
-
-        <!-- Slot para la búsqueda -->
         <template #header-search>
-            <div class="flex items-center">
-                <IconField>
-                    <InputIcon class="pi pi-search" />
-                    <InputText placeholder="Search" />
-                </IconField>
-                <Icon class="m-8" icon="ph:user-focus-duotone" />
-            </div>
+            <IconField>
+                <InputIcon class="pi pi-search" />
+                <InputText placeholder="Search" />
+            </IconField>
         </template>
-
-        <!-- Slot para el contenido del Card -->
         <template #card-content>
-            <DataTable :value="customers" paginator :rows="5" :rowsPerPageOptions="[5, 10, 20, 50]"
-                tableStyle="min-width: 50rem">
-                <Column field="name" header="Name" style="width: 25%"></Column>
-                <Column field="country.name" header="Country" style="width: 25%"></Column>
-                <Column field="company" header="Company" style="width: 25%"></Column>
-                <Column field="representative.name" header="Representative" style="width: 25%"></Column>
-            </DataTable>
+            <EditableDataTable :data="costsList.data" :headers="headers" :editableColumns="editableColumns"
+                :onDelete="onDelete" @update="handleUpdate" />
         </template>
     </BaseLayout>
 </template>
+
+<style scoped></style>

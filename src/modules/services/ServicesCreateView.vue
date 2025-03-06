@@ -8,7 +8,7 @@ import { Button, DatePicker, FloatLabel, IconField, InputIcon, InputText, Select
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
 import CreateLayout from '@/layouts/CreateLayout.vue';
 
-import type CreateServiceData from '@/interfaces/services/new-service.interface';
+import type CreateServiceData from '@/interfaces/services/services.interface';
 
 const newService = ref<CreateServiceData>({
     date: moment().format('YYYY-MM-DD'),

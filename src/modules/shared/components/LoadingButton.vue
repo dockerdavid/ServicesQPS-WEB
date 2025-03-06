@@ -1,6 +1,6 @@
 <template>
     <Button :loading="isLoading" :severity="severity || 'warn'">
-        <p v-if="!isLoading"> {{ label || 'Click' }} </p>
+        <p v-if="!isLoading"> {{ label || 'Create' }} </p>
     </Button>
 </template>
 

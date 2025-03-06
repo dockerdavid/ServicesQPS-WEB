@@ -1,14 +1,14 @@
 import type { MetaPagination } from "../meta-pagination.interface";
 
 export interface Companies {
-    data: Companie[];
+    data: Company[];
     meta: MetaPagination;
 }
 
-export interface Companie {
-    id:          string;
+export interface Company {
+    id: string;
     companyName: string;
-    createdAt:   Date;
-    updatedAt:   Date;
+    createdAt: Date;
+    updatedAt: Date;
 }
 

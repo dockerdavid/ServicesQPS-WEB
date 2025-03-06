@@ -1,27 +1,27 @@
 import { apiServicesQps } from "@/api/api";
 import type { Communities, Community } from "@/interfaces/communities/communities.interface";
 import type { Companies } from "@/interfaces/companies/companies.interface";
-import type { Costs } from "@/interfaces/costs/costs.interface";
-import type { Statuses } from "@/interfaces/statuses/statuses.interface";
+import type { Costs, NewCost } from "@/interfaces/costs/costs.interface";
 import { useGlobalStateStore } from "@/store/auth.store";
 import genericNullObject from "@/utils/null-data-meta";
 
 
-export class StatusesServices {
+export class CostsServices {
 
     static store = useGlobalStateStore();
 
-    static async getStatuses(): Promise<Statuses> {
+    static async getCosts(): Promise<Costs> {
 
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get('/statuses')
+            const { data } = await apiServicesQps.get('/costs')
+            console.log(data)
             return data
         } catch (error) {
             console.log(error)
             return {
-                data: [],
+                data:[],
                 meta: genericNullObject.meta
             }
         } finally {
@@ -29,11 +29,10 @@ export class StatusesServices {
         }
     }
 
-    static async createStatus(statusName:string) {
-        this.store.setIsLoading(true)
-
+    static async createCost(cost:NewCost) {
         try {
-            const { data } = await apiServicesQps.post('/statuses', {statusName})
+            const { data } = await apiServicesQps.post('/costs', cost)
+            console.log(data)
         } catch (error:any) {
             throw new Error(error)
         } finally {
