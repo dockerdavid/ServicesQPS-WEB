@@ -9,12 +9,12 @@ export class UsersServices {
 
     static store = useGlobalStateStore();
 
-    static async getUsers(): Promise<Users> {
+    static async getUsers(page: number = 1, take:number = 10): Promise<Users> {
 
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get('/users')
+            const { data } = await apiServicesQps.get(`/users?page=${page}&take=${take}`)
             return data
         } catch (error) {
             console.log(error)

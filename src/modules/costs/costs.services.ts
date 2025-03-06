@@ -10,12 +10,12 @@ export class CostsServices {
 
     static store = useGlobalStateStore();
 
-    static async getCosts(): Promise<Costs> {
+    static async getCosts(page: number = 1, take:number = 10): Promise<Costs> {
 
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get('/costs')
+            const { data } = await apiServicesQps.get(`/costs?page=${page}&take=${take}`)
             console.log(data)
             return data
         } catch (error) {

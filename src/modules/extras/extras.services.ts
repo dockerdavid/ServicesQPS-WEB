@@ -11,12 +11,12 @@ export class ExtrasServices {
 
     static store = useGlobalStateStore();
 
-    static async getExtras(): Promise<Extras> {
+    static async getExtras(page: number = 1, take:number = 10): Promise<Extras> {
 
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get('/extras')
+            const { data } = await apiServicesQps.get(`/extras?page=${page}&take=${take}`)
             return data
         } catch (error) {
             console.log(error)

@@ -9,12 +9,12 @@ export class CompaniesServices {
 
     static store = useGlobalStateStore();
 
-    static async getCompanies(): Promise<Companies> {
+    static async getCompanies(page: number = 1, take:number = 10): Promise<Companies> {
 
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get('/companies')
+            const { data } = await apiServicesQps.get(`/companies?page=${page}&take=${take}`)
             return data
         } catch (error) {
             console.log(error)

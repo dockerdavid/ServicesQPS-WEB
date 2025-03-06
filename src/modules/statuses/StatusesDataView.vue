@@ -15,12 +15,16 @@ const statusesList = ref<Statuses>({
     data: [],
     meta: { hasNextPage: false, hasPreviousPage: false, page: 0, pageCount: 0, take: 0, totalCount: 0 }
 });
-
-
+const currentPage = ref(1); 
+const rowsPerPage = ref(10); 
 
 const headers = ref([
     { field: 'statusName', name: 'Status name' },
 ]);
+
+const fetchStatuses = async() =>{
+    statusesList.value = await StatusesServices.getStatuses(currentPage.value, rowsPerPage.value);
+}
 
 const editableColumns = ref(['companyName']);
 
@@ -49,8 +53,14 @@ const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
     data[field] = newValue;
 };
 
+const handlePageChange = (event: any) => {
+    currentPage.value = event.page + 1;
+    rowsPerPage.value = event.rows;
+    fetchStatuses(); 
+};
+
 onMounted(async () => {
-    statusesList.value = await StatusesServices.getStatuses();
+    fetchStatuses()
 })
 
 </script>
@@ -69,9 +79,8 @@ onMounted(async () => {
         </template>
         <template #card-content>
             <EditableDataTable :data="statusesList.data" :headers="headers" :editableColumns="editableColumns"
-                :onDelete="onDelete" @update="handleUpdate" />
+                :onDelete="onDelete" @update="handleUpdate" @page-change="handlePageChange"
+                :total-records="statusesList.meta.totalCount" />
         </template>
     </BaseLayout>
 </template>
-
-<style scoped></style>

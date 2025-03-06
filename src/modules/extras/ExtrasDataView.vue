@@ -9,11 +9,11 @@ import { ExtrasServices } from "./extras.services";
 import genericNullObject from "@/utils/null-data-meta";
 import { showToast } from "@/utils/show-toast";
 
-
-
 const toast = useToast();
 
 const extrasList = ref<Extras>(genericNullObject);
+const currentPage = ref(1);
+const rowsPerPage = ref(10);
 
 const headers = ref([
     { field: 'item', name: 'Item' },
@@ -43,13 +43,23 @@ const onDelete = async (item: Extra) => {
     }
 };
 
+const fetchExtras = async () => {
+    extrasList.value = await ExtrasServices.getExtras(currentPage.value, rowsPerPage.value);
+}
+
 const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
     const { data, newValue, field } = event;
     data[field] = newValue;
 };
 
+const handlePageChange = (event: any) => {
+    currentPage.value = event.page + 1;
+    rowsPerPage.value = event.rows;
+    fetchExtras();
+};
+
 onMounted(async () => {
-    extrasList.value = await ExtrasServices.getExtras();
+    fetchExtras()
 })
 
 </script>
@@ -68,7 +78,8 @@ onMounted(async () => {
         </template>
         <template #card-content>
             <EditableDataTable :data="extrasList.data" :headers="headers" :editableColumns="editableColumns"
-                :onDelete="onDelete" @update="handleUpdate" />
+                :onDelete="onDelete" @update="handleUpdate" @page-change="handlePageChange"
+                :total-records="extrasList.meta.totalCount" />
         </template>
     </BaseLayout>
 </template>

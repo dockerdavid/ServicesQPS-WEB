@@ -15,12 +15,24 @@ const toast = useToast();
 const companiesList = ref<Companies>(
     genericNullObject
 );
+const currentPage = ref(1); 
+const rowsPerPage = ref(10); 
 
 const headers = ref([
     { field: 'companyName', name: 'Company name' },
 ]);
 
 const editableColumns = ref(['companyName']);
+
+const handlePageChange = (event: any) => {
+    currentPage.value = event.page + 1;
+    rowsPerPage.value = event.rows;
+    fetchCompanies(); 
+};
+
+const fetchCompanies = async () => {
+    companiesList.value = await CompaniesServices.getCompanies(currentPage.value, rowsPerPage.value);
+}
 
 const onDelete = async (item: Company) => {
     const originalData = [...companiesList.value.data];
@@ -41,14 +53,17 @@ const onDelete = async (item: Company) => {
         })
     }
 };
+
 const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
     const { data, newValue, field } = event;
     data[field] = newValue;
+    fetchCompanies();
 };
 
+
 onMounted(async () => {
-    companiesList.value = await CompaniesServices.getCompanies();
-})
+    await fetchCompanies();
+});
 
 </script>
 
@@ -65,10 +80,16 @@ onMounted(async () => {
             </IconField>
         </template>
         <template #card-content>
-            <EditableDataTable :data="companiesList.data" :headers="headers" :editableColumns="editableColumns"
-                :onDelete="onDelete" @update="handleUpdate" />
+            <EditableDataTable
+                :data="companiesList.data"
+                :headers="headers"
+                :editableColumns="editableColumns"
+                :onDelete="onDelete"
+                @update="handleUpdate"
+                @page-change="handlePageChange"
+                :total-records="companiesList.meta.totalCount"
+            />
         </template>
     </BaseLayout>
 </template>
 
-<style scoped></style>

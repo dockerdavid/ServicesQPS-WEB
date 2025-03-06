@@ -15,6 +15,8 @@ const typesList = ref<Types>({
     data: [],
     meta: { hasNextPage: false, hasPreviousPage: false, page: 0, pageCount: 0, take: 0, totalCount: 0 }
 });
+const currentPage = ref(1); 
+const rowsPerPage = ref(10); 
 
 const headers = ref([
     { field: 'description', name: 'Description' },
@@ -23,6 +25,10 @@ const headers = ref([
     { field: 'community.communityName', name: 'Community' },
     { field: 'commission', name: 'Commission' },
 ]);
+
+const fetchTypes = async() =>{
+    typesList.value = await TypesServices.getTypes(currentPage.value, rowsPerPage.value);
+}
 
 const editableColumns = ref(['companyName']);
 
@@ -51,8 +57,14 @@ const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
     data[field] = newValue;
 };
 
+const handlePageChange = (event: any) => {
+    currentPage.value = event.page + 1;
+    rowsPerPage.value = event.rows;
+    fetchTypes(); 
+};
+
 onMounted(async () => {
-    typesList.value = await TypesServices.getTypes();
+    fetchTypes()
 })
 
 </script>
@@ -71,7 +83,8 @@ onMounted(async () => {
         </template>
         <template #card-content>
             <EditableDataTable :data="typesList.data" :headers="headers" :editableColumns="editableColumns"
-                :onDelete="onDelete" @update="handleUpdate" />
+                :onDelete="onDelete" @update="handleUpdate" @page-change="handlePageChange"
+                :total-records="typesList.meta.totalCount" />
         </template>
     </BaseLayout>
 </template>

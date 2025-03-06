@@ -15,6 +15,8 @@ const usersList = ref<Users>({
     data: [],
     meta: { hasNextPage: false, hasPreviousPage: false, page: 0, pageCount: 0, take: 0, totalCount: 0 }
 });
+const currentPage = ref(1); 
+const rowsPerPage = ref(10); 
 
 const headers = ref([
     { field: 'name', name: 'Name' },
@@ -22,6 +24,10 @@ const headers = ref([
     { field: 'role.name', name: 'Role' },
     { field: 'phoneNumber', name: 'Phone number' },
 ]);
+
+const fetchUsers = async() =>{
+    usersList.value = await UsersServices.getUsers(currentPage.value, rowsPerPage.value);
+}
 
 const editableColumns = ref(['companyName']);
 
@@ -47,10 +53,18 @@ const onDelete = async (item: User) => {
 const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
     const { data, newValue, field } = event;
     data[field] = newValue;
+    fetchUsers();
 };
 
+const handlePageChange = (event: any) => {
+    currentPage.value = event.page + 1;
+    rowsPerPage.value = event.rows;
+    fetchUsers(); 
+};
+
+
 onMounted(async () => {
-    usersList.value = await UsersServices.getUsers();
+    fetchUsers();
 })
 
 </script>
@@ -69,7 +83,8 @@ onMounted(async () => {
         </template>
         <template #card-content>
             <EditableDataTable :data="usersList.data" :headers="headers" :editableColumns="editableColumns"
-                :onDelete="onDelete" @update="handleUpdate" />
+                :onDelete="onDelete" @update="handleUpdate" @page-change="handlePageChange"
+                :total-records="usersList.meta.totalCount" />
         </template>
     </BaseLayout>
 </template>

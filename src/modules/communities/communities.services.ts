@@ -8,12 +8,12 @@ export class CommunitiesServices {
 
     static store = useGlobalStateStore();
 
-    static async getCommunities(): Promise<Communities> {
+    static async getCommunities(page: number = 1, take:number = 10): Promise<Communities> {
 
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get<Communities>('/communities')
+            const { data } = await apiServicesQps.get<Communities>(`/communities?page=${page}&take=${take}`)
             return data
         } catch (error) {
             console.log(error)

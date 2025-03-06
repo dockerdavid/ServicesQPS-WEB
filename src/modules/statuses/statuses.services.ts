@@ -11,12 +11,12 @@ export class StatusesServices {
 
     static store = useGlobalStateStore();
 
-    static async getStatuses(): Promise<Statuses> {
+    static async getStatuses(page: number = 1, take:number = 10): Promise<Statuses> {
 
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get('/statuses?take=20')
+            const { data } = await apiServicesQps.get(`/statuses?page=${page}&take=${take}`)
             return data
         } catch (error) {
             console.log(error)

@@ -17,6 +17,12 @@ const servicesList = ref<Services>({
     data: [],
     meta: { hasNextPage: false, hasPreviousPage: false, page: 0, pageCount: 0, take: 0, totalCount: 0 }
 });
+const currentPage = ref(1);
+const rowsPerPage = ref(10);
+
+const fetchServices = async () => {
+    servicesList.value = await CleanersServices.getServices(currentPage.value, rowsPerPage.value);
+}
 
 const headers = ref([
     { field: 'date', name: 'Date' },
@@ -55,8 +61,15 @@ const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
     data[field] = newValue;
 };
 
+const handlePageChange = (event: any) => {
+    currentPage.value = event.page + 1;
+    rowsPerPage.value = event.rows;
+    fetchServices();
+};
+
+
 onMounted(async () => {
-    servicesList.value = await CleanersServices.getServices();
+    await fetchServices()
 })
 
 </script>
@@ -75,7 +88,8 @@ onMounted(async () => {
         </template>
         <template #card-content>
             <EditableDataTable :data="servicesList.data" :headers="headers" :editableColumns="editableColumns"
-                :onDelete="onDelete" @update="handleUpdate" />
+                :onDelete="onDelete" @update="handleUpdate" @page-change="handlePageChange"
+                :total-records="servicesList.meta.totalCount" />
         </template>
     </BaseLayout>
 </template>

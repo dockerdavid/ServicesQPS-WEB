@@ -10,10 +10,15 @@ import { CostsServices } from "./costs.services";
 import { showToast } from "@/utils/show-toast";
 import genericNullObject from "@/utils/null-data-meta";
 
-
 const toast = useToast();
 
 const costsList = ref<Costs>(genericNullObject);
+const currentPage = ref(1);
+const rowsPerPage = ref(10);
+
+const fetchCost = async () => {
+    costsList.value = await CostsServices.getCosts(currentPage.value, rowsPerPage.value);
+};
 
 const headers = ref([
     { field: 'date', name: 'Date' },
@@ -26,31 +31,37 @@ const onDelete = async (item: Cost) => {
     const originalData = [...costsList.value.data];
     costsList.value.data = costsList.value.data.filter((cost) => cost.id !== item.id);
     try {
-        await CostsServices.deleteCost(item.id)
+        await CostsServices.deleteCost(item.id);
         showToast(toast, {
             summary: 'Extra deleted',
             detail: `Extra: ${item.description}`,
-            severity: "info"
-        })
+            severity: "info",
+        });
     } catch (error) {
         costsList.value.data = originalData;
         showToast(toast, {
             summary: "Extra wasn't deleted",
             detail: `Extra: ${item.description}`,
-            severity: "error"
-        })
+            severity: "error",
+        });
     }
+};
+
+const handlePageChange = (event: any) => {
+    currentPage.value = event.page + 1;
+    rowsPerPage.value = event.rows;
+    fetchCost(); 
 };
 
 const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
     const { data, newValue, field } = event;
     data[field] = newValue;
+    fetchCost();
 };
 
 onMounted(async () => {
-    costsList.value = await CostsServices.getCosts();
-})
-
+    await fetchCost();
+});
 </script>
 
 <template>
@@ -67,9 +78,8 @@ onMounted(async () => {
         </template>
         <template #card-content>
             <EditableDataTable :data="costsList.data" :headers="headers" :editableColumns="editableColumns"
-                :onDelete="onDelete" @update="handleUpdate" />
+                :onDelete="onDelete" @update="handleUpdate" @page-change="handlePageChange"
+                :total-records="costsList.meta.totalCount" />
         </template>
     </BaseLayout>
 </template>
-
-<style scoped></style>
