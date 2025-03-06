@@ -2,7 +2,7 @@ import { apiServicesQps } from "@/api/api";
 import type { Communities, Community } from "@/interfaces/communities/communities.interface";
 import type { Companies } from "@/interfaces/companies/companies.interface";
 import type { Costs } from "@/interfaces/costs/costs.interface";
-import type { Types } from "@/interfaces/types/types.interface";
+import type { NewType, Types } from "@/interfaces/types/types.interface";
 import { useGlobalStateStore } from "@/store/auth.store";
 import genericNullObject from "@/utils/null-data-meta";
 
@@ -28,4 +28,19 @@ export class TypesServices {
             this.store.setIsLoading(false)
         }
     }
+
+    static async createType(newType:NewType) {
+
+        this.store.setIsLoading(true)
+
+        try {
+            await apiServicesQps.post('/types', newType)
+        } catch (error:any) {
+            throw new Error(error)
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
+
 }
+

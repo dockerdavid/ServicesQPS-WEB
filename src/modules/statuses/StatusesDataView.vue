@@ -7,13 +7,16 @@ import EditableDataTable from "../shared/components/EditableDataTable.vue";
 import type { Statuses } from "@/interfaces/statuses/statuses.interface";
 import type { Status } from "@/interfaces/services/services.interface";
 import { StatusesServices } from "./statuses.services";
+import { showToast } from "@/utils/show-toast";
 
 const toast = useToast();
 
-const companiesList = ref<Statuses>({
+const statusesList = ref<Statuses>({
     data: [],
     meta: { hasNextPage: false, hasPreviousPage: false, page: 0, pageCount: 0, take: 0, totalCount: 0 }
 });
+
+
 
 const headers = ref([
     { field: 'statusName', name: 'Status name' },
@@ -21,15 +24,24 @@ const headers = ref([
 
 const editableColumns = ref(['companyName']);
 
-const onDelete = (item: Status) => {
-    companiesList.value.data = companiesList.value.data.filter((company) => company.id !== item.id);
-    toast.add({
-        closable: true,
-        life: 5000,
-        summary: 'Status deleted',
-        detail: `Status: ${item.statusName}`,
-        severity: "info"
-    })
+const onDelete = async (item: Status) => {
+    const originalData = [...statusesList.value.data];
+    statusesList.value.data = statusesList.value.data.filter((status) => status.id !== item.id);
+    try {
+        await StatusesServices.deleteStatus(item.id)
+        showToast(toast, {
+            summary: 'Status deleted',
+            detail: `Status: ${item.statusName}`,
+            severity: "info"
+        })
+    } catch (error) {
+        statusesList.value.data = originalData;
+        showToast(toast, {
+            summary: "Status wasn't deleted",
+            detail: `Status: ${item.statusName}`,
+            severity: "error"
+        })
+    }
 };
 
 const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
@@ -38,7 +50,7 @@ const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
 };
 
 onMounted(async () => {
-    companiesList.value = await StatusesServices.getStatuses();
+    statusesList.value = await StatusesServices.getStatuses();
 })
 
 </script>
@@ -56,7 +68,7 @@ onMounted(async () => {
             </IconField>
         </template>
         <template #card-content>
-            <EditableDataTable :data="companiesList.data" :headers="headers" :editableColumns="editableColumns"
+            <EditableDataTable :data="statusesList.data" :headers="headers" :editableColumns="editableColumns"
                 :onDelete="onDelete" @update="handleUpdate" />
         </template>
     </BaseLayout>

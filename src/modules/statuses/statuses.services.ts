@@ -16,7 +16,7 @@ export class StatusesServices {
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get('/statuses')
+            const { data } = await apiServicesQps.get('/statuses?take=20')
             return data
         } catch (error) {
             console.log(error)
@@ -29,15 +29,25 @@ export class StatusesServices {
         }
     }
 
-    static async createStatus(statusName:string) {
+    static async createStatus(statusName: string) {
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.post('/statuses', {statusName})
-        } catch (error:any) {
+            await apiServicesQps.post('/statuses', { statusName })
+        } catch (error: any) {
             throw new Error(error)
         } finally {
             this.store.setIsLoading(false)
         }
     }
+
+    static async deleteStatus(statusId: string) {
+        
+        try {
+            await apiServicesQps.delete(`/statuses/${statusId}`)
+        } catch (error: any) {
+            throw new Error(error)
+        } 
+    }
+
 }

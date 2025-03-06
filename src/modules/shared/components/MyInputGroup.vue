@@ -2,29 +2,20 @@
     <fieldset>
         <label :for="props.inputId">{{ props.label }}</label>
         <IconField>
-
             <InputText :placeholder="props.placeholder" v-if="props.inputType === 'input'" v-model="modelValue"
                 :id="props.inputId" />
 
             <DatePicker :placeholder="props.placeholder" v-if="props.inputType === 'datepicker'" v-model="dateValue"
                 :inputId="props.inputId" :hourFormat="props.hourFormat ? '12' : '24'" :timeOnly="props.timeOnly" />
 
-            <Select
-            :placeholder="props.placeholder" 
-            v-if="props.inputType === 'select'" 
-            v-model="modelValue"
-            :labelId="props.inputId" 
-            :options="props.options"
-            option-label="label"
-            option-value="value"
-            />
+            <Select :placeholder="props.placeholder" v-if="props.inputType === 'select'" v-model="modelValue"
+                :labelId="props.inputId" :options="props.options" option-label="label" option-value="value" />
 
             <InputNumber :placeholder="props.placeholder" mode="currency" currency="USD"
                 v-if="props.inputType === 'numeric'" v-model="numericValue" :inputId="props.inputId" />
 
             <InputIcon :placeholder="props.placeholder" v-if="props.inputType !== 'select' && props.icon"
                 :class="`pi pi-${props.icon}`" />
-
         </IconField>
     </fieldset>
 </template>
@@ -49,11 +40,12 @@ interface InputGroupProps {
 
 const props = defineProps<InputGroupProps>();
 
-const model = defineModel<string>();
+
+const model = defineModel<string | number | undefined>();
 
 const modelValue = computed({
     get() {
-        return model.value || '';
+        return typeof model.value === 'string' ? model.value : '';
     },
     set(value: string) {
         model.value = value;
@@ -73,16 +65,15 @@ const dateValue = computed({
 
 const numericValue = computed({
     get() {
-        return model.value && !isNaN(Number(model.value))
-            ? Number(model.value)
-            : null;
+        if (typeof model.value === 'number') {
+            return model.value;
+        }
+        return model.value && !isNaN(Number(model.value)) ? Number(model.value) : null;
     },
-    set(value: number) {
-        model.value = value.toString();
+    set(value: number | null) {
+
+        model.value = value !== null ? value : undefined;
     },
 });
-
-
 </script>
 
-<style lang="scss" scoped></style>

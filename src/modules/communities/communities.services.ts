@@ -13,7 +13,7 @@ export class CommunitiesServices {
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get('/communities')
+            const { data } = await apiServicesQps.get<Communities>('/communities')
             return data
         } catch (error) {
             console.log(error)

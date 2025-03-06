@@ -26,3 +26,19 @@ export enum Name {
     SuperAdmin = "super_admin",
 }
 
+export interface NewUser {
+    name:        string;
+    email:       string;
+    phoneNumber: string;
+    roleId:      string;
+    password: string
+}
+
+
+export interface UserRoles {
+    id:        string;
+    name:      string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+

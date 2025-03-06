@@ -48,9 +48,9 @@ onMounted(async () => {
 
 <template>
     <BaseLayout>
-        <template #view-title>Statuses</template>
+        <template #view-title>Users</template>
         <template #create-new>
-            <router-link to="/statuses/create">New status</router-link>
+            <router-link to="/users/create">New user</router-link>
         </template>
         <template #header-search>
             <IconField>

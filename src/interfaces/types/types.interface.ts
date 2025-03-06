@@ -18,7 +18,6 @@ export interface Type {
 }
 
 
-
 export interface Community {
     id: string;
     communityName: string;

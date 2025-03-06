@@ -35,7 +35,7 @@ import { ExtrasServices } from './extras.services';
 const toast = useToast();
 
 const newExtra = ref<NewExtra>({
-    commission: '',
+    commission: 0,
     item: '',
     itemPrice: 0
 })
@@ -45,7 +45,7 @@ const createNewExtra = async () => {
         await ExtrasServices.createExtra(newExtra.value);
         showToast(toast, {severity: 'success', summary: 'Extra was created'})
         newExtra.value = {
-            commission: '',
+            commission: 0,
             item: '',
             itemPrice: 0
         }

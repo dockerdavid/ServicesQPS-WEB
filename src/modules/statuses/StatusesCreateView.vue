@@ -36,6 +36,7 @@ const toast = useToast();
 const createStatus = async () => {
 
     try {
+        console.log(statusName.value)
         await StatusesServices.createStatus(statusName.value);
         showToast(toast, { severity: 'success', summary: 'Status created' })
         statusName.value = '';

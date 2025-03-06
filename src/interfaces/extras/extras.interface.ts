@@ -17,6 +17,6 @@ export interface Extra {
 export interface NewExtra {
     item:       string;
     itemPrice:  number;
-    commission: string;
+    commission: number;
 }
 
