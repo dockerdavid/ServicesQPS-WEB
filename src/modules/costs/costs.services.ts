@@ -39,4 +39,14 @@ export class CostsServices {
             this.store.setIsLoading(false)
         }
     }
+
+    static async deleteCost(costId: string) {
+
+        try {
+            await apiServicesQps.delete(`/costs/${costId}`)
+        } catch (error: any) {
+            throw new Error(error)
+        }
+    }
+
 }

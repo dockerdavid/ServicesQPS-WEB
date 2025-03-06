@@ -7,6 +7,7 @@ import EditableDataTable from "../shared/components/EditableDataTable.vue";
 import type { Extra, Extras } from "@/interfaces/extras/extras.interface";
 import { CleanersServices } from "./services.services";
 import type { Service, Services } from "@/interfaces/services/services.interface";
+import { showToast } from "@/utils/show-toast";
 
 
 
@@ -18,26 +19,35 @@ const servicesList = ref<Services>({
 });
 
 const headers = ref([
-    {field: 'date', name: 'Date'},
-    {field: 'schedule', name: 'Schedule'},
-    {field: 'unitySize', name: 'Unit size'},
-    {field: 'unitNumber', name: 'Unit number'},
-    {field: 'community.communityName', name: 'Community'},
-    {field: 'type.cleaningType', name: 'Type'},
-    {field: 'status.statusName', name: 'Status'},
+    { field: 'date', name: 'Date' },
+    { field: 'schedule', name: 'Schedule' },
+    { field: 'unitySize', name: 'Unit size' },
+    { field: 'unitNumber', name: 'Unit number' },
+    { field: 'community.communityName', name: 'Community' },
+    { field: 'type.cleaningType', name: 'Type' },
+    { field: 'status.statusName', name: 'Status' },
 ]);
 
 const editableColumns = ref(['item', 'itemPrice', 'commission']);
 
-const onDelete = (item: Service) => {
-    servicesList.value.data = servicesList.value.data.filter((service) => service.id !== item.id);
-    toast.add({
-        closable: true,
-        life: 5000,
-        summary: 'Service deleted',
-        detail: `Service: ${item.type}`,
-        severity: "info"
-    })
+const onDelete = async (item: Service) => {
+    const originalData = [...servicesList.value.data];
+    servicesList.value.data = servicesList.value.data.filter((community) => community.id !== item.id);
+    try {
+        await CleanersServices.deleteService(item.id)
+        showToast(toast, {
+            summary: 'Service deleted',
+            detail: `Service: ${item.id}`,
+            severity: "info"
+        })
+    } catch (error) {
+        servicesList.value.data = originalData;
+        showToast(toast, {
+            summary: "Service wasn't deleted",
+            detail: `Service: ${item.id}`,
+            severity: "error"
+        })
+    }
 };
 
 const handleUpdate = (event: { data: any; newValue: any; field: string }) => {

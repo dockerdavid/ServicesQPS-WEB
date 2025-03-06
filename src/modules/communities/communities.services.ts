@@ -18,7 +18,7 @@ export class CommunitiesServices {
         } catch (error) {
             console.log(error)
             return {
-                data:[],
+                data: [],
                 meta: genericNullObject.meta
             }
         } finally {
@@ -42,12 +42,12 @@ export class CommunitiesServices {
         }
     }
 
-    static async deleteCommunity(community: Community) {
+    static async deleteCommunity(communityId: string) {
+
         try {
-            await apiServicesQps.delete(`/communities/${community.id}`)
-            console.log('éxito')
-        } catch (error) {
-            console.log(error)
+            await apiServicesQps.delete(`/communities/${communityId}`)
+        } catch (error: any) {
+            throw new Error(error)
         }
     }
 

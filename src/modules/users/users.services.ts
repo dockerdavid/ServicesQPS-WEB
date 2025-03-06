@@ -50,4 +50,13 @@ export class UsersServices {
         }
     }
 
+    static async deleteUser(userId: string) {
+
+        try {
+            await apiServicesQps.delete(`/users/${userId}`)
+        } catch (error: any) {
+            throw new Error(error)
+        }
+    }
+
 }

@@ -43,4 +43,13 @@ export class ExtrasServices {
         }
     }
 
+    static async deleteExtra(extraId: string) {
+
+        try {
+            await apiServicesQps.delete(`/extras/${extraId}`)
+        } catch (error: any) {
+            throw new Error(error)
+        }
+    }
+
 }

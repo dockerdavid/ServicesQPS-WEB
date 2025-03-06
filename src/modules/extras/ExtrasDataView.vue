@@ -6,15 +6,14 @@ import BaseLayout from '@/layouts/BaseLayout.vue';
 import EditableDataTable from "../shared/components/EditableDataTable.vue";
 import type { Extra, Extras } from "@/interfaces/extras/extras.interface";
 import { ExtrasServices } from "./extras.services";
+import genericNullObject from "@/utils/null-data-meta";
+import { showToast } from "@/utils/show-toast";
 
 
 
 const toast = useToast();
 
-const extrasList = ref<Extras>({
-    data: [],
-    meta: { hasNextPage: false, hasPreviousPage: false, page: 0, pageCount: 0, take: 0, totalCount: 0 }
-});
+const extrasList = ref<Extras>(genericNullObject);
 
 const headers = ref([
     { field: 'item', name: 'Item' },
@@ -24,15 +23,24 @@ const headers = ref([
 
 const editableColumns = ref(['item', 'itemPrice', 'commission']);
 
-const onDelete = (item: Extra) => {
-    extrasList.value.data = extrasList.value.data.filter((cost) => cost.id !== item.id);
-    toast.add({
-        closable: true,
-        life: 5000,
-        summary: 'item deleted',
-        detail: `Item: ${item.item}`,
-        severity: "info"
-    })
+const onDelete = async (item: Extra) => {
+    const originalData = [...extrasList.value.data];
+    extrasList.value.data = extrasList.value.data.filter((extra) => extra.id !== item.id);
+    try {
+        await ExtrasServices.deleteExtra(item.id)
+        showToast(toast, {
+            summary: 'Extra deleted',
+            detail: `Extra: ${item.item}`,
+            severity: "info"
+        })
+    } catch (error) {
+        extrasList.value.data = originalData;
+        showToast(toast, {
+            summary: "Extra wasn't deleted",
+            detail: `Extra: ${item.item}`,
+            severity: "error"
+        })
+    }
 };
 
 const handleUpdate = (event: { data: any; newValue: any; field: string }) => {

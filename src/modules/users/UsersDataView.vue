@@ -6,6 +6,7 @@ import BaseLayout from '@/layouts/BaseLayout.vue';
 import EditableDataTable from "../shared/components/EditableDataTable.vue";
 import type { User, Users } from "@/interfaces/users/users.interface";
 import { UsersServices } from "./users.services";
+import { showToast } from "@/utils/show-toast";
 
 
 const toast = useToast();
@@ -24,17 +25,25 @@ const headers = ref([
 
 const editableColumns = ref(['companyName']);
 
-const onDelete = (item: User) => {
-    usersList.value.data = usersList.value.data.filter((company) => company.id !== item.id);
-    toast.add({
-        closable: true,
-        life: 5000,
-        summary: 'User deleted',
-        detail: `User: ${item.name}`,
-        severity: "info"
-    })
+const onDelete = async (item: User) => {
+    const originalData = [...usersList.value.data];
+    usersList.value.data = usersList.value.data.filter((user) => user.id !== item.id);
+    try {
+        await UsersServices.deleteUser(item.id)
+        showToast(toast, {
+            summary: 'User deleted',
+            detail: `User: ${item.name} - ${item.email}`,
+            severity: "info"
+        })
+    } catch (error) {
+        usersList.value.data = originalData;
+        showToast(toast, {
+            summary: "User wasn't deleted",
+            detail: `User: ${item.name} - ${item.email}`,
+            severity: "error"
+        })
+    }
 };
-
 const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
     const { data, newValue, field } = event;
     data[field] = newValue;

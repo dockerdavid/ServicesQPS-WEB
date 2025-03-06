@@ -38,6 +38,15 @@ export class CompaniesServices {
         }
     }
 
+    static async deleteCompany(companyId: string) {
+
+        try {
+            await apiServicesQps.delete(`/companies/${companyId}`)
+        } catch (error: any) {
+            throw new Error(error)
+        }
+    }
+
     /*     static async editCommunity(community: Community, changedValue: any) {
             apiServicesQps.patch(`/communities/${community.id}`, { ...community, changedValue })
         }

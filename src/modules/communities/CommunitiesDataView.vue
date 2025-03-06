@@ -8,6 +8,7 @@ import EditableDataTable from "../shared/components/EditableDataTable.vue";
 import type { Communities, Community } from "@/interfaces/communities/communities.interface";
 
 import { CommunitiesServices } from "./communities.services";
+import { showToast } from "@/utils/show-toast";
 
 const toast = useToast();
 
@@ -24,15 +25,24 @@ const headers = ref([
 
 const editableColumns = ref(['communityName', 'user.name', 'company.companyName']);
 
-const onDelete = (item: Community) => {
+const onDelete = async (item: Community) => {
+    const originalData = [...communitiesList.value.data];
     communitiesList.value.data = communitiesList.value.data.filter((community) => community.id !== item.id);
-    toast.add({
-        closable: true,
-        life: 5000,
-        summary: 'Community deleted',
-        detail: `Community name: ${item.communityName}`,
-        severity: "info"
-    })
+    try {
+        await CommunitiesServices.deleteCommunity(item.id)
+        showToast(toast, {
+            summary: 'Community deleted',
+            detail: `Community: ${item.communityName}`,
+            severity: "info"
+        })
+    } catch (error) {
+        communitiesList.value.data = originalData;
+        showToast(toast, {
+            summary: "Community wasn't deleted",
+            detail: `Community: ${item.communityName}`,
+            severity: "error"
+        })
+    }
 };
 
 const handleUpdate = (event: { data: any; newValue: any; field: string }) => {

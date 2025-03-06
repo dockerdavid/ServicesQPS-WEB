@@ -6,6 +6,7 @@ import BaseLayout from '@/layouts/BaseLayout.vue';
 import EditableDataTable from "../shared/components/EditableDataTable.vue";
 import type { Type, Types } from "@/interfaces/types/types.interface";
 import { TypesServices } from "./types.services";
+import { showToast } from "@/utils/show-toast";
 
 
 const toast = useToast();
@@ -25,15 +26,24 @@ const headers = ref([
 
 const editableColumns = ref(['companyName']);
 
-const onDelete = (item: Type) => {
+const onDelete = async (item: Type) => {
+    const originalData = [...typesList.value.data];
     typesList.value.data = typesList.value.data.filter((type) => type.id !== item.id);
-    toast.add({
-        closable: true,
-        life: 5000,
-        summary: 'Type deleted',
-        detail: `Type: ${item.cleaningType}`,
-        severity: "info"
-    })
+    try {
+        await TypesServices.deleteType(item.id)
+        showToast(toast, {
+            summary: 'Type deleted',
+            detail: `Type: ${item.cleaningType}`,
+            severity: "info"
+        })
+    } catch (error) {
+        typesList.value.data = originalData;
+        showToast(toast, {
+            summary: "Type wasn't deleted",
+            detail: `Type: ${item.cleaningType}`,
+            severity: "error"
+        })
+    }
 };
 
 const handleUpdate = (event: { data: any; newValue: any; field: string }) => {

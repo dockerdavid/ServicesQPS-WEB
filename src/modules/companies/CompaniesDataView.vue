@@ -7,13 +7,14 @@ import EditableDataTable from "../shared/components/EditableDataTable.vue";
 
 import { CompaniesServices } from "./companies.services";
 import type { Company, Companies } from "@/interfaces/companies/companies.interface";
+import genericNullObject from "@/utils/null-data-meta";
+import { showToast } from "@/utils/show-toast";
 
 const toast = useToast();
 
-const companiesList = ref<Companies>({
-    data: [],
-    meta: { hasNextPage: false, hasPreviousPage: false, page: 0, pageCount: 0, take: 0, totalCount: 0 }
-});
+const companiesList = ref<Companies>(
+    genericNullObject
+);
 
 const headers = ref([
     { field: 'companyName', name: 'Company name' },
@@ -21,17 +22,25 @@ const headers = ref([
 
 const editableColumns = ref(['companyName']);
 
-const onDelete = (item: Company) => {
+const onDelete = async (item: Company) => {
+    const originalData = [...companiesList.value.data];
     companiesList.value.data = companiesList.value.data.filter((company) => company.id !== item.id);
-    toast.add({
-        closable: true,
-        life: 5000,
-        summary: 'Company deleted',
-        detail: `Company name: ${item.companyName}`,
-        severity: "info"
-    })
+    try {
+        await CompaniesServices.deleteCompany(item.id)
+        showToast(toast, {
+            summary: 'Company deleted',
+            detail: `Company: ${item.companyName}`,
+            severity: "info"
+        })
+    } catch (error) {
+        companiesList.value.data = originalData;
+        showToast(toast, {
+            summary: "Company wasn't deleted",
+            detail: `Company: ${item.companyName}`,
+            severity: "error"
+        })
+    }
 };
-
 const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
     const { data, newValue, field } = event;
     data[field] = newValue;

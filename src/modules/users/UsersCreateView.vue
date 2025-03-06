@@ -12,13 +12,13 @@
             <MyInputGroup v-model="newUser.email" input-type="input" label="Email" input-id="email" />
             <MyInputGroup v-model="newUser.password" input-type="input" label="Password" input-id="password" />
             <MyInputGroup :options="userRolesOptions" v-model="newUser.roleId" input-type="select" label="Role" input-id="role" />
-            <MyInputGroup v-model="newUser.phoneNumber" input-type="input" label="Phone number"
+            <MyInputGroup v-model="newUser.phoneNumber" input-type="numeric" input-numeric-mode="decimal" label="Phone number"
                 input-id="phone-number" />
 
             <div />
 
             <div>
-                <Button>Create</Button>
+                <LoadingButton @click="createUser" />
             </div>
 
         </template>
@@ -36,6 +36,7 @@ import { Button, useToast } from 'primevue';
 import { UsersServices } from './users.services';
 import type { NewUser, UserRoles } from '@/interfaces/users/users.interface';
 import { computed, onMounted, ref } from 'vue';
+import LoadingButton from '../shared/components/LoadingButton.vue';
 
 
 const toast = useToast();
@@ -61,6 +62,7 @@ const newUser = ref<NewUser>({
 const createUser = async () => {
 
     try {
+        newUser.value.phoneNumber = `+${newUser.value.phoneNumber.toString()}`
         await UsersServices.createUser(newUser.value);
         showToast(toast, { severity: 'success', detail: 'User was created' })
         newUser.value = {

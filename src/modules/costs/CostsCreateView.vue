@@ -40,10 +40,11 @@ const newCost = ref<NewCost>({ amount: '', date: '', description: '' });
 
 
 const createCost = async () => {
+    newCost.value.amount = newCost.value.amount.toString();
     try {
         await CostsServices.createCost(newCost.value)
         showToast(toast, { severity: 'success', summary: 'Cost created' })
-        newCost.value = {amount: '', date: '', description: ''}
+        newCost.value = { amount: '', date: '', description: '' }
     } catch (error) {
         showToast(toast, { severity: 'error', summary: "Cost wasn't created" })
     }

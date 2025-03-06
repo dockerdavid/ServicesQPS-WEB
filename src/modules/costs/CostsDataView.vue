@@ -7,14 +7,13 @@ import EditableDataTable from "../shared/components/EditableDataTable.vue";
 
 import type { Cost, Costs } from "@/interfaces/costs/costs.interface";
 import { CostsServices } from "./costs.services";
+import { showToast } from "@/utils/show-toast";
+import genericNullObject from "@/utils/null-data-meta";
 
 
 const toast = useToast();
 
-const costsList = ref<Costs>({
-    data: [],
-    meta: { hasNextPage: false, hasPreviousPage: false, page: 0, pageCount: 0, take: 0, totalCount: 0 }
-});
+const costsList = ref<Costs>(genericNullObject);
 
 const headers = ref([
     { field: 'date', name: 'Date' },
@@ -23,15 +22,24 @@ const headers = ref([
 
 const editableColumns = ref(['date', 'description']);
 
-const onDelete = (item: Cost) => {
+const onDelete = async (item: Cost) => {
+    const originalData = [...costsList.value.data];
     costsList.value.data = costsList.value.data.filter((cost) => cost.id !== item.id);
-    toast.add({
-        closable: true,
-        life: 5000,
-        summary: 'Costs deleted',
-        detail: `Cost description: ${item.description}`,
-        severity: "info"
-    })
+    try {
+        await CostsServices.deleteCost(item.id)
+        showToast(toast, {
+            summary: 'Extra deleted',
+            detail: `Extra: ${item.description}`,
+            severity: "info"
+        })
+    } catch (error) {
+        costsList.value.data = originalData;
+        showToast(toast, {
+            summary: "Extra wasn't deleted",
+            detail: `Extra: ${item.description}`,
+            severity: "error"
+        })
+    }
 };
 
 const handleUpdate = (event: { data: any; newValue: any; field: string }) => {

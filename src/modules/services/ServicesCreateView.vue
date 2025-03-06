@@ -162,8 +162,9 @@ const unitSizeOptions = [
         value: '5 Bedroom',
     },
 ]
-const createService = async () => {
 
+const createService = async () => {
+    newService.value.unitNumber =  newService.value.unitNumber.toString();
     try {
         await CleanersServices.createService(newService.value);
         showToast(toast, { severity: 'success', detail: 'Type was created' })

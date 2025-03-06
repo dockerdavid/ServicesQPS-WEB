@@ -42,5 +42,14 @@ export class TypesServices {
         }
     }
 
+    static async deleteType(typeId: string) {
+
+        try {
+            await apiServicesQps.delete(`/types/${typeId}`)
+        } catch (error: any) {
+            throw new Error(error)
+        }
+    }
+
 }
 

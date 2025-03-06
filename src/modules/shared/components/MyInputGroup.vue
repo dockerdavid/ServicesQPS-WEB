@@ -11,7 +11,7 @@
             <Select :placeholder="props.placeholder" v-if="props.inputType === 'select'" v-model="modelValue"
                 :labelId="props.inputId" :options="props.options" option-label="label" option-value="value" />
 
-            <InputNumber :placeholder="props.placeholder" :mode="props.inputNumericMode" currency="USD"
+            <InputNumber :useGrouping="false" :placeholder="props.placeholder" :mode="props.inputNumericMode" currency="USD"
                 v-if="props.inputType === 'numeric'" v-model="numericValue" :inputId="props.inputId" />
 
             <InputIcon :placeholder="props.placeholder" v-if="props.inputType !== 'select' && props.icon"

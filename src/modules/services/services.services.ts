@@ -43,4 +43,13 @@ export class CleanersServices {
 
     }
 
+    static async deleteService(serviceId: string) {
+
+        try {
+            await apiServicesQps.delete(`/services/${serviceId}`)
+        } catch (error: any) {
+            throw new Error(error)
+        }
+    }
+
 }
