@@ -1,29 +1,3 @@
-<template>
-
-    <CreateLayout>
-
-        <template #view-title>Create Type</template>
-
-        <template #inputs>
-
-            <MyInputGroup v-model="newType.description" label="Description" input-id="description" input-type="input" />
-            <MyInputGroup v-model="newType.cleaningType" label="Cleaning type" input-id="cleaning-type" input-type="input" />
-            <MyInputGroup v-model="newType.price" label="Price" input-id="price" input-type="numeric" />
-            <MyInputGroup v-model="newType.communityId" :options="communitiesOptions" label="Community" input-id="community" input-type="select" />
-            <MyInputGroup  v-model="newType.commission" label="Commision" input-id="commision" input-type="numeric" />
-
-            <div />
-
-            <div>
-                <LoadingButton @click="createType" />
-            </div>
-
-        </template>
-
-    </CreateLayout>
-
-</template>
-
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useToast } from 'primevue';
@@ -43,9 +17,14 @@ import genericNullObject from '@/utils/null-data-meta';
 
 const toast = useToast();
 
+const breadcrumbRoutes = [
+    { label: 'Types', to: { name: 'types-default' } },
+    { label: 'Create', to: { name: 'type-create' } },
+];
+
 const communities = ref<Communities>(genericNullObject)
 const communitiesOptions = computed(() => {
-    return communities.value.data.map((community)=>{
+    return communities.value.data.map((community) => {
         return {
             label: community.communityName,
             value: community.id
@@ -88,3 +67,31 @@ onMounted(async () => {
 })
 
 </script>
+
+<template>
+
+    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
+
+        <template #view-title>Create Type</template>
+
+        <template #inputs>
+
+            <MyInputGroup v-model="newType.description" label="Description" input-id="description" input-type="input" />
+            <MyInputGroup v-model="newType.cleaningType" label="Cleaning type" input-id="cleaning-type"
+                input-type="input" />
+            <MyInputGroup v-model="newType.price" label="Price" input-id="price" input-type="numeric" />
+            <MyInputGroup v-model="newType.communityId" :options="communitiesOptions" label="Community"
+                input-id="community" input-type="select" />
+            <MyInputGroup v-model="newType.commission" label="Commision" input-id="commision" input-type="numeric" />
+
+            <div />
+
+            <div>
+                <LoadingButton @click="createType" />
+            </div>
+
+        </template>
+
+    </CreateLayout>
+
+</template>

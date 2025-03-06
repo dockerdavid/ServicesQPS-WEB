@@ -1,28 +1,3 @@
-<template>
-    <CreateLayout>
-
-        <template #view-title> Create Community </template>
-
-        <template #inputs>
-
-            <MyInputGroup v-model="newCommunity.communityName" label="Community name" inputId="name"
-                input-type="input" />
-            <MyInputGroup :options="usersOptions" v-model="newCommunity.userId" label="Manager" inputId="manager"
-                input-type="select" />
-            <MyInputGroup :options="companiesOptions" v-model="newCommunity.companyId" label="Company" inputId="company"
-                input-type="select" />
-
-            <div />
-
-            <div>
-                <LoadingButton label="Create" @click="createCommunity"></LoadingButton>
-            </div>
-
-        </template>
-
-    </CreateLayout>
-</template>
-
 <script setup lang="ts">
 
 import CreateLayout from '@/layouts/CreateLayout.vue';
@@ -80,6 +55,10 @@ const createCommunity = async () => {
     }
 }
 
+const breadcrumbRoutes = [
+  { label: 'Communities', to: { name: 'communities-default' } },
+  { label: 'Create', to: { name: 'community-create' } },
+];
 
 onMounted(async () => {
     const [companiesResult, usersResult] = await Promise.all([
@@ -92,4 +71,30 @@ onMounted(async () => {
 
 </script>
 
-<style lang="scss" scoped></style>
+<template>
+    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
+
+        <template #view-title> Create Community </template>
+
+        <template #inputs>
+
+            <MyInputGroup v-model="newCommunity.communityName" label="Community name" inputId="name"
+                input-type="input" />
+            <MyInputGroup :options="usersOptions" v-model="newCommunity.userId" label="Manager" inputId="manager"
+                input-type="select" />
+            <MyInputGroup :options="companiesOptions" v-model="newCommunity.companyId" label="Company" inputId="company"
+                input-type="select" />
+
+            <div />
+
+            <div>
+                <LoadingButton label="Create" @click="createCommunity"></LoadingButton>
+            </div>
+
+        </template>
+
+    </CreateLayout>
+</template>
+
+
+

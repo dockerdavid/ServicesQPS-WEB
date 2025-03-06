@@ -1,32 +1,3 @@
-<template>
-
-    <CreateLayout>
-
-
-        <template #view-title>Create user</template>
-
-
-        <template #inputs>
-
-            <MyInputGroup v-model="newUser.name" input-type="input" label="Name" input-id="name" />
-            <MyInputGroup v-model="newUser.email" input-type="input" label="Email" input-id="email" />
-            <MyInputGroup v-model="newUser.password" input-type="input" label="Password" input-id="password" />
-            <MyInputGroup :options="userRolesOptions" v-model="newUser.roleId" input-type="select" label="Role" input-id="role" />
-            <MyInputGroup v-model="newUser.phoneNumber" input-type="numeric" input-numeric-mode="decimal" label="Phone number"
-                input-id="phone-number" />
-
-            <div />
-
-            <div>
-                <LoadingButton @click="createUser" />
-            </div>
-
-        </template>
-
-    </CreateLayout>
-
-</template>
-
 <script setup lang="ts">
 
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
@@ -41,9 +12,14 @@ import LoadingButton from '../shared/components/LoadingButton.vue';
 
 const toast = useToast();
 
+const breadcrumbRoutes = [
+    { label: 'Users', to: { name: 'users-default' } },
+    { label: 'Create', to: { name: 'user-create' } },
+];
+
 const usersRoles = ref<UserRoles[]>([]);
-const userRolesOptions = computed(()=>{
-    return usersRoles.value?.map((rol)=>{
+const userRolesOptions = computed(() => {
+    return usersRoles.value?.map((rol) => {
         return {
             label: rol.name,
             value: rol.id
@@ -85,3 +61,34 @@ onMounted(async () => {
 
 
 </script>
+
+
+<template>
+
+    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
+
+
+        <template #view-title>Create user</template>
+
+
+        <template #inputs>
+
+            <MyInputGroup v-model="newUser.name" input-type="input" label="Name" input-id="name" />
+            <MyInputGroup v-model="newUser.email" input-type="input" label="Email" input-id="email" />
+            <MyInputGroup v-model="newUser.password" input-type="input" label="Password" input-id="password" />
+            <MyInputGroup :options="userRolesOptions" v-model="newUser.roleId" input-type="select" label="Role"
+                input-id="role" />
+            <MyInputGroup v-model="newUser.phoneNumber" input-type="numeric" input-numeric-mode="decimal"
+                label="Phone number" input-id="phone-number" />
+
+            <div />
+
+            <div>
+                <LoadingButton @click="createUser" />
+            </div>
+
+        </template>
+
+    </CreateLayout>
+
+</template>

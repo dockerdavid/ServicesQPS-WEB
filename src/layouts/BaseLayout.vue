@@ -1,10 +1,26 @@
 <script setup lang="ts">
-import { Button, Card, Chip, Column, DataTable, IconField, InputText, Popover, InputGroupAddon, Breadcrumb } from 'primevue';
+import { Breadcrumb, Button, Card } from 'primevue';
+
+interface BreadcrumbRoute {
+    label: string;
+    to?: object;
+}
+
+const props = defineProps({
+    breadcrumbRoutes: {
+        type: Array as () => BreadcrumbRoute[],
+        required: true,
+    },
+});
+
+
 </script>
 
 <template>
     <div class="py-6">
-        <Breadcrumb :model="[{ label: 'Companies' }, { label: 'Table' }]" />
+
+        <Breadcrumb :model="breadcrumbRoutes" />
+
         <div class="flex justify-between items-center">
             <!-- Slot para el título -->
             <h1 class="text-3xl">

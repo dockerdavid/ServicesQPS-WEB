@@ -3,24 +3,26 @@
 import SharedForm from '@/modules/shared/components/SharedForm.vue';
 import { Breadcrumb } from 'primevue';
 
-import { ref } from "vue";
+interface BreadcrumbRoute {
+  label: string;
+  to?: object;
+}
 
-const home = ref({
-    label: 'Communities',
-    route: '/communities'
+const props = defineProps({
+  breadcrumbRoutes: {
+    type: Array as () => BreadcrumbRoute[],
+    required: true,
+  },
 });
-const items = ref([
-    { label: 'Create'},
-]);
 
 </script>
 
 <template>
     <div class="py-6">
 
-        <Breadcrumb :home="home" :model="items">
+        <Breadcrumb :model="breadcrumbRoutes">
             <template #item="{ item, props }">
-                <router-link v-if="item.route" v-slot="{ href, navigate }" :to="item.route" custom>
+                <router-link v-if="item.to" v-slot="{ href, navigate }" :to="item.to" custom>
                     <a :href="href" v-bind="props.action" @click="navigate">
                         <span :class="[item.icon, 'text-color']" />
                         <span class="text-primary font-semibold">{{ item.label }}</span>
@@ -31,6 +33,9 @@ const items = ref([
                 </a>
             </template>
         </Breadcrumb>
+
+
+
 
         <div>
             <h1 class="text-3xl pb-3">

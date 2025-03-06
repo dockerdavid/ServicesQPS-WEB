@@ -1,52 +1,3 @@
-<template>
-    <CreateLayout>
-        <template #view-title>
-            Create service
-        </template>
-
-        <template #inputs>
-
-            <MyInputGroup inputType="datepicker" label="Date" inputId="date" v-model="newService.date"
-                icon="calendar" />
-
-            <MyInputGroup inputType="datepicker" label="Schedule" inputId="schedule" v-model="newService.schedule"
-                icon="clock" :hourFormat="true" :timeOnly="true" />
-
-            <MyInputGroup :options="unitSizeOptions" inputType="select" label="Unit size" inputId="unit-size" v-model="newService.unitySize" />
-
-            <MyInputGroup inputType="numeric" input-numeric-mode="decimal" label="Unit number" inputId="unit-number" v-model="newService.unitNumber"
-                icon="address-book" />
-
-            <MyInputGroup inputType="select" label="Community" inputId="community" v-model="newService.communityId"
-                :options="communityOptions" />
-
-            <MyInputGroup inputType="select" label="Type" inputId="type" v-model="newService.typeId"
-                :options="typeOptions" />
-
-            <MyInputGroup inputType="select" label="Status" inputId="status" v-model="newService.statusId"
-                :options="statusOptions" />
-
-            <MyInputGroup inputType="select" label="Extras" inputId="extras" v-model="newService.extraId"
-                :options="extrasOptions" />
-
-            <MyInputGroup inputType="select" label="Cleaner" inputId="cleaner" v-model="newService.userId"
-                :options="cleanerOptions" />
-
-            <MyInputGroup inputType="input" label="Comment" inputId="comment" v-model="newService.comment"
-                style="resize:none;" />
-
-
-            <div />
-
-            <div>
-                <LoadingButton @click="createService" />
-            </div>
-
-        </template>
-
-    </CreateLayout>
-</template>
-
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
 
@@ -74,6 +25,11 @@ import { ExtrasServices } from '../extras/extras.services';
 import { UsersServices } from '../users/users.services';
 
 const toast = useToast();
+
+const breadcrumbRoutes = [
+    { label: 'Services', to: { name: 'services-default' } },
+    { label: 'Create', to: { name: 'service-create' } },
+];
 
 const newService = ref<CreateService>({
     date: moment().format('YYYY-MM-DD'),
@@ -164,7 +120,7 @@ const unitSizeOptions = [
 ]
 
 const createService = async () => {
-    newService.value.unitNumber =  newService.value.unitNumber.toString();
+    newService.value.unitNumber = newService.value.unitNumber.toString();
     try {
         await CleanersServices.createService(newService.value);
         showToast(toast, { severity: 'success', detail: 'Type was created' })
@@ -205,3 +161,53 @@ onMounted(async () => {
 })
 
 </script>
+
+<template>
+    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
+        <template #view-title>
+            Create service
+        </template>
+
+        <template #inputs>
+
+            <MyInputGroup inputType="datepicker" label="Date" inputId="date" v-model="newService.date"
+                icon="calendar" />
+
+            <MyInputGroup inputType="datepicker" label="Schedule" inputId="schedule" v-model="newService.schedule"
+                icon="clock" :hourFormat="true" :timeOnly="true" />
+
+            <MyInputGroup :options="unitSizeOptions" inputType="select" label="Unit size" inputId="unit-size"
+                v-model="newService.unitySize" />
+
+            <MyInputGroup inputType="numeric" input-numeric-mode="decimal" label="Unit number" inputId="unit-number"
+                v-model="newService.unitNumber" icon="address-book" />
+
+            <MyInputGroup inputType="select" label="Community" inputId="community" v-model="newService.communityId"
+                :options="communityOptions" />
+
+            <MyInputGroup inputType="select" label="Type" inputId="type" v-model="newService.typeId"
+                :options="typeOptions" />
+
+            <MyInputGroup inputType="select" label="Status" inputId="status" v-model="newService.statusId"
+                :options="statusOptions" />
+
+            <MyInputGroup inputType="select" label="Extras" inputId="extras" v-model="newService.extraId"
+                :options="extrasOptions" />
+
+            <MyInputGroup inputType="select" label="Cleaner" inputId="cleaner" v-model="newService.userId"
+                :options="cleanerOptions" />
+
+            <MyInputGroup inputType="input" label="Comment" inputId="comment" v-model="newService.comment"
+                style="resize:none;" />
+
+
+            <div />
+
+            <div>
+                <LoadingButton @click="createService" />
+            </div>
+
+        </template>
+
+    </CreateLayout>
+</template>

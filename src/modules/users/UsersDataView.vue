@@ -1,92 +1,34 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
-import { IconField, InputIcon, InputText, useToast } from 'primevue';
-
-import BaseLayout from '@/layouts/BaseLayout.vue';
-import EditableDataTable from "../shared/components/EditableDataTable.vue";
-import type { User, Users } from "@/interfaces/users/users.interface";
+import GenericDataView from "../shared/views/GenericDataView.vue";
 import { UsersServices } from "./users.services";
-import { showToast } from "@/utils/show-toast";
 
-
-const toast = useToast();
-
-const usersList = ref<Users>({
-    data: [],
-    meta: { hasNextPage: false, hasPreviousPage: false, page: 0, pageCount: 0, take: 0, totalCount: 0 }
-});
-const currentPage = ref(1); 
-const rowsPerPage = ref(10); 
-
-const headers = ref([
-    { field: 'name', name: 'Name' },
-    { field: 'email', name: 'Email' },
-    { field: 'role.name', name: 'Role' },
-    { field: 'phoneNumber', name: 'Phone number' },
-]);
-
-const fetchUsers = async() =>{
-    usersList.value = await UsersServices.getUsers(currentPage.value, rowsPerPage.value);
-}
-
-const editableColumns = ref(['companyName']);
-
-const onDelete = async (item: User) => {
-    const originalData = [...usersList.value.data];
-    usersList.value.data = usersList.value.data.filter((user) => user.id !== item.id);
-    try {
-        await UsersServices.deleteUser(item.id)
-        showToast(toast, {
-            summary: 'User deleted',
-            detail: `User: ${item.name} - ${item.email}`,
-            severity: "info"
-        })
-    } catch (error) {
-        usersList.value.data = originalData;
-        showToast(toast, {
-            summary: "User wasn't deleted",
-            detail: `User: ${item.name} - ${item.email}`,
-            severity: "error"
-        })
-    }
-};
-const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
-    const { data, newValue, field } = event;
-    data[field] = newValue;
-    fetchUsers();
+const fetchUsers = async (page: number, rows: number) => {
+    return await UsersServices.getUsers(page, rows);
 };
 
-const handlePageChange = (event: any) => {
-    currentPage.value = event.page + 1;
-    rowsPerPage.value = event.rows;
-    fetchUsers(); 
+const deleteUser = async (id: string) => {
+    return await UsersServices.deleteUser(id);
 };
 
+const updateUser = async (data: any) => {
 
-onMounted(async () => {
-    fetchUsers();
-})
+};
 
 </script>
 
 <template>
-    <BaseLayout>
-        <template #view-title>Users</template>
-        <template #create-new>
-            <router-link to="/users/create">New user</router-link>
-        </template>
-        <template #header-search>
-            <IconField>
-                <InputIcon class="pi pi-search" />
-                <InputText placeholder="Search" />
-            </IconField>
-        </template>
-        <template #card-content>
-            <EditableDataTable :data="usersList.data" :headers="headers" :editableColumns="editableColumns"
-                :onDelete="onDelete" @update="handleUpdate" @page-change="handlePageChange"
-                :total-records="usersList.meta.totalCount" />
-        </template>
-    </BaseLayout>
+    <GenericDataView
+        view-title="Users"
+        create-new-route="/users/create"
+        :headers="[
+            { field: 'name', name: 'Name' },
+            { field: 'email', name: 'Email' },
+            { field: 'role.name', name: 'Role' },
+            { field: 'phoneNumber', name: 'Phone number' }
+        ]"
+        :editable-columns="['name', 'email']"
+        :fetch-data="fetchUsers"
+        :delete-data="deleteUser"
+        :update-data="updateUser"
+    />
 </template>
-
-<style scoped></style>
