@@ -74,8 +74,7 @@ export class CommunitiesServices {
     static async updateCommunity(communityId: string, changedValue: NewCommunity) {
 
         if(!communityId) return
-        console.log(communityId);
-        console.log(changedValue);
+
         this.store.setIsLoading(true)
 
         try {

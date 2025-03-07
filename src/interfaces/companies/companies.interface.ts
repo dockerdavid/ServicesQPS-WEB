@@ -12,3 +12,8 @@ export interface Company {
     updatedAt: Date;
 }
 
+export interface UpdateCompany {
+    id: string;
+    companyName: string;
+}
+

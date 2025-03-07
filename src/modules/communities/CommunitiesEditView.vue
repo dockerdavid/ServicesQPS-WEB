@@ -41,7 +41,7 @@ const usersOptions = computed(() => {
     })
 })
 
-const newCommunity = ref<NewCommunity>({
+const updatedCommunity = ref<NewCommunity>({
     communityName: '',
     companyId: '',
     userId: '',
@@ -52,7 +52,7 @@ const updateCommunity = async () => {
 
     if (!currentCommunity.value?.id!) return
     try {
-        await CommunitiesServices.updateCommunity(currentCommunity.value!.id, newCommunity.value);
+        await CommunitiesServices.updateCommunity(currentCommunity.value!.id, updatedCommunity.value);
 
         showToast(toast, { severity: 'success', summary: 'Community updated' })
     } catch (error) {
@@ -80,7 +80,7 @@ onMounted(async () => {
 
 
     if (currentCommunity.value) {
-        newCommunity.value = {
+        updatedCommunity.value = {
             communityName: currentCommunity.value.communityName || '',
             companyId: currentCommunity.value.company?.id || '',
             userId: currentCommunity.value.user?.id || '',
@@ -99,11 +99,11 @@ onMounted(async () => {
 
         <template #inputs>
 
-            <MyInputGroup v-model="newCommunity.communityName" label="Community name" inputId="name"
+            <MyInputGroup v-model="updatedCommunity.communityName" label="Community name" inputId="name"
                 input-type="input" />
-            <MyInputGroup :options="usersOptions" v-model="newCommunity.userId" label="Manager" inputId="manager"
+            <MyInputGroup :options="usersOptions" v-model="updatedCommunity.userId" label="Manager" inputId="manager"
                 input-type="select" />
-            <MyInputGroup :options="companiesOptions" v-model="newCommunity.companyId" label="Company" inputId="company"
+            <MyInputGroup :options="companiesOptions" v-model="updatedCommunity.companyId" label="Company" inputId="company"
                 input-type="select" />
 
             <div />
