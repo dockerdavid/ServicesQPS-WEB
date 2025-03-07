@@ -5,6 +5,7 @@ import BaseLayout from '@/layouts/BaseLayout.vue';
 import { showToast } from "@/utils/show-toast";
 import EditableDataTable from "../components/EditableDataTable.vue";
 
+
 interface Header {
     field: string;
     name: string;
@@ -63,10 +64,34 @@ const onDelete = async (item: any) => {
     }
 };
 
-const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
+
+const handleUpdate = async (event: { data: any; newValue: any; field: string }) => {
+
     const { data, newValue, field } = event;
+
+    const originalValue = data[field];
+
     data[field] = newValue;
-    props.updateData(data);
+
+    try {
+        await props.updateData(data);
+
+        showToast(toast, {
+            summary: 'Update successful',
+            detail: `Field: ${field}`,
+            severity: "success"
+        });
+
+    } catch (error) {
+
+        data[field] = originalValue;
+
+        showToast(toast, {
+            summary: "Update failed",
+            detail: `Field: ${field}`,
+            severity: "error"
+        });
+    }
 };
 
 const debounce = (fn: Function, delay: number) => {

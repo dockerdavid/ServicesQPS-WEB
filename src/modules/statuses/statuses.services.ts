@@ -3,13 +3,14 @@ import type { Status } from "@/interfaces/services/services.interface";
 import type { Statuses } from "@/interfaces/statuses/statuses.interface";
 import { useGlobalStateStore } from "@/store/auth.store";
 import genericNullObject from "@/utils/null-data-meta";
+import { removeTimestamps } from "@/utils/remove-time-stamps";
 
 
 export class StatusesServices {
 
     static store = useGlobalStateStore();
 
-    static async getStatuses(page: number = 1, take:number = 10): Promise<Statuses> {
+    static async getStatuses(page: number = 1, take: number = 10): Promise<Statuses> {
 
         this.store.setIsLoading(true)
 
@@ -40,12 +41,12 @@ export class StatusesServices {
     }
 
     static async deleteStatus(statusId: string) {
-        
+
         try {
             await apiServicesQps.delete(`/statuses/${statusId}`)
         } catch (error: any) {
             throw new Error(error)
-        } 
+        }
     }
 
     static async searchStatus(searchWord: string): Promise<Status[]> {
@@ -60,4 +61,12 @@ export class StatusesServices {
         }
     }
 
+    static async editStatus(status:Status) {
+        try {
+            const cleanedStatus = removeTimestamps(status);
+            await apiServicesQps.patch(`/statuses/${status.id}`, cleanedStatus)
+        } catch (error:any) {
+            throw new Error(error)
+        }
+    }
 }

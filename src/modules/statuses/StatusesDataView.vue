@@ -1,5 +1,6 @@
 <script setup lang="ts">
 
+import type { Status } from "@/interfaces/services/services.interface";
 import GenericDataView from "../shared/views/GenericDataView.vue";
 import { StatusesServices } from "./statuses.services";
 
@@ -11,13 +12,14 @@ const deleteStatus = async (id: string) => {
     return await StatusesServices.deleteStatus(id);
 };
 
-const updateStatus = async (data: any) => {
-
-};
 
 const searchStatus = async (searchWord: any) => {
     return await StatusesServices.searchStatus(searchWord)
 };
+
+const updateStatus = async (status:Status) =>{
+    return await StatusesServices.editStatus(status)
+}
 
 </script>
 

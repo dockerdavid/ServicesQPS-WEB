@@ -1,3 +1,69 @@
+<script setup lang="ts">
+import { ref, computed } from "vue";
+import { useToast } from 'primevue/usetoast';
+import { Column, DataTable, InputText, Button, Skeleton, Paginator } from "primevue";
+import MyDeleteToast from "./MyDeleteToast.vue";
+import { useGlobalStateStore } from "@/store/auth.store";
+import { storeToRefs } from "pinia";
+
+interface TableI {
+    data: any[];
+    headers: { field: string; name: string; style?: string }[];
+    editableColumns: string[];
+    onDelete: (item: any) => void;
+    totalRecords: number;
+}
+
+const { isLoading } = storeToRefs(useGlobalStateStore());
+const loadingEdit = ref(false);
+
+const props = defineProps<TableI>();
+const emit = defineEmits(['update', 'page-change']);
+const toast = useToast();
+
+
+const rows = ref(10); 
+const first = ref(0); 
+
+const onPageChange = (event: any) => {
+    first.value = event.first; 
+    rows.value = event.rows; 
+    emit('page-change', event);
+};
+
+
+const onCellEditComplete = async (event: { data: any; newValue: any; field: string }) => {
+    const { data, newValue, field } = event;
+
+    if (data[field] === newValue) return;
+
+    emit('update', { data, newValue, field });
+};
+
+const itemToDelete = ref<any>(null);
+
+const showDeleteToast = (item: any) => {
+    itemToDelete.value = item;
+    toast.add({
+        severity: 'error',
+        summary: 'Delete item?',
+        group: 'bc',
+    });
+};
+
+const handleDelete = () => {
+    if (itemToDelete.value) {
+        props.onDelete(itemToDelete.value);
+        itemToDelete.value = null;
+        toast.removeGroup('bc');
+    }
+};
+
+const closeDeleteToast = () => {
+    toast.removeGroup('bc');
+};
+</script>
+
 <template>
     <div>
         <div v-if="isLoading" class="flex flex-col gap-y-2 py-4">
@@ -60,96 +126,3 @@
     </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed } from "vue";
-import { useToast } from 'primevue/usetoast';
-import { Column, DataTable, InputText, Button, Skeleton, Paginator } from "primevue";
-import MyDeleteToast from "./MyDeleteToast.vue";
-import { useGlobalStateStore } from "@/store/auth.store";
-import { storeToRefs } from "pinia";
-
-interface TableI {
-    data: any[];
-    headers: { field: string; name: string; style?: string }[];
-    editableColumns: string[];
-    onDelete: (item: any) => void;
-    totalRecords: number;
-}
-
-const { isLoading } = storeToRefs(useGlobalStateStore());
-const loadingEdit = ref(false);
-
-const props = defineProps<TableI>();
-const emit = defineEmits(['update', 'page-change']);
-const toast = useToast();
-
-
-const rows = ref(10); 
-const first = ref(0); 
-
-const onPageChange = (event: any) => {
-    first.value = event.first; 
-    rows.value = event.rows; 
-    emit('page-change', event);
-};
-
-
-const simulateRequest = async (): Promise<boolean> => {
-    loadingEdit.value = true;
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const success = Math.random() < 0.8;
-            resolve(success);
-            loadingEdit.value = false;
-        }, 1000);
-    });
-};
-
-const onCellEditComplete = async (event: { data: any; newValue: any; field: string }) => {
-    const { data, newValue, field } = event;
-
-    if (data[field] === newValue) return;
-
-    const success = await simulateRequest();
-
-    if (success) {
-        emit('update', { data, newValue, field });
-        toast.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Data was updated',
-            life: 3000,
-        });
-    } else {
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Data was not updated',
-            life: 3000,
-        });
-    }
-};
-
-const itemToDelete = ref<any>(null);
-
-const showDeleteToast = (item: any) => {
-    itemToDelete.value = item;
-    toast.add({
-        severity: 'error',
-        summary: 'Delete item?',
-        group: 'bc',
-    });
-};
-
-const handleDelete = () => {
-    if (itemToDelete.value) {
-        props.onDelete(itemToDelete.value);
-        itemToDelete.value = null;
-        toast.removeGroup('bc');
-    }
-};
-
-const closeDeleteToast = () => {
-    toast.removeGroup('bc');
-};
-</script>
