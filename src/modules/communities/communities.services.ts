@@ -57,8 +57,34 @@ export class CommunitiesServices {
         }
     }
 
-    /*  static async editCommunity(community: Community, changedValue: any) {
-         apiServicesQps.patch(`/communities/${community.id}`, { ...community, changedValue })
-     } */
+    static async getCommunityById(id: string): Promise<Community> {
+
+        this.store.setIsLoading(true)
+
+        try {
+            const { data } = await apiServicesQps.get<Community>(`/communities/${id}`)
+            return data
+        } catch (error: any) {
+            throw new Error(error)
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
+
+    static async updateCommunity(communityId: string, changedValue: NewCommunity) {
+
+        if(!communityId) return
+        console.log(communityId);
+        console.log(changedValue);
+        this.store.setIsLoading(true)
+
+        try {
+            await apiServicesQps.patch(`/communities/${communityId}`, changedValue)
+        } catch (error:any) {
+            throw new Error(error)
+        }finally{
+            this.store.setIsLoading(false)
+        }
+    }
 
 }

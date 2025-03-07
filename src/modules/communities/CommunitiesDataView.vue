@@ -21,7 +21,7 @@ const searchCommunity = async (searchWord: any) => {
 </script>
 
 <template>
-    <GenericDataView view-title="Communities" create-new-route="/communities/create" :headers="[
+    <GenericDataView view-title="Communities" :headers="[
         { field: 'communityName', name: 'Community name', style: 'width: 25%' },
         { field: 'user.name', name: 'Manager', style: 'width: 25%' },
         { field: 'company.companyName', name: 'Company', style: 'width: 25%' }

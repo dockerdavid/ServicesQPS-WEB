@@ -14,7 +14,7 @@ const toast = useToast();
 
 const breadcrumbRoutes = [
     { label: 'Users', to: { name: 'users-default' } },
-    { label: 'Create', to: { name: 'users-create' } },
+    { label: 'Edit', to: { name: 'users-edit' } },
 ];
 
 const usersRoles = ref<UserRoles[]>([]);
@@ -40,7 +40,7 @@ const createUser = async () => {
     try {
         newUser.value.phoneNumber = `+${newUser.value.phoneNumber.toString()}`
         await UsersServices.createUser(newUser.value);
-        showToast(toast, { severity: 'success', detail: 'User was created' })
+        showToast(toast, { severity: 'success', detail: 'User was updated' })
         newUser.value = {
             email: '',
             name: '',
@@ -49,7 +49,7 @@ const createUser = async () => {
             roleId: ''
         }
     } catch (error) {
-        showToast(toast, { severity: 'error', summary: "User wasn't created" })
+        showToast(toast, { severity: 'error', summary: "User wasn't updated" })
     }
 
 }
@@ -68,7 +68,7 @@ onMounted(async () => {
     <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
 
 
-        <template #view-title>Create user</template>
+        <template #view-title>Edit user</template>
 
 
         <template #inputs>

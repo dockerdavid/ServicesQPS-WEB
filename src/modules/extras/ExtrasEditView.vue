@@ -12,7 +12,7 @@ const toast = useToast();
 
 const breadcrumbRoutes = [
     { label: 'Extras', to: { name: 'extras-default' } },
-    { label: 'Create', to: { name: 'extras-create' } },
+    { label: 'Edit', to: { name: 'extras-edit' } },
 ];
 
 const newExtra = ref<NewExtra>({
@@ -24,14 +24,14 @@ const newExtra = ref<NewExtra>({
 const createNewExtra = async () => {
     try {
         await ExtrasServices.createExtra(newExtra.value);
-        showToast(toast, { severity: 'success', summary: 'Extra was created' })
+        showToast(toast, { severity: 'success', summary: 'Extra was updated' })
         newExtra.value = {
             commission: 0,
             item: '',
             itemPrice: 0
         }
     } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Extra wasn't created" })
+        showToast(toast, { severity: 'error', summary: "Extra wasn't updated" })
     }
 }
 
@@ -40,7 +40,7 @@ const createNewExtra = async () => {
 <template>
     <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
 
-        <template #view-title> Create Extra </template>
+        <template #view-title> Edit Extra </template>
 
         <template #inputs>
 

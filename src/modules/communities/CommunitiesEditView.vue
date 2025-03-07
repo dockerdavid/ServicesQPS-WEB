@@ -5,7 +5,7 @@ import { computed, onMounted, ref } from 'vue';
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
 import LoadingButton from '../shared/components/LoadingButton.vue';
 import { CommunitiesServices } from './communities.services';
-import type { NewCommunity } from '@/interfaces/communities/communities.interface';
+import type { Community, NewCommunity } from '@/interfaces/communities/communities.interface';
 import { CompaniesServices } from '../companies/companies.services';
 import type { Companies } from '@/interfaces/companies/companies.interface';
 import genericNullObject from '@/utils/null-data-meta';
@@ -13,9 +13,14 @@ import type { Users } from '@/interfaces/users/users.interface';
 import { UsersServices } from '../users/users.services';
 import { useToast } from 'primevue';
 import { showToast } from '@/utils/show-toast';
+import { useRoute } from 'vue-router';
 
 const toast = useToast();
 
+const route = useRoute();
+const currentCommunityId = route.params.id as string;
+
+const currentCommunity = ref<Community>();
 const companies = ref<Companies>(genericNullObject);
 const companiesOptions = computed(() => {
     return companies.value.data.map((company) => {
@@ -39,35 +44,50 @@ const usersOptions = computed(() => {
 const newCommunity = ref<NewCommunity>({
     communityName: '',
     companyId: '',
-    userId: ''
-})
+    userId: '',
+    id: ''
+});
 
-const createCommunity = async () => {
+const updateCommunity = async () => {
+
+    if (!currentCommunity.value?.id!) return
     try {
-        await CommunitiesServices.createCommunity(newCommunity.value);
-        newCommunity.value = {
-            communityName: '',
-            companyId: '',
-            userId: ''
-        }
-        showToast(toast,{ severity: 'success', summary: 'Community created' })
+        await CommunitiesServices.updateCommunity(currentCommunity.value!.id, newCommunity.value);
+
+        showToast(toast, { severity: 'success', summary: 'Community updated' })
     } catch (error) {
-        showToast(toast,{ severity: 'error', summary: "Community wasn't created" })
+        showToast(toast, { severity: 'error', summary: "Community wasn't updated" })
     }
 }
 
 const breadcrumbRoutes = [
-  { label: 'Communities', to: { name: 'communities-default' } },
-  { label: 'Create', to: { name: 'communities-create' } },
+    { label: 'Communities', to: { name: 'communities-default' } },
+    { label: 'Edit', to: { name: 'communities-edit' } },
 ];
 
+
+
 onMounted(async () => {
-    const [companiesResult, usersResult] = await Promise.all([
+    const [companiesResult, usersResult, communityResult] = await Promise.all([
         CompaniesServices.getCompanies(),
-        UsersServices.getUsers()
+        UsersServices.getUsers(undefined, 50),
+        CommunitiesServices.getCommunityById(currentCommunityId)
     ]);
+
     companies.value = companiesResult;
     users.value = usersResult;
+    currentCommunity.value = communityResult;
+
+
+    if (currentCommunity.value) {
+        newCommunity.value = {
+            communityName: currentCommunity.value.communityName || '',
+            companyId: currentCommunity.value.company?.id || '',
+            userId: currentCommunity.value.user?.id || '',
+            id: currentCommunity.value.id || ''
+        };
+    }
+
 });
 
 </script>
@@ -75,7 +95,7 @@ onMounted(async () => {
 <template>
     <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
 
-        <template #view-title> Create Community </template>
+        <template #view-title> Edit Community </template>
 
         <template #inputs>
 
@@ -89,13 +109,10 @@ onMounted(async () => {
             <div />
 
             <div>
-                <LoadingButton label="Create" @click="createCommunity"></LoadingButton>
+                <LoadingButton label="Create" @click="updateCommunity"></LoadingButton>
             </div>
 
         </template>
 
     </CreateLayout>
 </template>
-
-
-

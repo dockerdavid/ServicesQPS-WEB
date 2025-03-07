@@ -13,7 +13,7 @@ const toast = useToast();
 
 const breadcrumbRoutes = [
     { label: 'Statuses', to: { name: 'statuses-default' } },
-    { label: 'Create', to: { name: 'statuses-create' } },
+    { label: 'Edit', to: { name: 'statuses-edit' } },
 ];
 
 const createStatus = async () => {
@@ -21,10 +21,10 @@ const createStatus = async () => {
     try {
         console.log(statusName.value)
         await StatusesServices.createStatus(statusName.value);
-        showToast(toast, { severity: 'success', summary: 'Status created' })
+        showToast(toast, { severity: 'success', summary: 'Status updated' })
         statusName.value = '';
     } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Status wasn't created" })
+        showToast(toast, { severity: 'error', summary: "Status wasn't updated" })
     }
 }
 
@@ -35,7 +35,7 @@ const createStatus = async () => {
 
     <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
 
-        <template #view-title>Create Status</template>
+        <template #view-title>Edit Status</template>
 
         <template #inputs>
 

@@ -12,17 +12,17 @@ const toast = useToast();
 
 const breadcrumbRoutes = [
     { label: 'Companies', to: { name: 'companies-default' } },
-    { label: 'Create', to: { name: 'companies-create' } },
+    { label: 'Edit', to: { name: 'companies-edit' } },
 ];
 
 const createCompany = async () => {
 
     try {
         await CompaniesServices.createCompany(companyName.value);
-        showToast(toast, { severity: 'success', summary: 'Community created' })
+        showToast(toast, { severity: 'success', summary: 'Company updated' })
         companyName.value = '';
     } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Community wasn't created" })
+        showToast(toast, { severity: 'error', summary: "Company wasn't updated" })
     }
 
 }
@@ -32,7 +32,7 @@ const createCompany = async () => {
 <template>
     <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
 
-        <template #view-title> Create Company </template>
+        <template #view-title> Edit Company </template>
 
         <template #inputs>
 

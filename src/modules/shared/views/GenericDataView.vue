@@ -14,7 +14,6 @@ interface Header {
 
 interface Props {
     viewTitle: string;
-    createNewRoute: string;
     headers: Header[];
     editableColumns: string[];
     fetchData: (page: number, rows: number) => Promise<any>;
@@ -64,35 +63,8 @@ const onDelete = async (item: any) => {
     }
 };
 
-
-const handleUpdate = async (event: { data: any; newValue: any; field: string }) => {
-
-    const { data, newValue, field } = event;
-
-    const originalValue = data[field];
-
-    data[field] = newValue;
-
-    try {
-        await props.updateData(data);
-
-        showToast(toast, {
-            summary: 'Update successful',
-            detail: `Field: ${field}`,
-            severity: "success"
-        });
-
-    } catch (error) {
-
-        data[field] = originalValue;
-
-        showToast(toast, {
-            summary: "Update failed",
-            detail: `Field: ${field}`,
-            severity: "error"
-        });
-    }
-};
+const editRoute = `${props.viewTitle.toLocaleLowerCase()}`
+const createNewRoute = `${props.viewTitle.toLowerCase()}-create`
 
 const debounce = (fn: Function, delay: number) => {
     let timeoutId: number;
@@ -127,14 +99,14 @@ const handlePageChange = (event: any) => {
 onMounted(async () => {
     fetchDataList();
 });
-</script>
 
+</script>
 <template>
     <BaseLayout :breadcrumbRoutes="breadcrumbRoutes">
 
         <template #view-title>{{ viewTitle }}</template>
         <template #create-new>
-            <router-link :to="createNewRoute">New {{ viewTitle.toLowerCase() }}</router-link>
+            <router-link :to="{name: createNewRoute}">New {{ viewTitle.toLowerCase() }}</router-link>
         </template>
         <template #header-search>
             <IconField>
@@ -144,8 +116,8 @@ onMounted(async () => {
         </template>
         <template #card-content>
             <EditableDataTable :data="dataList.data" :headers="headers" :editableColumns="editableColumns"
-                :onDelete="onDelete" @update="handleUpdate" @page-change="handlePageChange"
-                :total-records="dataList.meta.totalCount" />
+                :onDelete="onDelete" @page-change="handlePageChange"
+                :total-records="dataList.meta.totalCount" :edit-route="editRoute" />
         </template>
     </BaseLayout>
 </template>

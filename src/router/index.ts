@@ -40,8 +40,13 @@ const router = createRouter({
             },
             {
               path: 'create',
-              name: 'community-create',
+              name: 'communities-create',
               component: () => import('../modules/communities/CommunitiesCreateView.vue'),
+            },
+            {
+              path: 'edit/:id',
+              name: 'communities-edit',
+              component: () => import('../modules/communities/CommunitiesEditView.vue'),
             },
           ],
         },
@@ -57,8 +62,13 @@ const router = createRouter({
             },
             {
               path: 'create',
-              name: 'company-create',
+              name: 'companies-create',
               component: () => import('../modules/companies/CompaniesCreateView.vue'),
+            },
+            {
+              path: 'edit/:id',
+              name: 'companies-edit',
+              component: () => import('../modules/companies/CompaniesEditView.vue'),
             },
           ],
         },
@@ -74,8 +84,13 @@ const router = createRouter({
             },
             {
               path: 'create',
-              name: 'cost-create',
+              name: 'costs-create',
               component: () => import('../modules/costs/CostsCreateView.vue'),
+            },
+            {
+              path: 'edit/:id',
+              name: 'costs-edit',
+              component: () => import('../modules/costs/CostsEditView.vue'),
             },
           ],
         },
@@ -91,8 +106,13 @@ const router = createRouter({
             },
             {
               path: 'create',
-              name: 'extra-create',
+              name: 'extras-create',
               component: () => import('../modules/extras/ExtrasCreateView.vue'),
+            },
+            {
+              path: 'edit/:id',
+              name: 'extras-edit',
+              component: () => import('../modules/extras/ExtrasEditView.vue'),
             },
           ],
         },
@@ -108,8 +128,13 @@ const router = createRouter({
             },
             {
               path: 'create',
-              name: 'service-create',
+              name: 'services-create',
               component: () => import('../modules/services/ServicesCreateView.vue'),
+            },
+            {
+              path: 'edit/:id',
+              name: 'services-edit',
+              component: () => import('../modules/services/ServicesEditView.vue'),
             },
           ],
         },
@@ -125,8 +150,13 @@ const router = createRouter({
             },
             {
               path: 'create',
-              name: 'status-create',
+              name: 'statuses-create',
               component: () => import('../modules/statuses/StatusesCreateView.vue'),
+            },
+            {
+              path: 'edit/:id',
+              name: 'statuses-edit',
+              component: () => import('../modules/statuses/StatusesEditView.vue'),
             },
           ],
         },
@@ -142,8 +172,13 @@ const router = createRouter({
             },
             {
               path: 'create',
-              name: 'type-create',
+              name: 'types-create',
               component: () => import('../modules/types/TypesCreateView.vue'),
+            },
+            {
+              path: 'edit/:id',
+              name: 'types-edit',
+              component: () => import('../modules/types/TypesEditView.vue'),
             },
           ],
         },
@@ -159,8 +194,13 @@ const router = createRouter({
             },
             {
               path: 'create',
-              name: 'user-create',
+              name: 'users-create',
               component: () => import('../modules/users/UsersCreateView.vue'),
+            },
+            {
+              path: 'edit/:id',
+              name: 'users-edit',
+              component: () => import('../modules/users/UsersEditView.vue'),
             },
           ],
         },
@@ -174,6 +214,4 @@ const router = createRouter({
   ],
 });
 
-
 export default router;
-

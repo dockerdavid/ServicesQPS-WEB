@@ -16,17 +16,17 @@ const newCost = ref<NewCost>({ amount: '', date: '', description: '' });
 
 const breadcrumbRoutes = [
     { label: 'Costs', to: { name: 'costs-default' } },
-    { label: 'Create', to: { name: 'costs-create' } },
+    { label: 'Edit', to: { name: 'costs-edit' } },
 ];
 
 const createCost = async () => {
     newCost.value.amount = newCost.value.amount.toString();
     try {
         await CostsServices.createCost(newCost.value)
-        showToast(toast, { severity: 'success', summary: 'Cost created' })
+        showToast(toast, { severity: 'success', summary: 'Cost updated' })
         newCost.value = { amount: '', date: '', description: '' }
     } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Cost wasn't created" })
+        showToast(toast, { severity: 'error', summary: "Cost wasn't updated" })
     }
 }
 
@@ -36,7 +36,7 @@ const createCost = async () => {
 <template>
     <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
 
-        <template #view-title> Create Cost </template>
+        <template #view-title> Edit Cost </template>
 
         <template #inputs>
 

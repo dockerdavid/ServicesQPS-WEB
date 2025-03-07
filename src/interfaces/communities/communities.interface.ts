@@ -19,6 +19,7 @@ export interface NewCommunity {
     communityName: string;
     userId: string;
     companyId: string;
+    id:string
 }
 
 export interface Company {

@@ -51,16 +51,8 @@ const createModuleStructure = (moduleName) => {
   // Crear los archivos básicos del módulo (si no existen)
   const files = [
     {
-      name: `${capitalizedModuleName}View.vue`,
-      content: `<template><div>${capitalizedModuleName} View</div></template>`,
-    },
-    {
-      name: `${capitalizedModuleName}DataView.vue`,
-      content: `<template><div>${capitalizedModuleName} Data View (Tabla de datos)</div></template>`,
-    },
-    {
-      name: `${capitalizedModuleName}CreateView.vue`,
-      content: `<template><div>${capitalizedModuleName} Create View (Formulario)</div></template>`,
+      name: `${capitalizedModuleName}EditView.vue`,
+      content: `<template><div>${capitalizedModuleName} Edit View (Formulario)</div></template>`,
     },
   ];
 

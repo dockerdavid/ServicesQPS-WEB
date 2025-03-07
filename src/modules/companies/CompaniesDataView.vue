@@ -22,7 +22,7 @@ const searchCompany = async (searchWord: any) => {
 </script>
 
 <template>
-    <GenericDataView view-title="Companies" create-new-route="/companies/create" :headers="[
+    <GenericDataView view-title="Companies" :headers="[
         { field: 'companyName', name: 'Company name' },
     ]" :editable-columns="['name', 'email']" :fetch-data="fetchCompanies" :delete-data="deleteCompany"
         :update-data="updateCompany" :search-data="searchCompany" />

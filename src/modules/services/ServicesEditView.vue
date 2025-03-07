@@ -28,7 +28,7 @@ const toast = useToast();
 
 const breadcrumbRoutes = [
     { label: 'Services', to: { name: 'services-default' } },
-    { label: 'Create', to: { name: 'services-create' } },
+    { label: 'Edit', to: { name: 'services-edit' } },
 ];
 
 const newService = ref<CreateService>({
@@ -123,7 +123,7 @@ const createService = async () => {
     newService.value.unitNumber = newService.value.unitNumber.toString();
     try {
         await CleanersServices.createService(newService.value);
-        showToast(toast, { severity: 'success', detail: 'Type was created' })
+        showToast(toast, { severity: 'success', detail: 'Type was updated' })
         newService.value = {
             date: moment().format('YYYY-MM-DD'),
             schedule: moment().format('HH:mm:ss'),
@@ -138,7 +138,7 @@ const createService = async () => {
             userId: ''
         }
     } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Type wasn't created" })
+        showToast(toast, { severity: 'error', summary: "Type wasn't updated" })
     }
 
 }
@@ -165,7 +165,7 @@ onMounted(async () => {
 <template>
     <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
         <template #view-title>
-            Create service
+            Edit service
         </template>
 
         <template #inputs>

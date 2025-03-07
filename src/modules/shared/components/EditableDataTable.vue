@@ -5,6 +5,7 @@ import { Column, DataTable, InputText, Button, Skeleton, Paginator } from "prime
 import MyDeleteToast from "./MyDeleteToast.vue";
 import { useGlobalStateStore } from "@/store/auth.store";
 import { storeToRefs } from "pinia";
+import router from "@/router";
 
 interface TableI {
     data: any[];
@@ -12,33 +13,28 @@ interface TableI {
     editableColumns: string[];
     onDelete: (item: any) => void;
     totalRecords: number;
+    editRoute: string;
 }
 
 const { isLoading } = storeToRefs(useGlobalStateStore());
-const loadingEdit = ref(false);
 
 const props = defineProps<TableI>();
 const emit = defineEmits(['update', 'page-change']);
 const toast = useToast();
 
 
-const rows = ref(10); 
-const first = ref(0); 
+const rows = ref(10);
+const first = ref(0);
 
 const onPageChange = (event: any) => {
-    first.value = event.first; 
-    rows.value = event.rows; 
+    first.value = event.first;
+    rows.value = event.rows;
     emit('page-change', event);
 };
 
-
-const onCellEditComplete = async (event: { data: any; newValue: any; field: string }) => {
-    const { data, newValue, field } = event;
-
-    if (data[field] === newValue) return;
-
-    emit('update', { data, newValue, field });
-};
+const redirectToEdit = (id:string) =>{
+    router.push({ name: `${props.editRoute}-edit`, params: { id } });
+}
 
 const itemToDelete = ref<any>(null);
 
@@ -71,19 +67,9 @@ const closeDeleteToast = () => {
         </div>
 
         <div v-else-if="data.length > 0">
-            <DataTable 
-                edit-mode="cell" 
-                :value="data" 
-                tableStyle="min-width: 50rem"
-                @cell-edit-complete="onCellEditComplete"
-            >
-                <Column 
-                    v-for="(header, index) in headers" 
-                    :key="index" 
-                    :field="header.field" 
-                    :header="header.name" 
-                    :style="header.style"
-                >
+            <DataTable :value="data" tableStyle="min-width: 50rem">
+                <Column v-for="(header, index) in headers" :key="index" :field="header.field" :header="header.name"
+                    :style="header.style">
                     <template #editor="{ data, field }">
                         <InputText v-model="data[field]" />
                     </template>
@@ -92,25 +78,17 @@ const closeDeleteToast = () => {
                 <Column field="actions" style="width: 25%">
                     <template #body="{ data }">
                         <div class="flex justify-around">
-                            <Button 
-                                variant="text" 
-                                icon="pi pi-trash" 
-                                severity="danger" 
-                                label="Delete" 
-                                @click="showDeleteToast(data)" 
-                            />
+                            <Button variant="text" icon="pi pi-pencil" severity="warn" label="Edit"
+                                @click="redirectToEdit(data.id)" />
+                            <Button variant="text" icon="pi pi-trash" severity="danger" label="Delete"
+                            @click="showDeleteToast(data)" />
                         </div>
                     </template>
                 </Column>
             </DataTable>
 
-            <Paginator 
-                :rows="rows" 
-                :totalRecords="totalRecords" 
-                :rowsPerPageOptions="[5, 10, 20]" 
-                :first="first"
-                @page="onPageChange"
-            />
+            <Paginator :rows="rows" :totalRecords="totalRecords" :rowsPerPageOptions="[5, 10, 20]" :first="first"
+                @page="onPageChange" />
         </div>
 
         <div v-else class="py-2">
@@ -125,4 +103,3 @@ const closeDeleteToast = () => {
         <MyDeleteToast @delete="handleDelete" @close="closeDeleteToast" />
     </div>
 </template>
-

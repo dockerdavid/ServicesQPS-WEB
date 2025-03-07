@@ -19,7 +19,7 @@ const toast = useToast();
 
 const breadcrumbRoutes = [
     { label: 'Types', to: { name: 'types-default' } },
-    { label: 'Create', to: { name: 'types-create' } },
+    { label: 'Edit', to: { name: 'types-edit' } },
 ];
 
 const communities = ref<Communities>(genericNullObject)
@@ -45,7 +45,7 @@ const createType = async () => {
     try {
         newType.value.commission = newType.value.commission.toString()
         await TypesServices.createType(newType.value);
-        showToast(toast, { severity: 'success', detail: 'Type was created' })
+        showToast(toast, { severity: 'success', detail: 'Type was updated' })
         newType.value = {
             cleaningType: '',
             commission: '',
@@ -54,7 +54,7 @@ const createType = async () => {
             price: 0
         }
     } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Type wasn't created" })
+        showToast(toast, { severity: 'error', summary: "Type wasn't updated" })
     }
 
 }
@@ -72,7 +72,7 @@ onMounted(async () => {
 
     <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
 
-        <template #view-title>Create Type</template>
+        <template #view-title>Edit Type</template>
 
         <template #inputs>
 
