@@ -47,8 +47,12 @@
             />
         </div>
 
-        <div v-else>
-            <p class="text-center py-4 text-2xl">There is no data</p>
+        <div v-else class="py-2">
+            <a href="https://storyset.com/search"></a>
+            <picture class="flex items-center flex-col">
+                <p class="text-2xl text-center py-4">There is no data. Please try a different search.</p>
+                <img class="w-70 " src="../../../assets/empty.svg">
+            </picture>
         </div>
 
 
