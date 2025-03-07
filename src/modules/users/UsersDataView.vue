@@ -14,6 +14,10 @@ const updateUser = async (data: any) => {
 
 };
 
+const searchUser = async (searchWord: any) => {
+    return await UsersServices.searchUser(searchWord)
+};
+
 </script>
 
 <template>
@@ -30,5 +34,6 @@ const updateUser = async (data: any) => {
         :fetch-data="fetchUsers"
         :delete-data="deleteUser"
         :update-data="updateUser"
+        :search-data="searchUser"
     />
 </template>

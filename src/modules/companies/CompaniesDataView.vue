@@ -15,11 +15,15 @@ const updateCompany = async (data: any) => {
 
 };
 
+const searchCompany = async (searchWord: any) => {
+    return await CompaniesServices.searchCompany(searchWord)
+};
+
 </script>
 
 <template>
     <GenericDataView view-title="Companies" create-new-route="/companies/create" :headers="[
         { field: 'companyName', name: 'Company name' },
     ]" :editable-columns="['name', 'email']" :fetch-data="fetchCompanies" :delete-data="deleteCompany"
-        :update-data="updateCompany" />
+        :update-data="updateCompany" :search-data="searchCompany" />
 </template>

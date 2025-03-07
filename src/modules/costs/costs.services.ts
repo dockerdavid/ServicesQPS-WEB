@@ -1,7 +1,7 @@
 import { apiServicesQps } from "@/api/api";
 import type { Communities, Community } from "@/interfaces/communities/communities.interface";
 import type { Companies } from "@/interfaces/companies/companies.interface";
-import type { Costs, NewCost } from "@/interfaces/costs/costs.interface";
+import type { Cost, Costs, NewCost } from "@/interfaces/costs/costs.interface";
 import { useGlobalStateStore } from "@/store/auth.store";
 import genericNullObject from "@/utils/null-data-meta";
 
@@ -48,5 +48,17 @@ export class CostsServices {
             throw new Error(error)
         }
     }
+
+    static async searchCost(searchWord: string): Promise<Cost[]> {
+            this.store.setIsLoading(true)
+            try {
+                const { data } = await apiServicesQps.post(`/costs/search`, { searchWord });
+                return data
+            } catch (error) {
+                return []
+            }finally{
+                this.store.setIsLoading(false)
+            }
+        }
 
 }

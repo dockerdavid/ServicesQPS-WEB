@@ -16,6 +16,10 @@ const updateCost = async (data: any) => {
 
 };
 
+const searchCost = async (searchWord: any) => {
+    return await CostsServices.searchCost(searchWord)
+};
+
 </script>
 
 <template>
@@ -23,5 +27,5 @@ const updateCost = async (data: any) => {
         { field: 'date', name: 'Date' },
         { field: 'description', name: 'Description' },
     ]" :editable-columns="['name', 'email']" :fetch-data="fetchCosts" :delete-data="deleteCost"
-        :update-data="updateCost" />
+        :update-data="updateCost" :search-data="searchCost" />
 </template>

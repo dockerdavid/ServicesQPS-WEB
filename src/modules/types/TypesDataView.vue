@@ -16,6 +16,10 @@ const updateType = async (data: any) => {
 
 };
 
+const searchType = async (searchWord: any) => {
+    return await TypesServices.searchType(searchWord)
+};
+
 </script>
 
 <template>
@@ -26,5 +30,5 @@ const updateType = async (data: any) => {
         { field: 'community.communityName', name: 'Community' },
         { field: 'commission', name: 'Commission' },
     ]" :editable-columns="['name', 'email']" :fetch-data="fetchTypes" :delete-data="deleteType"
-        :update-data="updateType" />
+        :search-data="searchType" :update-data="updateType" />
 </template>

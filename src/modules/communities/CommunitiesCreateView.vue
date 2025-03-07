@@ -12,6 +12,7 @@ import genericNullObject from '@/utils/null-data-meta';
 import type { Users } from '@/interfaces/users/users.interface';
 import { UsersServices } from '../users/users.services';
 import { useToast } from 'primevue';
+import { showToast } from '@/utils/show-toast';
 
 const toast = useToast();
 
@@ -49,9 +50,9 @@ const createCommunity = async () => {
             companyId: '',
             userId: ''
         }
-        toast.add({ severity: 'success', life: 3000, summary: 'Community created' })
+        showToast(toast,{ severity: 'success', summary: 'Community created' })
     } catch (error) {
-        console.log(error)
+        showToast(toast,{ severity: 'error', summary: "Community wasn't created" })
     }
 }
 

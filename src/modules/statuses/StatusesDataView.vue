@@ -15,6 +15,10 @@ const updateStatus = async (data: any) => {
 
 };
 
+const searchStatus = async (searchWord: any) => {
+    return await StatusesServices.searchStatus(searchWord)
+};
+
 </script>
 
 <template>
@@ -28,5 +32,6 @@ const updateStatus = async (data: any) => {
         :fetch-data="fetchStatuses"
         :delete-data="deleteStatus"
         :update-data="updateStatus"
+        :search-data="searchStatus"
     />
 </template>

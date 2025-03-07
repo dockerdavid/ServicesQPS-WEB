@@ -1,9 +1,6 @@
 import { apiServicesQps } from "@/api/api";
-import type { Communities, Community } from "@/interfaces/communities/communities.interface";
-import type { Companies } from "@/interfaces/companies/companies.interface";
-import type { Costs } from "@/interfaces/costs/costs.interface";
 import type CreateService from "@/interfaces/services/services.interface";
-import type { Services } from "@/interfaces/services/services.interface";
+import type { Service, Services } from "@/interfaces/services/services.interface";
 import { useGlobalStateStore } from "@/store/auth.store";
 import genericNullObject from "@/utils/null-data-meta";
 
@@ -49,6 +46,18 @@ export class CleanersServices {
             await apiServicesQps.delete(`/services/${serviceId}`)
         } catch (error: any) {
             throw new Error(error)
+        }
+    }
+
+    static async searchService(searchWord: string): Promise<Service[]> {
+        this.store.setIsLoading(true)
+        try {
+            const { data } = await apiServicesQps.post(`/services/search`, { searchWord });
+            return data
+        } catch (error) {
+            return []
+        } finally {
+            this.store.setIsLoading(false)
         }
     }
 

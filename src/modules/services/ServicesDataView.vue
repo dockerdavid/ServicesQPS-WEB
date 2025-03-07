@@ -16,6 +16,10 @@ const updateService = async (data: any) => {
 
 };
 
+const searchService = async (searchWord: any) => {
+    return await CleanersServices.searchService(searchWord)
+};
+
 </script>
 
 <template>
@@ -28,5 +32,5 @@ const updateService = async (data: any) => {
         { field: 'type.cleaningType', name: 'Type' },
         { field: 'status.statusName', name: 'Status' },
     ]" :editable-columns="['name', 'email']" :fetch-data="fetchServices" :delete-data="deleteService"
-        :update-data="updateService" />
+        :update-data="updateService" :search-data="searchService"/>
 </template>

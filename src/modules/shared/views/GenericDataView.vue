@@ -5,7 +5,6 @@ import BaseLayout from '@/layouts/BaseLayout.vue';
 import { showToast } from "@/utils/show-toast";
 import EditableDataTable from "../components/EditableDataTable.vue";
 
-
 interface Header {
     field: string;
     name: string;
@@ -20,6 +19,7 @@ interface Props {
     fetchData: (page: number, rows: number) => Promise<any>;
     deleteData: (id: string) => Promise<void>;
     updateData: (data: any) => Promise<void>;
+    searchData: (data: string) => Promise<any>;
 }
 
 const props = defineProps<Props>();
@@ -32,9 +32,11 @@ const dataList = ref({
 const currentPage = ref(1);
 const rowsPerPage = ref(10);
 
+const searchWord = ref('');
+
 const breadcrumbRoutes = [
-    { label: props.viewTitle.charAt(0).toUpperCase() + props.viewTitle.slice(1), to: {name: `${props.viewTitle.toLowerCase()}-default`}  },
-    { label: 'Table', to: {name: `${props.viewTitle.toLowerCase()}-default`} },
+    { label: props.viewTitle.charAt(0).toUpperCase() + props.viewTitle.slice(1), to: { name: `${props.viewTitle.toLowerCase()}-default` } },
+    { label: 'Table', to: { name: `${props.viewTitle.toLowerCase()}-default` } },
 ];
 
 const fetchDataList = async () => {
@@ -67,11 +69,35 @@ const handleUpdate = (event: { data: any; newValue: any; field: string }) => {
     props.updateData(data);
 };
 
+const debounce = (fn: Function, delay: number) => {
+    let timeoutId: number;
+    return (...args: any[]) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn(...args), delay);
+    };
+};
+
+const debouncedSearch = debounce(async () => {
+    if (!searchWord.value) {
+        await fetchDataList();
+        return;
+    }
+
+    dataList.value = await props.searchData(searchWord.value);
+
+}, 450);
+
+const onSearch = () => {
+    debouncedSearch();
+};
+
 const handlePageChange = (event: any) => {
     currentPage.value = event.page + 1;
     rowsPerPage.value = event.rows;
     fetchDataList();
 };
+
+
 
 onMounted(async () => {
     fetchDataList();
@@ -88,7 +114,7 @@ onMounted(async () => {
         <template #header-search>
             <IconField>
                 <InputIcon class="pi pi-search" />
-                <InputText placeholder="Search" />
+                <InputText v-model="searchWord" @input="onSearch" placeholder="Search" />
             </IconField>
         </template>
         <template #card-content>

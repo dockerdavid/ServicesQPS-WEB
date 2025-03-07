@@ -8,15 +8,14 @@ export class CommunitiesServices {
 
     static store = useGlobalStateStore();
 
-    static async getCommunities(page: number = 1, take:number = 10): Promise<Communities> {
+    static async getCommunities(page: number = 1, take: number = 10): Promise<Communities> {
 
         this.store.setIsLoading(true)
 
         try {
             const { data } = await apiServicesQps.get<Communities>(`/communities?page=${page}&take=${take}`)
             return data
-        } catch (error) {
-            console.log(error)
+        } catch (error: any) {
             return {
                 data: [],
                 meta: genericNullObject.meta
@@ -26,17 +25,12 @@ export class CommunitiesServices {
         }
     }
 
-    static async editCommunity(community: Community, changedValue: any) {
-        apiServicesQps.patch(`/communities/${community.id}`, { ...community, changedValue })
-    }
-
     static async createCommunity(community: NewCommunity) {
         this.store.setIsLoading(true)
         try {
             const { data } = await apiServicesQps.post(`/communities`, community)
-            console.log(data)
-        } catch (error) {
-            console.log(error)
+        } catch (error: any) {
+            throw new Error(error)
         } finally {
             this.store.setIsLoading(false)
         }
@@ -51,6 +45,20 @@ export class CommunitiesServices {
         }
     }
 
+    static async searchCommunity(searchWord: string): Promise<Community[]> {
+        this.store.setIsLoading(true)
+        try {
+            const { data } = await apiServicesQps.post(`/communities/search`, { searchWord });
+            return data
+        } catch (error) {
+            return []
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
 
+    /*  static async editCommunity(community: Community, changedValue: any) {
+         apiServicesQps.patch(`/communities/${community.id}`, { ...community, changedValue })
+     } */
 
 }

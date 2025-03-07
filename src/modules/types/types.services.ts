@@ -1,7 +1,5 @@
 import { apiServicesQps } from "@/api/api";
-import type { Communities, Community } from "@/interfaces/communities/communities.interface";
-import type { Companies } from "@/interfaces/companies/companies.interface";
-import type { Costs } from "@/interfaces/costs/costs.interface";
+import type { Type } from "@/interfaces/services/services.interface";
 import type { NewType, Types } from "@/interfaces/types/types.interface";
 import { useGlobalStateStore } from "@/store/auth.store";
 import genericNullObject from "@/utils/null-data-meta";
@@ -51,5 +49,17 @@ export class TypesServices {
         }
     }
 
+
+    static async searchType(searchWord: string): Promise<Type[]> {
+        this.store.setIsLoading(true)
+        try {
+            const { data } = await apiServicesQps.post(`/types/search`, { searchWord });
+            return data
+        } catch (error) {
+            return []
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
 }
 
