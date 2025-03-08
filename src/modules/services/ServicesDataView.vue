@@ -16,8 +16,8 @@ const updateService = async (data: any) => {
 
 };
 
-const searchService = async (searchWord: any) => {
-    return await CleanersServices.searchService(searchWord)
+const searchService = async (searchWord: any, page: number, rows: number) => {
+    return await CleanersServices.searchService(searchWord, page, rows)
 };
 
 </script>
@@ -32,5 +32,5 @@ const searchService = async (searchWord: any) => {
         { field: 'type.cleaningType', name: 'Type' },
         { field: 'status.statusName', name: 'Status' },
     ]" :editable-columns="['name', 'email']" :fetch-data="fetchServices" :delete-data="deleteService"
-        :update-data="updateService" :search-data="searchService"/>
+        :update-data="updateService" :search-data="searchService" />
 </template>

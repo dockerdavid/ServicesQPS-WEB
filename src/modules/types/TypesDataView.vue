@@ -16,8 +16,8 @@ const updateType = async (data: any) => {
 
 };
 
-const searchType = async (searchWord: any) => {
-    return await TypesServices.searchType(searchWord)
+const searchType = async (searchWord: any, page: number, rows: number) => {
+    return await TypesServices.searchType(searchWord, page, rows)
 };
 
 </script>

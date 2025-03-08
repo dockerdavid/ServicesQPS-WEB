@@ -14,26 +14,18 @@ const updateUser = async (data: any) => {
 
 };
 
-const searchUser = async (searchWord: any) => {
-    return await UsersServices.searchUser(searchWord)
+const searchUser = async (searchWord: any, page: number, rows: number) => {
+    return await UsersServices.searchUser(searchWord, page, rows)
 };
 
 </script>
 
 <template>
-    <GenericDataView
-        view-title="Users"
-        create-new-route="/users/create"
-        :headers="[
-            { field: 'name', name: 'Name' },
-            { field: 'email', name: 'Email' },
-            { field: 'role.name', name: 'Role' },
-            { field: 'phoneNumber', name: 'Phone number' }
-        ]"
-        :editable-columns="['name', 'email']"
-        :fetch-data="fetchUsers"
-        :delete-data="deleteUser"
-        :update-data="updateUser"
-        :search-data="searchUser"
-    />
+    <GenericDataView view-title="Users" create-new-route="/users/create" :headers="[
+        { field: 'name', name: 'Name' },
+        { field: 'email', name: 'Email' },
+        { field: 'role.name', name: 'Role' },
+        { field: 'phoneNumber', name: 'Phone number' }
+    ]" :editable-columns="['name', 'email']" :fetch-data="fetchUsers" :delete-data="deleteUser"
+        :update-data="updateUser" :search-data="searchUser" />
 </template>

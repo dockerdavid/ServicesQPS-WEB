@@ -48,7 +48,7 @@ export class CommunitiesServices {
     static async searchCommunity(searchWord: string, page: number = 1, take: number = 10): Promise<Community[]> {
         this.store.setIsLoading(true)
         try {
-            const { data } = await apiServicesQps.post(`/communities/search?page=${page}&take=${take}?page=${page}&take=${take}`, { searchWord });
+            const { data } = await apiServicesQps.post(`/communities/search?page=${page}&take=${take}`, { searchWord });
             return data
         } catch (error) {
             return []

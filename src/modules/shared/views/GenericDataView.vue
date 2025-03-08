@@ -19,7 +19,7 @@ interface Props {
     fetchData: (page: number, rows: number) => Promise<any>;
     deleteData: (id: string) => Promise<void>;
     updateData: (data: any) => Promise<void>;
-    searchData: (data: string) => Promise<any>;
+    searchData: (data: string, page: number, rows: number) => Promise<any>;
 }
 
 const props = defineProps<Props>();
@@ -74,24 +74,29 @@ const debounce = (fn: Function, delay: number) => {
     };
 };
 
+const handlePageChange = (event: any) => {
+    currentPage.value = event.page + 1; // Asegúrate de que currentPage sea 1-based
+    rowsPerPage.value = event.rows;
+
+    if (searchWord.value) {
+        onSearch(); // Llama a la búsqueda si hay una palabra clave
+    } else {
+        fetchDataList(); // Si no hay palabra clave, carga los datos normales
+    }
+};
+
 const debouncedSearch = debounce(async () => {
     if (!searchWord.value) {
         await fetchDataList();
         return;
     }
 
-    dataList.value = await props.searchData(searchWord.value);
-
+    // Realiza la búsqueda con la página actual y el número de filas por página
+    dataList.value = await props.searchData(searchWord.value, currentPage.value, rowsPerPage.value);
 }, 450);
 
 const onSearch = () => {
     debouncedSearch();
-};
-
-const handlePageChange = (event: any) => {
-    currentPage.value = event.page + 1;
-    rowsPerPage.value = event.rows;
-    fetchDataList();
 };
 
 
@@ -106,7 +111,7 @@ onMounted(async () => {
 
         <template #view-title>{{ viewTitle }}</template>
         <template #create-new>
-            <router-link :to="{name: createNewRoute}">New {{ viewTitle.toLowerCase() }}</router-link>
+            <router-link :to="{ name: createNewRoute }">New {{ viewTitle.toLowerCase() }}</router-link>
         </template>
         <template #header-search>
             <IconField>
@@ -116,8 +121,8 @@ onMounted(async () => {
         </template>
         <template #card-content>
             <EditableDataTable :data="dataList.data" :headers="headers" :editableColumns="editableColumns"
-                :onDelete="onDelete" @page-change="handlePageChange"
-                :total-records="dataList.meta.totalCount" :edit-route="editRoute" />
+                :onDelete="onDelete" @page-change="handlePageChange" :total-records="dataList.meta.totalCount"
+                :edit-route="editRoute" />
         </template>
     </BaseLayout>
 </template>

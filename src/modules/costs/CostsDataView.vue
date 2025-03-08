@@ -16,8 +16,8 @@ const updateCost = async (data: any) => {
 
 };
 
-const searchCost = async (searchWord: any) => {
-    return await CostsServices.searchCost(searchWord)
+const searchCost = async (searchWord: any, page: number, rows: number) => {
+    return await CostsServices.searchCost(searchWord, page, rows)
 };
 
 </script>

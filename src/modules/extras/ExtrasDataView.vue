@@ -16,8 +16,8 @@ const updateUser = async (data: any) => {
 
 };
 
-const searchExtra = async (searchWord: any) => {
-    return await ExtrasServices.searchExtra(searchWord)
+const searchExtra = async (searchWord: any, page: number, rows: number) => {
+    return await ExtrasServices.searchExtra(searchWord, page, rows)
 };
 
 </script>

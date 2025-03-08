@@ -15,8 +15,8 @@ const updateCompany = async (data: any) => {
 
 };
 
-const searchCompany = async (searchWord: any) => {
-    return await CompaniesServices.searchCompany(searchWord)
+const searchCompany = async (searchWord: any, page: number, rows: number) => {
+    return await CompaniesServices.searchCompany(searchWord, page, rows)
 };
 
 </script>

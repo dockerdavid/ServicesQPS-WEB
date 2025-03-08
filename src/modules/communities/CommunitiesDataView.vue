@@ -14,8 +14,8 @@ const updateCommunity = async (data: any) => {
 
 };
 
-const searchCommunity = async (searchWord: any) => {
-    return await CommunitiesServices.searchCommunity(searchWord)
+const searchCommunity = async (searchWord: any, page: number, rows: number) => {
+    return await CommunitiesServices.searchCommunity(searchWord, page, rows)
 };
 
 </script>
@@ -26,5 +26,5 @@ const searchCommunity = async (searchWord: any) => {
         { field: 'user.name', name: 'Manager', style: 'width: 25%' },
         { field: 'company.companyName', name: 'Company', style: 'width: 25%' }
     ]" :editable-columns="['name', 'email']" :fetch-data="fetchCommunities" :delete-data="deleteCommunity"
-        :update-data="updateCommunity"  :search-data="searchCommunity"/>
+        :update-data="updateCommunity" :search-data="searchCommunity" />
 </template>
