@@ -45,10 +45,10 @@ export class CommunitiesServices {
         }
     }
 
-    static async searchCommunity(searchWord: string): Promise<Community[]> {
+    static async searchCommunity(searchWord: string, page: number = 1, take: number = 10): Promise<Community[]> {
         this.store.setIsLoading(true)
         try {
-            const { data } = await apiServicesQps.post(`/communities/search`, { searchWord });
+            const { data } = await apiServicesQps.post(`/communities/search?page=${page}&take=${take}?page=${page}&take=${take}`, { searchWord });
             return data
         } catch (error) {
             return []
@@ -73,15 +73,15 @@ export class CommunitiesServices {
 
     static async updateCommunity(communityId: string, changedValue: NewCommunity) {
 
-        if(!communityId) return
+        if (!communityId) return
 
         this.store.setIsLoading(true)
 
         try {
             await apiServicesQps.patch(`/communities/${communityId}`, changedValue)
-        } catch (error:any) {
+        } catch (error: any) {
             throw new Error(error)
-        }finally{
+        } finally {
             this.store.setIsLoading(false)
         }
     }

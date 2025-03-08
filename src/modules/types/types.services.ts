@@ -9,7 +9,7 @@ export class TypesServices {
 
     static store = useGlobalStateStore();
 
-    static async getTypes(page: number = 1, take:number = 10): Promise<Types> {
+    static async getTypes(page: number = 1, take: number = 10): Promise<Types> {
 
         this.store.setIsLoading(true)
 
@@ -19,7 +19,7 @@ export class TypesServices {
         } catch (error) {
             console.log(error)
             return {
-                data:[],
+                data: [],
                 meta: genericNullObject.meta
             }
         } finally {
@@ -27,13 +27,13 @@ export class TypesServices {
         }
     }
 
-    static async createType(newType:NewType) {
+    static async createType(newType: NewType) {
 
         this.store.setIsLoading(true)
 
         try {
             await apiServicesQps.post('/types', newType)
-        } catch (error:any) {
+        } catch (error: any) {
             throw new Error(error)
         } finally {
             this.store.setIsLoading(false)
@@ -50,10 +50,10 @@ export class TypesServices {
     }
 
 
-    static async searchType(searchWord: string): Promise<Type[]> {
+    static async searchType(searchWord: string, page: number = 1, take: number = 10): Promise<Type[]> {
         this.store.setIsLoading(true)
         try {
-            const { data } = await apiServicesQps.post(`/types/search`, { searchWord });
+            const { data } = await apiServicesQps.post(`/types/search?page=${page}&take=${take}`, { searchWord });
             return data
         } catch (error) {
             return []
@@ -64,29 +64,29 @@ export class TypesServices {
 
     static async getTypeById(id: string): Promise<Type> {
         this.store.setIsLoading(true);
-    
+
         try {
-          const { data } = await apiServicesQps.get<Type>(`/types/${id}`);
-          return data;
+            const { data } = await apiServicesQps.get<Type>(`/types/${id}`);
+            return data;
         } catch (error: any) {
-          throw new Error(error);
+            throw new Error(error);
         } finally {
-          this.store.setIsLoading(false);
+            this.store.setIsLoading(false);
         }
-      }
-    
-      static async updateType(typeId: string, changedValue: NewType) {
+    }
+
+    static async updateType(typeId: string, changedValue: NewType) {
         if (!typeId) return;
-    
+
         this.store.setIsLoading(true);
-    
+
         try {
-          await apiServicesQps.patch(`/types/${typeId}`, changedValue);
+            await apiServicesQps.patch(`/types/${typeId}`, changedValue);
         } catch (error: any) {
-          throw new Error(error);
+            throw new Error(error);
         } finally {
-          this.store.setIsLoading(false);
+            this.store.setIsLoading(false);
         }
-      }
+    }
 }
 

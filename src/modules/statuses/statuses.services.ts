@@ -49,10 +49,10 @@ export class StatusesServices {
         }
     }
 
-    static async searchStatus(searchWord: string): Promise<Status[]> {
+    static async searchStatus(searchWord: string, page: number = 1, take: number = 10): Promise<Status[]> {
         this.store.setIsLoading(true)
         try {
-            const { data } = await apiServicesQps.post(`/statuses/search`, { searchWord });
+            const { data } = await apiServicesQps.post(`/statuses/search?page=${page}&take=${take}`, { searchWord });
             return data
         } catch (error) {
             return []
@@ -63,28 +63,28 @@ export class StatusesServices {
 
     static async getStatusById(id: string): Promise<Status> {
         this.store.setIsLoading(true);
-    
+
         try {
-          const { data } = await apiServicesQps.get<Status>(`/statuses/${id}`);
-          return data;
+            const { data } = await apiServicesQps.get<Status>(`/statuses/${id}`);
+            return data;
         } catch (error: any) {
-          throw new Error(error);
+            throw new Error(error);
         } finally {
-          this.store.setIsLoading(false);
+            this.store.setIsLoading(false);
         }
-      }
-    
-      static async updateStatus(statusId: string, changedValue:any) {
+    }
+
+    static async updateStatus(statusId: string, changedValue: any) {
         if (!statusId) return;
-    
+
         this.store.setIsLoading(true);
-    
+
         try {
-          await apiServicesQps.patch(`/statuses/${statusId}`, changedValue);
+            await apiServicesQps.patch(`/statuses/${statusId}`, changedValue);
         } catch (error: any) {
-          throw new Error(error);
+            throw new Error(error);
         } finally {
-          this.store.setIsLoading(false);
+            this.store.setIsLoading(false);
         }
-      }
+    }
 }

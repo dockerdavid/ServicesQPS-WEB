@@ -61,10 +61,10 @@ export class CompaniesServices {
         }
     }
 
-    static async searchCompany(searchWord: string): Promise<Company[]> {
+    static async searchCompany(searchWord: string, page: number = 1, take: number = 10): Promise<Company[]> {
         this.store.setIsLoading(true)
         try {
-            const { data } = await apiServicesQps.post(`/companies/search`, { searchWord });
+            const { data } = await apiServicesQps.post(`/companies/search?page=${page}&take=${take}`, { searchWord });
             return data
         } catch (error) {
             return []

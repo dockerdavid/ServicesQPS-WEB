@@ -9,7 +9,7 @@ export class UsersServices {
 
     static store = useGlobalStateStore();
 
-    static async getUsers(page: number = 1, take:number = 10): Promise<Users> {
+    static async getUsers(page: number = 1, take: number = 10): Promise<Users> {
 
         this.store.setIsLoading(true)
 
@@ -59,10 +59,10 @@ export class UsersServices {
         }
     }
 
-    static async searchUser(searchWord: string): Promise<User[]> {
+    static async searchUser(searchWord: string, page: number = 1, take: number = 10): Promise<User[]> {
         this.store.setIsLoading(true)
         try {
-            const { data } = await apiServicesQps.post(`/users/search`, { searchWord });
+            const { data } = await apiServicesQps.post(`/users/search?page=${page}&take=${take}`, { searchWord });
             return data
         } catch (error) {
             return []
@@ -73,29 +73,29 @@ export class UsersServices {
 
     static async getUserById(id: string): Promise<User> {
         this.store.setIsLoading(true);
-    
+
         try {
-          const { data } = await apiServicesQps.get<User>(`/users/${id}`);
-          return data;
+            const { data } = await apiServicesQps.get<User>(`/users/${id}`);
+            return data;
         } catch (error: any) {
-          throw new Error(error);
+            throw new Error(error);
         } finally {
-          this.store.setIsLoading(false);
+            this.store.setIsLoading(false);
         }
-      }
-    
-      static async updateUser(userId: string, changedValue: NewUser) {
+    }
+
+    static async updateUser(userId: string, changedValue: NewUser) {
         if (!userId) return;
-    
+
         this.store.setIsLoading(true);
-    
+
         try {
-          await apiServicesQps.patch(`/users/${userId}`, changedValue);
+            await apiServicesQps.patch(`/users/${userId}`, changedValue);
         } catch (error: any) {
-          throw new Error(error);
+            throw new Error(error);
         } finally {
-          this.store.setIsLoading(false);
+            this.store.setIsLoading(false);
         }
-      }
+    }
 
 }

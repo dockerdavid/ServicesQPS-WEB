@@ -49,10 +49,10 @@ export class CostsServices {
         }
     }
 
-    static async searchCost(searchWord: string): Promise<Cost[]> {
+    static async searchCost(searchWord: string, page: number = 1, take: number = 10): Promise<Cost[]> {
         this.store.setIsLoading(true)
         try {
-            const { data } = await apiServicesQps.post(`/costs/search`, { searchWord });
+            const { data } = await apiServicesQps.post(`/costs/search?page=${page}&take=${take}`, { searchWord });
             return data
         } catch (error) {
             return []

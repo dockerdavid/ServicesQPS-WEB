@@ -9,7 +9,7 @@ export class CleanersServices {
 
     static store = useGlobalStateStore();
 
-    static async getServices(page: number = 1, take:number = 10): Promise<Services> {
+    static async getServices(page: number = 1, take: number = 10): Promise<Services> {
 
         this.store.setIsLoading(true)
 
@@ -49,10 +49,10 @@ export class CleanersServices {
         }
     }
 
-    static async searchService(searchWord: string): Promise<Service[]> {
+    static async searchService(searchWord: string, page: number = 1, take: number = 10): Promise<Service[]> {
         this.store.setIsLoading(true)
         try {
-            const { data } = await apiServicesQps.post(`/services/search`, { searchWord });
+            const { data } = await apiServicesQps.post(`/services/search?page=${page}&take=${take}`, { searchWord });
             return data
         } catch (error) {
             return []
@@ -63,29 +63,29 @@ export class CleanersServices {
 
     static async getServiceById(id: string): Promise<Service> {
         this.store.setIsLoading(true);
-    
+
         try {
-          const { data } = await apiServicesQps.get<Service>(`/services/${id}`);
-          return data;
+            const { data } = await apiServicesQps.get<Service>(`/services/${id}`);
+            return data;
         } catch (error: any) {
-          throw new Error(error);
+            throw new Error(error);
         } finally {
-          this.store.setIsLoading(false);
+            this.store.setIsLoading(false);
         }
-      }
-    
-      static async updateService(serviceId: string, changedValue: CreateService) {
+    }
+
+    static async updateService(serviceId: string, changedValue: CreateService) {
         if (!serviceId) return;
-    
+
         this.store.setIsLoading(true);
-    
+
         try {
-          await apiServicesQps.patch(`/services/${serviceId}`, changedValue);
+            await apiServicesQps.patch(`/services/${serviceId}`, changedValue);
         } catch (error: any) {
-          throw new Error(error);
+            throw new Error(error);
         } finally {
-          this.store.setIsLoading(false);
+            this.store.setIsLoading(false);
         }
-      }
+    }
 
 }
