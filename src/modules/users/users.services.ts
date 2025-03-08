@@ -71,4 +71,31 @@ export class UsersServices {
         }
     }
 
+    static async getUserById(id: string): Promise<User> {
+        this.store.setIsLoading(true);
+    
+        try {
+          const { data } = await apiServicesQps.get<User>(`/users/${id}`);
+          return data;
+        } catch (error: any) {
+          throw new Error(error);
+        } finally {
+          this.store.setIsLoading(false);
+        }
+      }
+    
+      static async updateUser(userId: string, changedValue: NewUser) {
+        if (!userId) return;
+    
+        this.store.setIsLoading(true);
+    
+        try {
+          await apiServicesQps.patch(`/users/${userId}`, changedValue);
+        } catch (error: any) {
+          throw new Error(error);
+        } finally {
+          this.store.setIsLoading(false);
+        }
+      }
+
 }

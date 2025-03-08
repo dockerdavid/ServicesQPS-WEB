@@ -11,7 +11,7 @@ export class ExtrasServices {
 
     static store = useGlobalStateStore();
 
-    static async getExtras(page: number = 1, take:number = 10): Promise<Extras> {
+    static async getExtras(page: number = 1, take: number = 10): Promise<Extras> {
 
         this.store.setIsLoading(true)
 
@@ -21,7 +21,7 @@ export class ExtrasServices {
         } catch (error) {
             console.log(error)
             return {
-                data:[],
+                data: [],
                 meta: genericNullObject.meta
             }
         } finally {
@@ -29,14 +29,14 @@ export class ExtrasServices {
         }
     }
 
-    static async createExtra(newExtra:NewExtra) {
+    static async createExtra(newExtra: NewExtra) {
 
         this.store.setIsLoading(true)
 
         try {
             const { data } = await apiServicesQps.post('/extras', newExtra)
             console.log(data)
-        } catch (error:any) {
+        } catch (error: any) {
             throw new Error(error)
         } finally {
             this.store.setIsLoading(false)
@@ -61,6 +61,33 @@ export class ExtrasServices {
             return []
         } finally {
             this.store.setIsLoading(false)
+        }
+    }
+
+    static async getExtraById(id: string): Promise<Extra> {
+        this.store.setIsLoading(true);
+
+        try {
+            const { data } = await apiServicesQps.get<Extra>(`/extras/${id}`);
+            return data;
+        } catch (error: any) {
+            throw new Error(error);
+        } finally {
+            this.store.setIsLoading(false);
+        }
+    }
+
+    static async updateExtra(extraId: string, changedValue: NewExtra) {
+        if (!extraId) return;
+
+        this.store.setIsLoading(true);
+
+        try {
+            await apiServicesQps.patch(`/extras/${extraId}`, changedValue);
+        } catch (error: any) {
+            throw new Error(error);
+        } finally {
+            this.store.setIsLoading(false);
         }
     }
 

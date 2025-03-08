@@ -1,64 +1,56 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { NewExtra } from '@/interfaces/extras/extras.interface';
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import CreateLayout from '@/layouts/CreateLayout.vue';
-import LoadingButton from '../shared/components/LoadingButton.vue';
-import { showToast } from '@/utils/show-toast';
-import { useToast } from 'primevue';
+import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import { ExtrasServices } from './extras.services';
+import { useToast } from 'primevue';
+import { showToast } from '@/utils/show-toast';
+import { useRoute } from 'vue-router';
 
 const toast = useToast();
+const route = useRoute();
+const extraId = route.params.id as string;
 
 const breadcrumbRoutes = [
-    { label: 'Extras', to: { name: 'extras-default' } },
-    { label: 'Edit', to: { name: 'extras-edit' } },
+  { label: 'Extras', to: { name: 'extras-default' } },
+  { label: 'Edit', to: { name: 'extras-edit' } },
 ];
 
-const newExtra = ref<NewExtra>({
-    commission: 0,
-    item: '',
-    itemPrice: 0
-})
+const inputs = [
+  { label: 'Item', inputId: 'item', inputType: 'input' },
+  { label: 'Item Price', inputId: 'itemPrice', inputType: 'numeric', placeholder: '$0.00' },
+  { label: 'Commission', inputId: 'commission', inputType: 'numeric', placeholder: '$0.00' },
+];
 
-const createNewExtra = async () => {
-    try {
-        await ExtrasServices.createExtra(newExtra.value);
-        showToast(toast, { severity: 'success', summary: 'Extra was updated' })
-        newExtra.value = {
-            commission: 0,
-            item: '',
-            itemPrice: 0
-        }
-    } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Extra wasn't updated" })
-    }
-}
+const initialData = {
+  item: '',
+  itemPrice: 0,
+  commission: 0,
+};
 
+const loadData = async (id: string) => {
+  const extra = await ExtrasServices.getExtraById(id);
+  return {
+    ...extra,
+  };
+};
+
+const updateEntity = async (id: string, data: any) => {
+  /* try { */
+    await ExtrasServices.updateExtra(id, data);
+   /*  showToast(toast, { severity: 'success', summary: 'Extra updated' });
+  } catch (error) {
+    showToast(toast, { severity: 'error', summary: "Extra wasn't updated" });
+  } */
+};
 </script>
 
 <template>
-    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
-
-        <template #view-title> Edit Extra </template>
-
-        <template #inputs>
-
-            <MyInputGroup v-model="newExtra.item" label="Item" inputId="item" input-type="input" />
-            <MyInputGroup v-model="newExtra.itemPrice" placeholder="$0.00" label="Item price" inputId="item-price"
-                input-type="numeric" />
-            <MyInputGroup v-model="newExtra.commission" placeholder="$0.00" label="Comission" inputId="commision"
-                input-type="numeric" />
-
-            <div />
-
-            <div>
-                <LoadingButton @click="createNewExtra" />
-            </div>
-
-        </template>
-
-
-
-    </CreateLayout>
+  <GenericEditForm
+    :breadcrumb-routes="breadcrumbRoutes"
+    view-title="Edit Extra"
+    :inputs="inputs"
+    :load-data="loadData"
+    :update-entity="updateEntity"
+    :initial-data="initialData"
+  />
 </template>

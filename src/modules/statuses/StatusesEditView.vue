@@ -1,54 +1,40 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import CreateLayout from '@/layouts/CreateLayout.vue';
-
+import { useRoute } from 'vue-router';
 import { useToast } from 'primevue';
-import LoadingButton from '../shared/components/LoadingButton.vue';
+import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import { StatusesServices } from './statuses.services';
 import { showToast } from '@/utils/show-toast';
 
-const statusName = ref('');
+const route = useRoute();
 const toast = useToast();
+const statusId = route.params.id as string;
 
 const breadcrumbRoutes = [
-    { label: 'Statuses', to: { name: 'statuses-default' } },
-    { label: 'Edit', to: { name: 'statuses-edit' } },
+  { label: 'Statuses', to: { name: 'statuses-default' } },
+  { label: 'Edit', to: { name: 'statuses-edit' } },
 ];
 
-const createStatus = async () => {
+const inputs = [
+  { label: 'Status name', inputId: 'statusName', inputType: 'input' },
+];
 
-    try {
-        console.log(statusName.value)
-        await StatusesServices.createStatus(statusName.value);
-        showToast(toast, { severity: 'success', summary: 'Status updated' })
-        statusName.value = '';
-    } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Status wasn't updated" })
-    }
-}
+const loadData = async (id: string) => {
+  return await StatusesServices.getStatusById(id);
+};
 
+const updateEntity = async (id: string, data: any) => {
+    await StatusesServices.updateStatus(id, data);
+};
 </script>
 
-
 <template>
-
-    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
-
-        <template #view-title>Edit Status</template>
-
-        <template #inputs>
-
-            <MyInputGroup v-model="statusName" input-type="input" input-id="name" label="Status name" />
-
-            <div />
-
-            <div>
-                <LoadingButton @click="createStatus" />
-            </div>
-
-        </template>
-
-    </CreateLayout>
-
+  <GenericEditForm
+    :breadcrumb-routes="breadcrumbRoutes"
+    view-title="Edit Status"
+    :inputs="inputs"
+    :load-data="loadData"
+    :update-entity="updateEntity"
+    :initial-data="{ statusName: '' }"
+  />
 </template>

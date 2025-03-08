@@ -1,97 +1,64 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import { useToast } from 'primevue';
-import CreateLayout from '@/layouts/CreateLayout.vue';
-
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import LoadingButton from '../shared/components/LoadingButton.vue';
-
+import { useRoute } from 'vue-router';
 import { TypesServices } from './types.services';
-
-import type { NewType } from '@/interfaces/types/types.interface';
-
-import { showToast } from '@/utils/show-toast';
 import { CommunitiesServices } from '../communities/communities.services';
-import type { Communities } from '@/interfaces/communities/communities.interface';
-import genericNullObject from '@/utils/null-data-meta';
+import GenericEditForm from '../shared/views/GenericEditForm.vue';
+import type { NewType, Type, Community } from '@/interfaces/types/types.interface';
 
-const toast = useToast();
+const route = useRoute();
+const currentTypeId = route.params.id as string;
 
 const breadcrumbRoutes = [
-    { label: 'Types', to: { name: 'types-default' } },
-    { label: 'Edit', to: { name: 'types-edit' } },
+  { label: 'Types', to: { name: 'types-default' } },
+  { label: 'Edit', to: { name: 'types-edit' } },
 ];
 
-const communities = ref<Communities>(genericNullObject)
-const communitiesOptions = computed(() => {
-    return communities.value.data.map((community) => {
-        return {
-            label: community.communityName,
-            value: community.id
-        }
-    })
-})
+const inputs = [
+  { label: 'Description', inputId: 'description', inputType: 'input' },
+  { label: 'Cleaning type', inputId: 'cleaningType', inputType: 'input' },
+  { label: 'Price', inputId: 'price', inputType: 'numeric' },
+  { label: 'Commission', inputId: 'commission', inputType: 'input' },
+  { label: 'Community', inputId: 'communityId', inputType: 'select', options: [] },
+];
 
-const newType = ref<NewType>({
-    cleaningType: '',
-    commission: '',
-    communityId: '',
-    description: '',
-    price: 0
-});
+const keyValueMap = {
+  communityId: 'community.id', // Mapea communityId a community.id
+};
 
-const createType = async () => {
+const loadData = async (id: string) => {
+  const [communitiesResult, typeResult] = await Promise.all([
+    CommunitiesServices.getCommunities(),
+    TypesServices.getTypeById(id),
+  ]);
 
-    try {
-        newType.value.commission = newType.value.commission.toString()
-        await TypesServices.createType(newType.value);
-        showToast(toast, { severity: 'success', detail: 'Type was updated' })
-        newType.value = {
-            cleaningType: '',
-            commission: '',
-            communityId: '',
-            description: '',
-            price: 0
-        }
-    } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Type wasn't updated" })
-    }
+  return {
+    ...typeResult, // Datos del tipo
+    communityIdOptions: communitiesResult.data.map((type: Community) => ({
+      label: type.communityName,
+      value: type.id,
+    })),
+  };
+};
 
-}
-
-onMounted(async () => {
-
-    communities.value = await CommunitiesServices.getCommunities();
-
-
-})
-
+const updateEntity = async (id: string, data: NewType) => {
+  await TypesServices.updateType(id, data);
+};
 </script>
 
 <template>
-
-    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
-
-        <template #view-title>Edit Type</template>
-
-        <template #inputs>
-
-            <MyInputGroup v-model="newType.description" label="Description" input-id="description" input-type="input" />
-            <MyInputGroup v-model="newType.cleaningType" label="Cleaning type" input-id="cleaning-type"
-                input-type="input" />
-            <MyInputGroup v-model="newType.price" label="Price" input-id="price" input-type="numeric" />
-            <MyInputGroup v-model="newType.communityId" :options="communitiesOptions" label="Community"
-                input-id="community" input-type="select" />
-            <MyInputGroup v-model="newType.commission" label="Commision" input-id="commision" input-type="numeric" />
-
-            <div />
-
-            <div>
-                <LoadingButton @click="createType" />
-            </div>
-
-        </template>
-
-    </CreateLayout>
-
+  <GenericEditForm
+    :breadcrumb-routes="breadcrumbRoutes"
+    view-title="Edit Type"
+    :inputs="inputs"
+    :load-data="loadData"
+    :update-entity="updateEntity"
+    :initial-data="{
+      description: '',
+      cleaningType: '',
+      price: 0,
+      commission: '',
+      communityId: '',
+    }"
+    :key-value-map="keyValueMap"
+  />
 </template>

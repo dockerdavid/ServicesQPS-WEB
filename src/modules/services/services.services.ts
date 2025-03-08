@@ -61,4 +61,31 @@ export class CleanersServices {
         }
     }
 
+    static async getServiceById(id: string): Promise<Service> {
+        this.store.setIsLoading(true);
+    
+        try {
+          const { data } = await apiServicesQps.get<Service>(`/services/${id}`);
+          return data;
+        } catch (error: any) {
+          throw new Error(error);
+        } finally {
+          this.store.setIsLoading(false);
+        }
+      }
+    
+      static async updateService(serviceId: string, changedValue: CreateService) {
+        if (!serviceId) return;
+    
+        this.store.setIsLoading(true);
+    
+        try {
+          await apiServicesQps.patch(`/services/${serviceId}`, changedValue);
+        } catch (error: any) {
+          throw new Error(error);
+        } finally {
+          this.store.setIsLoading(false);
+        }
+      }
+
 }

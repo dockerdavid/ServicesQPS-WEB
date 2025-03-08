@@ -1,118 +1,62 @@
 <script setup lang="ts">
-
-import CreateLayout from '@/layouts/CreateLayout.vue';
-import { computed, onMounted, ref } from 'vue';
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import LoadingButton from '../shared/components/LoadingButton.vue';
-import { CommunitiesServices } from './communities.services';
-import type { Community, NewCommunity } from '@/interfaces/communities/communities.interface';
-import { CompaniesServices } from '../companies/companies.services';
-import type { Companies } from '@/interfaces/companies/companies.interface';
-import genericNullObject from '@/utils/null-data-meta';
-import type { Users } from '@/interfaces/users/users.interface';
-import { UsersServices } from '../users/users.services';
-import { useToast } from 'primevue';
-import { showToast } from '@/utils/show-toast';
 import { useRoute } from 'vue-router';
-
-const toast = useToast();
+import { CommunitiesServices } from './communities.services';
+import { UsersServices } from '../users/users.services';
+import { CompaniesServices } from '../companies/companies.services';
+import GenericEditForm from '../shared/views/GenericEditForm.vue';
 
 const route = useRoute();
 const currentCommunityId = route.params.id as string;
 
-const currentCommunity = ref<Community>();
-const companies = ref<Companies>(genericNullObject);
-const companiesOptions = computed(() => {
-    return companies.value.data.map((company) => {
-        return {
-            label: company.companyName,
-            value: company.id
-        };
-    });
-})
-
-const users = ref<Users>(genericNullObject);
-const usersOptions = computed(() => {
-    return users.value.data.map((user) => {
-        return {
-            label: user.name,
-            value: user.id
-        }
-    })
-})
-
-const updatedCommunity = ref<NewCommunity>({
-    communityName: '',
-    companyId: '',
-    userId: '',
-    id: ''
-});
-
-const updateCommunity = async () => {
-
-    if (!currentCommunity.value?.id!) return
-    try {
-        await CommunitiesServices.updateCommunity(currentCommunity.value!.id, updatedCommunity.value);
-
-        showToast(toast, { severity: 'success', summary: 'Community updated' })
-    } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Community wasn't updated" })
-    }
-}
-
 const breadcrumbRoutes = [
-    { label: 'Communities', to: { name: 'communities-default' } },
-    { label: 'Edit', to: { name: 'communities-edit' } },
+  { label: 'Communities', to: { name: 'communities-default' } },
+  { label: 'Edit', to: { name: 'communities-edit' } },
 ];
 
+const inputs = [
+  { label: 'Community name', inputId: 'communityName', inputType: 'input' },
+  { label: 'Manager', inputId: 'userId', inputType: 'select', options: [] },
+  { label: 'Company', inputId: 'companyId', inputType: 'select', options: [] },
+];
 
+const keyValueMap = {
+  userId: 'user.id', // Mapea userId a user.id
+  companyId: 'company.id', // Mapea companyId a company.id
+};
 
-onMounted(async () => {
-    const [companiesResult, usersResult, communityResult] = await Promise.all([
-        CompaniesServices.getCompanies(),
-        UsersServices.getUsers(undefined, 50),
-        CommunitiesServices.getCommunityById(currentCommunityId)
-    ]);
+const loadData = async (id: string) => {
+  const [companiesResult, usersResult, communityResult] = await Promise.all([
+    CompaniesServices.getCompanies(),
+    UsersServices.getUsers(undefined, 50),
+    CommunitiesServices.getCommunityById(id),
+  ]);
 
-    companies.value = companiesResult;
-    users.value = usersResult;
-    currentCommunity.value = communityResult;
+  return {
+    ...communityResult, // Datos de la comunidad
+    userIdOptions: usersResult.data.map((user) => ({
+      label: user.name,
+      value: user.id,
+    })),
+    companyIdOptions: companiesResult.data.map((company) => ({
+      label: company.companyName,
+      value: company.id,
+    })),
+  };
+};
 
-
-    if (currentCommunity.value) {
-        updatedCommunity.value = {
-            communityName: currentCommunity.value.communityName || '',
-            companyId: currentCommunity.value.company?.id || '',
-            userId: currentCommunity.value.user?.id || '',
-            id: currentCommunity.value.id || ''
-        };
-    }
-
-});
-
+const updateEntity = async (id: string, data: any) => {
+  await CommunitiesServices.updateCommunity(id, data);
+};
 </script>
 
 <template>
-    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
-
-        <template #view-title> Edit Community </template>
-
-        <template #inputs>
-
-            <MyInputGroup v-model="updatedCommunity.communityName" label="Community name" inputId="name"
-                input-type="input" />
-            <MyInputGroup :options="usersOptions" v-model="updatedCommunity.userId" label="Manager" inputId="manager"
-                input-type="select" />
-            <MyInputGroup :options="companiesOptions" v-model="updatedCommunity.companyId" label="Company" inputId="company"
-                input-type="select" />
-
-            <div />
-
-            <div>
-                <LoadingButton label="Create" @click="updateCommunity"></LoadingButton>
-            </div>
-
-        </template>
-
-    </CreateLayout>
+  <GenericEditForm
+    :breadcrumb-routes="breadcrumbRoutes"
+    view-title="Edit Community"
+    :inputs="inputs"
+    :load-data="loadData"
+    :update-entity="updateEntity"
+    :initial-data="{ communityName: '', userId: '', companyId: '' }" 
+    :key-value-map="keyValueMap"
+  />
 </template>

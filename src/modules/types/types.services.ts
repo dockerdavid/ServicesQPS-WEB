@@ -61,5 +61,32 @@ export class TypesServices {
             this.store.setIsLoading(false)
         }
     }
+
+    static async getTypeById(id: string): Promise<Type> {
+        this.store.setIsLoading(true);
+    
+        try {
+          const { data } = await apiServicesQps.get<Type>(`/types/${id}`);
+          return data;
+        } catch (error: any) {
+          throw new Error(error);
+        } finally {
+          this.store.setIsLoading(false);
+        }
+      }
+    
+      static async updateType(typeId: string, changedValue: NewType) {
+        if (!typeId) return;
+    
+        this.store.setIsLoading(true);
+    
+        try {
+          await apiServicesQps.patch(`/types/${typeId}`, changedValue);
+        } catch (error: any) {
+          throw new Error(error);
+        } finally {
+          this.store.setIsLoading(false);
+        }
+      }
 }
 

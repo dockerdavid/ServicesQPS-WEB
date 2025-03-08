@@ -10,7 +10,7 @@ export class CostsServices {
 
     static store = useGlobalStateStore();
 
-    static async getCosts(page: number = 1, take:number = 10): Promise<Costs> {
+    static async getCosts(page: number = 1, take: number = 10): Promise<Costs> {
 
         this.store.setIsLoading(true)
 
@@ -21,7 +21,7 @@ export class CostsServices {
         } catch (error) {
             console.log(error)
             return {
-                data:[],
+                data: [],
                 meta: genericNullObject.meta
             }
         } finally {
@@ -29,11 +29,11 @@ export class CostsServices {
         }
     }
 
-    static async createCost(cost:NewCost) {
+    static async createCost(cost: NewCost) {
         try {
             const { data } = await apiServicesQps.post('/costs', cost)
             console.log(data)
-        } catch (error:any) {
+        } catch (error: any) {
             throw new Error(error)
         } finally {
             this.store.setIsLoading(false)
@@ -50,15 +50,44 @@ export class CostsServices {
     }
 
     static async searchCost(searchWord: string): Promise<Cost[]> {
-            this.store.setIsLoading(true)
-            try {
-                const { data } = await apiServicesQps.post(`/costs/search`, { searchWord });
-                return data
-            } catch (error) {
-                return []
-            }finally{
-                this.store.setIsLoading(false)
-            }
+        this.store.setIsLoading(true)
+        try {
+            const { data } = await apiServicesQps.post(`/costs/search`, { searchWord });
+            return data
+        } catch (error) {
+            return []
+        } finally {
+            this.store.setIsLoading(false)
         }
+    }
+
+    static async getCostById(id: string): Promise<Cost> {
+
+        this.store.setIsLoading(true)
+
+        try {
+            const { data } = await apiServicesQps.get<Cost>(`/costs/${id}`)
+            return data
+        } catch (error: any) {
+            throw new Error(error)
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
+
+    static async updateCost(costId: string, changedValue: NewCost) {
+
+        if (!costId) return
+
+        this.store.setIsLoading(true)
+
+        try {
+            await apiServicesQps.patch(`/costs/${costId}`, changedValue)
+        } catch (error: any) {
+            throw new Error(error)
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
 
 }

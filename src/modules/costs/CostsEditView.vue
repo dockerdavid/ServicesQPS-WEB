@@ -1,58 +1,42 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-
-import type { NewCost } from '@/interfaces/costs/costs.interface';
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
-
-import CreateLayout from '@/layouts/CreateLayout.vue';
-import LoadingButton from '../shared/components/LoadingButton.vue';
+import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import { CostsServices } from './costs.services';
 import { useToast } from 'primevue';
 import { showToast } from '@/utils/show-toast';
+import { useRoute } from 'vue-router';
 
 const toast = useToast();
-
-const newCost = ref<NewCost>({ amount: '', date: '', description: '' });
+const route = useRoute();
+const costId = route.params.id as string;
 
 const breadcrumbRoutes = [
-    { label: 'Costs', to: { name: 'costs-default' } },
-    { label: 'Edit', to: { name: 'costs-edit' } },
+  { label: 'Costs', to: { name: 'costs-default' } },
+  { label: 'Edit', to: { name: 'costs-edit' } },
 ];
 
-const createCost = async () => {
-    newCost.value.amount = newCost.value.amount.toString();
-    try {
-        await CostsServices.createCost(newCost.value)
-        showToast(toast, { severity: 'success', summary: 'Cost updated' })
-        newCost.value = { amount: '', date: '', description: '' }
-    } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Cost wasn't updated" })
-    }
-}
+const inputs = [
+  { label: 'Date', inputId: 'date', inputType: 'datepicker', icon: 'calendar' },
+  { label: 'Description', inputId: 'description', inputType: 'input' },
+  { label: 'Amount', inputId: 'amount', inputType: 'numeric' },
+];
 
+const loadData = async (id: string) => {
+  const cost = await CostsServices.getCostById(id);
+  return {
+    ...cost,
+    amount: cost.amount.toString(),
+  };
+};
+
+const updateEntity = async (id: string, data: any) => {
+  data.amount = data.amount.toString();
+  await CostsServices.updateCost(id, data);
+
+};
 </script>
 
-
 <template>
-    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
-
-        <template #view-title> Edit Cost </template>
-
-        <template #inputs>
-
-            <MyInputGroup v-model="newCost.date" label="Date" inputId="date" input-type="datepicker" icon="calendar" />
-            <MyInputGroup v-model="newCost.description" label="Description" inputId="description" input-type="input" />
-            <MyInputGroup v-model="newCost.amount" label="Amount" inputId="amount" input-type="numeric" />
-
-            <div />
-
-            <div>
-                <LoadingButton @click="createCost" />
-            </div>
-
-        </template>
-
-
-
-    </CreateLayout>
+  <GenericEditForm :breadcrumb-routes="breadcrumbRoutes" view-title="Edit Cost" :inputs="inputs" :load-data="loadData"
+    :update-entity="updateEntity" :initial-data="{ date: '', description: '', amount: '' }" />
 </template>

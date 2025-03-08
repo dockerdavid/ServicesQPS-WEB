@@ -61,12 +61,30 @@ export class StatusesServices {
         }
     }
 
-    static async editStatus(status:Status) {
+    static async getStatusById(id: string): Promise<Status> {
+        this.store.setIsLoading(true);
+    
         try {
-            const cleanedStatus = removeTimestamps(status);
-            await apiServicesQps.patch(`/statuses/${status.id}`, cleanedStatus)
-        } catch (error:any) {
-            throw new Error(error)
+          const { data } = await apiServicesQps.get<Status>(`/statuses/${id}`);
+          return data;
+        } catch (error: any) {
+          throw new Error(error);
+        } finally {
+          this.store.setIsLoading(false);
         }
-    }
+      }
+    
+      static async updateStatus(statusId: string, changedValue:any) {
+        if (!statusId) return;
+    
+        this.store.setIsLoading(true);
+    
+        try {
+          await apiServicesQps.patch(`/statuses/${statusId}`, changedValue);
+        } catch (error: any) {
+          throw new Error(error);
+        } finally {
+          this.store.setIsLoading(false);
+        }
+      }
 }
