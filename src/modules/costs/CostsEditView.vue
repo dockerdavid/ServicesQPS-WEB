@@ -5,6 +5,7 @@ import { CostsServices } from './costs.services';
 import { useToast } from 'primevue';
 import { showToast } from '@/utils/show-toast';
 import { useRoute } from 'vue-router';
+import type { InputConfig } from '@/interfaces/input-config.interface';
 
 const toast = useToast();
 const route = useRoute();
@@ -15,7 +16,7 @@ const breadcrumbRoutes = [
   { label: 'Edit', to: { name: 'costs-edit' } },
 ];
 
-const inputs = [
+const inputs: InputConfig[] = [
   { label: 'Date', inputId: 'date', inputType: 'datepicker', icon: 'calendar' },
   { label: 'Description', inputId: 'description', inputType: 'input' },
   { label: 'Amount', inputId: 'amount', inputType: 'numeric' },

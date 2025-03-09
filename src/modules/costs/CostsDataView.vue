@@ -12,9 +12,6 @@ const deleteCost = async (id: string) => {
     return await CostsServices.deleteCost(id);
 };
 
-const updateCost = async (data: any) => {
-
-};
 
 const searchCost = async (searchWord: any, page: number, rows: number) => {
     return await CostsServices.searchCost(searchWord, page, rows)
@@ -26,6 +23,6 @@ const searchCost = async (searchWord: any, page: number, rows: number) => {
     <GenericDataView view-title="Costs" create-new-route="/costs/create" :headers="[
         { field: 'date', name: 'Date' },
         { field: 'description', name: 'Description' },
-    ]" :editable-columns="['name', 'email']" :fetch-data="fetchCosts" :delete-data="deleteCost"
-        :update-data="updateCost" :search-data="searchCost" />
+    ]"  :fetch-data="fetchCosts" :delete-data="deleteCost"
+         :search-data="searchCost" />
 </template>

@@ -12,9 +12,6 @@ const deleteType = async (id: string) => {
     return await TypesServices.deleteType(id);
 };
 
-const updateType = async (data: any) => {
-
-};
 
 const searchType = async (searchWord: any, page: number, rows: number) => {
     return await TypesServices.searchType(searchWord, page, rows)
@@ -29,6 +26,6 @@ const searchType = async (searchWord: any, page: number, rows: number) => {
         { field: 'price', name: 'Price' },
         { field: 'community.communityName', name: 'Community' },
         { field: 'commission', name: 'Commission' },
-    ]" :editable-columns="['name', 'email']" :fetch-data="fetchTypes" :delete-data="deleteType"
-        :search-data="searchType" :update-data="updateType" />
+    ]"  :fetch-data="fetchTypes" :delete-data="deleteType"
+        :search-data="searchType"  />
 </template>

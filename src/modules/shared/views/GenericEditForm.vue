@@ -6,6 +6,10 @@ import LoadingButton from '../components/LoadingButton.vue';
 import { useToast } from 'primevue';
 import { showToast } from '@/utils/show-toast';
 import { useRoute } from 'vue-router';
+import type { InputConfig } from '@/interfaces/input-config.interface';
+
+
+
 
 // Props
 const props = defineProps({
@@ -18,12 +22,7 @@ const props = defineProps({
     required: true,
   },
   inputs: {
-    type: Array as () => Array<{
-      label: string;
-      inputId: string;
-      inputType: string;
-      options?: Array<{ label: string; value: string }>;
-    }>,
+    type: Array as () => InputConfig[],
     required: true,
   },
   loadData: {
@@ -131,15 +130,9 @@ onMounted(async () => {
     <template #view-title>{{ viewTitle }}</template>
 
     <template #inputs>
-      <MyInputGroup
-        v-for="input in inputs"
-        :key="input.inputId"
-        v-model="entityData[input.inputId]"
-        :label="input.label"
-        :inputId="input.inputId"
-        :input-type="input.inputType"
-        :options="input.options"
-      />
+      <MyInputGroup v-for="input in inputs" :key="input.inputId" v-model="entityData[input.inputId]"
+        :label="input.label" :inputId="input.inputId" :input-type="input.inputType" :options="input.options"
+        :input-numeric-mode="input.inputNumericMode" :time-only="input.timeOnly" :hour-format="input.hourFormat" />
 
       <div />
 

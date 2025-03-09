@@ -10,10 +10,10 @@ import router from "@/router";
 interface TableI {
     data: any[];
     headers: { field: string; name: string; style?: string }[];
-    editableColumns: string[];
     onDelete: (item: any) => void;
     totalRecords: number;
     editRoute: string;
+    lockEdit?: boolean;
 }
 
 const { isLoading } = storeToRefs(useGlobalStateStore());
@@ -32,7 +32,7 @@ const onPageChange = (event: any) => {
     emit('page-change', event);
 };
 
-const redirectToEdit = (id:string) =>{
+const redirectToEdit = (id: string) => {
     router.push({ name: `${props.editRoute}-edit`, params: { id } });
 }
 
@@ -62,6 +62,7 @@ const closeDeleteToast = () => {
 
 <template>
     <div>
+
         <div v-if="isLoading" class="flex flex-col gap-y-2 py-4">
             <Skeleton v-for="i in 5" class="w-100 py-6" />
         </div>
@@ -75,16 +76,17 @@ const closeDeleteToast = () => {
                     </template>
                 </Column>
 
-                <Column field="actions" style="width: 25%">
+                <Column v-if="!props.lockEdit" field="actions" style="width: 25%">
                     <template #body="{ data }">
                         <div class="flex justify-around">
                             <Button variant="text" icon="pi pi-pencil" severity="warn" label="Edit"
                                 @click="redirectToEdit(data.id)" />
                             <Button variant="text" icon="pi pi-trash" severity="danger" label="Delete"
-                            @click="showDeleteToast(data)" />
+                                @click="showDeleteToast(data)" />
                         </div>
                     </template>
                 </Column>
+
             </DataTable>
 
             <Paginator :rows="rows" :totalRecords="totalRecords" :rowsPerPageOptions="[5, 10, 20]" :first="first"

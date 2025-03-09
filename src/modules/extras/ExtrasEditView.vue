@@ -5,6 +5,7 @@ import { ExtrasServices } from './extras.services';
 import { useToast } from 'primevue';
 import { showToast } from '@/utils/show-toast';
 import { useRoute } from 'vue-router';
+import type { InputConfig } from '@/interfaces/input-config.interface';
 
 const toast = useToast();
 const route = useRoute();
@@ -15,10 +16,10 @@ const breadcrumbRoutes = [
   { label: 'Edit', to: { name: 'extras-edit' } },
 ];
 
-const inputs = [
+const inputs: InputConfig[] = [
   { label: 'Item', inputId: 'item', inputType: 'input' },
-  { label: 'Item Price', inputId: 'itemPrice', inputType: 'numeric', placeholder: '$0.00' },
-  { label: 'Commission', inputId: 'commission', inputType: 'numeric', placeholder: '$0.00' },
+  { label: 'Item Price', inputId: 'itemPrice', inputType: 'numeric' },
+  { label: 'Commission', inputId: 'commission', inputType: 'numeric' },
 ];
 
 const initialData = {
@@ -36,21 +37,15 @@ const loadData = async (id: string) => {
 
 const updateEntity = async (id: string, data: any) => {
   /* try { */
-    await ExtrasServices.updateExtra(id, data);
-   /*  showToast(toast, { severity: 'success', summary: 'Extra updated' });
-  } catch (error) {
-    showToast(toast, { severity: 'error', summary: "Extra wasn't updated" });
-  } */
+  await ExtrasServices.updateExtra(id, data);
+  /*  showToast(toast, { severity: 'success', summary: 'Extra updated' });
+ } catch (error) {
+   showToast(toast, { severity: 'error', summary: "Extra wasn't updated" });
+ } */
 };
 </script>
 
 <template>
-  <GenericEditForm
-    :breadcrumb-routes="breadcrumbRoutes"
-    view-title="Edit Extra"
-    :inputs="inputs"
-    :load-data="loadData"
-    :update-entity="updateEntity"
-    :initial-data="initialData"
-  />
+  <GenericEditForm :breadcrumb-routes="breadcrumbRoutes" view-title="Edit Extra" :inputs="inputs" :load-data="loadData"
+    :update-entity="updateEntity" :initial-data="initialData" />
 </template>

@@ -75,3 +75,15 @@ export default interface CreateService {
     userId: string;
     extraId: string;
 }
+
+export interface TypeByCommunity {
+    id:           string;
+    description:  string;
+    cleaningType: string;
+    price:        number;
+    commission:   string;
+    communityId:  string;
+    createdAt:    Date;
+    updatedAt:    Date;
+    community:    Community;
+}

@@ -17,15 +17,13 @@ const searchStatus = async (searchWord: any, page: number, rows: number) => {
     return await StatusesServices.searchStatus(searchWord, page, rows)
 };
 
-const updateStatus = async (status: Status) => {
-    return await StatusesServices.editStatus(status)
-}
+
 
 </script>
 
 <template>
     <GenericDataView view-title="Statuses" create-new-route="/statuses/create" :headers="[
         { field: 'statusName', name: 'Status name' }
-    ]" :editable-columns="['statusName']" :fetch-data="fetchStatuses" :delete-data="deleteStatus"
-        :update-data="updateStatus" :search-data="searchStatus" />
+    ]"  :fetch-data="fetchStatuses" :delete-data="deleteStatus"
+        :search-data="searchStatus" />
 </template>

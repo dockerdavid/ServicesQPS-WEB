@@ -7,6 +7,7 @@ import { createPersistedStatePlugin } from 'pinia-plugin-persistedstate-2';
 import PrimeVue from 'primevue/config';
 import { MyCustomPreset } from './assets/primevue_presets';
 import ToastService from 'primevue/toastservice';
+import Tooltip from 'primevue/tooltip';
 
 import App from './App.vue';
 import router from './router';
@@ -25,8 +26,6 @@ pinia.use((context) => installPersistedStatePlugin(context))
 
 app.component('Icon', Icon);
 
-
-
 app.use(pinia)
    .use(router)
    .use(PrimeVue, {
@@ -39,6 +38,6 @@ app.use(pinia)
    }
   )
   .use(ToastService);
-
+  app.directive('tooltip', Tooltip)
 
 app.mount('#app');

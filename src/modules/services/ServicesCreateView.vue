@@ -1,13 +1,9 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
-
+import { computed, onMounted, ref, watch } from 'vue';
 import moment from 'moment';
-
 import { useToast } from 'primevue';
-
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
 import CreateLayout from '@/layouts/CreateLayout.vue';
-
 import type CreateService from '@/interfaces/services/services.interface';
 import LoadingButton from '../shared/components/LoadingButton.vue';
 import { CleanersServices } from './services.services';
@@ -23,6 +19,7 @@ import { TypesServices } from '../types/types.services';
 import { StatusesServices } from '../statuses/statuses.services';
 import { ExtrasServices } from '../extras/extras.services';
 import { UsersServices } from '../users/users.services';
+import type { TypeByCommunity } from '@/interfaces/services/services.interface';
 
 const toast = useToast();
 
@@ -46,84 +43,83 @@ const newService = ref<CreateService>({
 });
 
 const communities = ref<Communities>(genericNullObject);
-const types = ref<Types>(genericNullObject);
+const typesByCommunity = ref<TypeByCommunity[]>([]); // Tipado como array
 const statuses = ref<Statuses>(genericNullObject);
 const extras = ref<Extras>(genericNullObject);
 const cleaners = ref<Users>(genericNullObject);
-
 
 const communityOptions = computed(() => {
     return communities.value.data.map((community) => {
         return {
             label: community.communityName,
             value: community.id,
-        }
-    })
-})
+        };
+    });
+});
+
 const typeOptions = computed(() => {
-    return types.value.data.map((type) => {
+    return typesByCommunity.value.map((type: TypeByCommunity) => { // Tipar el parámetro
         return {
             label: `${type.cleaningType} (${type.description})`,
             value: type.id,
-        }
-    })
-})
+        };
+    });
+});
+
 const statusOptions = computed(() => {
     return statuses.value.data.map((status) => {
         return {
             label: status.statusName,
             value: status.id,
-        }
-    })
-})
+        };
+    });
+});
+
 const extrasOptions = computed(() => {
     return extras.value.data.map((extra) => {
         return {
             label: extra.item,
             value: extra.id,
-        }
-    })
-})
+        };
+    });
+});
+
 const cleanerOptions = computed(() => {
     return cleaners.value.data.map((cleaner) => {
         return {
             label: cleaner.name,
             value: cleaner.id,
-        }
-    })
-})
+        };
+    });
+});
+
 const unitSizeOptions = [
-    {
-        label: 'N/A',
-        value: 'N/A',
-    },
-    {
-        label: '1 Bedroom',
-        value: '1 Bedroom',
-    },
-    {
-        label: '2 Bedroom',
-        value: '2 Bedroom',
-    },
-    {
-        label: '3 Bedroom',
-        value: '3 Bedroom',
-    },
-    {
-        label: '4 Bedroom',
-        value: '4 Bedroom',
-    },
-    {
-        label: '5 Bedroom',
-        value: '5 Bedroom',
-    },
-]
+    { label: 'N/A', value: 'N/A' },
+    { label: '1 Bedroom', value: '1 Bedroom' },
+    { label: '2 Bedroom', value: '2 Bedroom' },
+    { label: '3 Bedroom', value: '3 Bedroom' },
+    { label: '4 Bedroom', value: '4 Bedroom' },
+    { label: '5 Bedroom', value: '5 Bedroom' },
+];
+
+const getTypesByCommunity = async () => {
+    if (newService.value.communityId) {
+        const types = await TypesServices.getTypesByCommunity(newService.value.communityId);
+        typesByCommunity.value = types; // Asegúrate de que `types` sea un array
+    }
+};
+
+watch(() => newService.value.communityId, (newCommunityId) => {
+    if (newCommunityId) {
+        getTypesByCommunity();
+    }
+});
 
 const createService = async () => {
     newService.value.unitNumber = newService.value.unitNumber.toString();
     try {
         await CleanersServices.createService(newService.value);
-        showToast(toast, { severity: 'success', detail: 'Type was created' })
+        showToast(toast, { severity: 'success', detail: 'Service was created' });
         newService.value = {
             date: moment().format('YYYY-MM-DD'),
             schedule: moment().format('HH:mm:ss'),
@@ -136,31 +132,27 @@ const createService = async () => {
             unitySize: '',
             userComment: '',
             userId: ''
-        }
+        };
     } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Type wasn't created" })
+        showToast(toast, { severity: 'error', summary: "Service wasn't created" });
     }
-
-}
+};
 
 onMounted(async () => {
-    const [communityResults, typeResults, statusResults, extrasResults, cleanerResults] = await Promise.all([
+    const [communityResults, statusResults, extrasResults, cleanerResults] = await Promise.all([
         CommunitiesServices.getCommunities(),
-        TypesServices.getTypes(),
         StatusesServices.getStatuses(),
         ExtrasServices.getExtras(),
         UsersServices.getUsers(),
-    ])
+    ]);
 
-    communities.value = communityResults
-    types.value = typeResults
-    statuses.value = statusResults
-    extras.value = extrasResults
-    cleaners.value = cleanerResults
-
-})
-
+    communities.value = communityResults;
+    statuses.value = statusResults;
+    extras.value = extrasResults;
+    cleaners.value = cleanerResults;
+});
 </script>
+
 
 <template>
     <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
@@ -169,9 +161,7 @@ onMounted(async () => {
         </template>
 
         <template #inputs>
-
-            <MyInputGroup inputType="datepicker" label="Date" inputId="date" v-model="newService.date"
-                icon="calendar" />
+            <MyInputGroup inputType="datepicker" label="Date" inputId="date" v-model="newService.date" icon="calendar" />
 
             <MyInputGroup inputType="datepicker" label="Schedule" inputId="schedule" v-model="newService.schedule"
                 icon="clock" :hourFormat="true" :timeOnly="true" />
@@ -200,14 +190,11 @@ onMounted(async () => {
             <MyInputGroup inputType="input" label="Comment" inputId="comment" v-model="newService.comment"
                 style="resize:none;" />
 
-
             <div />
 
             <div>
                 <LoadingButton @click="createService" />
             </div>
-
         </template>
-
     </CreateLayout>
 </template>

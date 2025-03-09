@@ -1,5 +1,5 @@
 <template>
-    <RouterLink :to="{name: props.route}" class="sidebar-item">
+    <RouterLink :to="{ name: props.route }" class="sidebar-item">
         <Icon :class="{ 'mr': sidebarState.isSidebarOpen }"
             :icon="props.icon ? props.icon : 'material-symbols:circle-outline'" />
         <span :class="[sidebarState.isSidebarOpen ? '' : 'none']">{{ label }}</span>
@@ -50,14 +50,15 @@ const props = defineProps<RouteLink>();
     }
 }
 
-.router-link-exact-active {
-
+.router-link-active {
     span {
-        color: red;
+        color: red; 
     }
 
     .iconify {
-        color: red;
+        color: red; 
     }
 }
+
+
 </style>

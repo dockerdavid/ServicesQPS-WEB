@@ -5,6 +5,7 @@ import { useToast } from 'primevue';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import { StatusesServices } from './statuses.services';
 import { showToast } from '@/utils/show-toast';
+import type { InputConfig } from '@/interfaces/input-config.interface';
 
 const route = useRoute();
 const toast = useToast();
@@ -15,7 +16,7 @@ const breadcrumbRoutes = [
   { label: 'Edit', to: { name: 'statuses-edit' } },
 ];
 
-const inputs = [
+const inputs: InputConfig[] = [
   { label: 'Status name', inputId: 'statusName', inputType: 'input' },
 ];
 
@@ -24,17 +25,11 @@ const loadData = async (id: string) => {
 };
 
 const updateEntity = async (id: string, data: any) => {
-    await StatusesServices.updateStatus(id, data);
+  await StatusesServices.updateStatus(id, data);
 };
 </script>
 
 <template>
-  <GenericEditForm
-    :breadcrumb-routes="breadcrumbRoutes"
-    view-title="Edit Status"
-    :inputs="inputs"
-    :load-data="loadData"
-    :update-entity="updateEntity"
-    :initial-data="{ statusName: '' }"
-  />
+  <GenericEditForm :breadcrumb-routes="breadcrumbRoutes" view-title="Edit Status" :inputs="inputs" :load-data="loadData"
+    :update-entity="updateEntity" :initial-data="{ statusName: '' }" />
 </template>

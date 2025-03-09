@@ -4,6 +4,7 @@ import { CommunitiesServices } from './communities.services';
 import { UsersServices } from '../users/users.services';
 import { CompaniesServices } from '../companies/companies.services';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
+import type { InputConfig } from '@/interfaces/input-config.interface';
 
 const route = useRoute();
 const currentCommunityId = route.params.id as string;
@@ -13,15 +14,15 @@ const breadcrumbRoutes = [
   { label: 'Edit', to: { name: 'communities-edit' } },
 ];
 
-const inputs = [
+const inputs:InputConfig[] = [
   { label: 'Community name', inputId: 'communityName', inputType: 'input' },
   { label: 'Manager', inputId: 'userId', inputType: 'select', options: [] },
   { label: 'Company', inputId: 'companyId', inputType: 'select', options: [] },
 ];
 
 const keyValueMap = {
-  userId: 'user.id', // Mapea userId a user.id
-  companyId: 'company.id', // Mapea companyId a company.id
+  userId: 'user.id',
+  companyId: 'company.id',
 };
 
 const loadData = async (id: string) => {
@@ -50,13 +51,7 @@ const updateEntity = async (id: string, data: any) => {
 </script>
 
 <template>
-  <GenericEditForm
-    :breadcrumb-routes="breadcrumbRoutes"
-    view-title="Edit Community"
-    :inputs="inputs"
-    :load-data="loadData"
-    :update-entity="updateEntity"
-    :initial-data="{ communityName: '', userId: '', companyId: '' }" 
-    :key-value-map="keyValueMap"
-  />
+  <GenericEditForm :breadcrumb-routes="breadcrumbRoutes" view-title="Edit Community" :inputs="inputs"
+    :load-data="loadData" :update-entity="updateEntity" :initial-data="{ communityName: '', userId: '', companyId: '' }"
+    :key-value-map="keyValueMap" />
 </template>

@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, type VNode } from "vue";
 import { IconField, InputIcon, InputText, useToast } from 'primevue';
 import BaseLayout from '@/layouts/BaseLayout.vue';
 import { showToast } from "@/utils/show-toast";
-import EditableDataTable from "../components/EditableDataTable.vue";
-
+import EditableDataTable from "../components/DataTable.vue";
 
 interface Header {
     field: string;
@@ -15,11 +14,12 @@ interface Header {
 interface Props {
     viewTitle: string;
     headers: Header[];
-    editableColumns: string[];
     fetchData: (page: number, rows: number) => Promise<any>;
     deleteData: (id: string) => Promise<void>;
-    updateData: (data: any) => Promise<void>;
     searchData: (data: string, page: number, rows: number) => Promise<any>;
+    lockEdit?: boolean;
+    lockCreateNew?: boolean;
+    dontShowBreadCrumb?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -90,8 +90,6 @@ const debouncedSearch = debounce(async () => {
         await fetchDataList();
         return;
     }
-
-    // Realiza la búsqueda con la página actual y el número de filas por página
     dataList.value = await props.searchData(searchWord.value, currentPage.value, rowsPerPage.value);
 }, 450);
 
@@ -99,30 +97,32 @@ const onSearch = () => {
     debouncedSearch();
 };
 
-
-
 onMounted(async () => {
     fetchDataList();
 });
-
 </script>
+
 <template>
-    <BaseLayout :breadcrumbRoutes="breadcrumbRoutes">
+    <BaseLayout :is-bread-crumb-visible="dontShowBreadCrumb" :breadcrumbRoutes="breadcrumbRoutes">
 
         <template #view-title>{{ viewTitle }}</template>
-        <template #create-new>
+
+        <template #create-new v-if="!lockCreateNew">
             <router-link :to="{ name: createNewRoute }">New {{ viewTitle.toLowerCase() }}</router-link>
         </template>
+
         <template #header-search>
-            <IconField>
-                <InputIcon class="pi pi-search" />
-                <InputText v-model="searchWord" @input="onSearch" placeholder="Search" />
-            </IconField>
+            <slot name="header-search">
+                <IconField>
+                    <InputIcon class="pi pi-search" />
+                    <InputText v-model="searchWord" @input="onSearch" placeholder="Search" />
+                </IconField>
+            </slot>
         </template>
+
         <template #card-content>
-            <EditableDataTable :data="dataList.data" :headers="headers" :editableColumns="editableColumns"
-                :onDelete="onDelete" @page-change="handlePageChange" :total-records="dataList.meta.totalCount"
-                :edit-route="editRoute" />
+            <EditableDataTable :data="dataList.data" :headers="headers" :onDelete="onDelete" :lockEdit="lockEdit"
+                @page-change="handlePageChange" :total-records="dataList.meta.totalCount" :edit-route="editRoute" />
         </template>
     </BaseLayout>
 </template>

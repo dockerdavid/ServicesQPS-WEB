@@ -10,9 +10,6 @@ const deleteUser = async (id: string) => {
     return await UsersServices.deleteUser(id);
 };
 
-const updateUser = async (data: any) => {
-
-};
 
 const searchUser = async (searchWord: any, page: number, rows: number) => {
     return await UsersServices.searchUser(searchWord, page, rows)
@@ -26,6 +23,6 @@ const searchUser = async (searchWord: any, page: number, rows: number) => {
         { field: 'email', name: 'Email' },
         { field: 'role.name', name: 'Role' },
         { field: 'phoneNumber', name: 'Phone number' }
-    ]" :editable-columns="['name', 'email']" :fetch-data="fetchUsers" :delete-data="deleteUser"
-        :update-data="updateUser" :search-data="searchUser" />
+    ]" :fetch-data="fetchUsers" :delete-data="deleteUser"
+         :search-data="searchUser" />
 </template>

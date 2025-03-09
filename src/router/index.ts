@@ -17,9 +17,10 @@ const router = createRouter({
       path: '/',
       component: DefaultLayout,
       beforeEnter: [authGuard],
+      redirect: '/dashboard',
       children: [
         {
-          path: '',
+          path: 'dashboard',
           name: 'dashboard',
           component: () => import('../modules/dashboard/DashboardView.vue'),
         },

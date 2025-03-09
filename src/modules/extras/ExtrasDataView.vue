@@ -12,9 +12,6 @@ const deleteExtra = async (id: string) => {
     return await ExtrasServices.deleteExtra(id);
 };
 
-const updateUser = async (data: any) => {
-
-};
 
 const searchExtra = async (searchWord: any, page: number, rows: number) => {
     return await ExtrasServices.searchExtra(searchWord, page, rows)
@@ -27,6 +24,6 @@ const searchExtra = async (searchWord: any, page: number, rows: number) => {
         { field: 'item', name: 'Item' },
         { field: 'itemPrice', name: 'Item price' },
         { field: 'commission', name: 'Commission' },
-    ]" :editable-columns="['name', 'email']" :fetch-data="fetchExtras" :delete-data="deleteExtra"
-        :update-data="updateUser" :search-data="searchExtra" />
+    ]"  :fetch-data="fetchExtras" :delete-data="deleteExtra"
+         :search-data="searchExtra" />
 </template>

@@ -5,6 +5,7 @@ import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import { UsersServices } from './users.services';
 import { showToast } from '@/utils/show-toast';
 import type { NewUser, UserRoles, User, Role } from '@/interfaces/users/users.interface';
+import type { InputConfig } from '@/interfaces/input-config.interface';
 
 const route = useRoute();
 const toast = useToast();
@@ -15,10 +16,10 @@ const breadcrumbRoutes = [
     { label: 'Edit', to: { name: 'users-edit' } },
 ];
 
-const inputs = [
+const inputs: InputConfig[] = [
     { label: 'Name', inputId: 'name', inputType: 'input' },
     { label: 'Email', inputId: 'email', inputType: 'input' },
-    { label: 'Password', inputId: 'password', inputType: 'input' },
+    /* { label: 'Password', inputId: 'password', inputType: 'input' }, */
     { label: 'Role', inputId: 'roleId', inputType: 'select', options: [] },
     { label: 'Phone number', inputId: 'phoneNumber', inputType: 'numeric', inputNumericMode: 'decimal' },
 ];
@@ -32,9 +33,9 @@ const loadData = async (id: string) => {
         UsersServices.getUsersRoles(),
         UsersServices.getUserById(id),
     ]);
-
+    const { id: _, ...userWithoutId } = userResult;
     return {
-        ...userResult, // Datos del usuario
+        ...userWithoutId,
         roleIdOptions: userRolesResult.map((role: UserRoles) => ({
             label: role.name,
             value: role.id,
@@ -44,7 +45,7 @@ const loadData = async (id: string) => {
 
 const updateEntity = async (id: string, data: NewUser) => {
 
-    data.phoneNumber = `+${data.phoneNumber.toString()}`; // Formatear el número de teléfono
+    data.phoneNumber = `+${data.phoneNumber.toString()}`;
     await UsersServices.updateUser(id, data);
 
 };
@@ -55,7 +56,6 @@ const updateEntity = async (id: string, data: NewUser) => {
         :update-entity="updateEntity" :initial-data="{
             email: '',
             name: '',
-            password: '',
             phoneNumber: '',
             roleId: '',
         }" :key-value-map="keyValueMap" />

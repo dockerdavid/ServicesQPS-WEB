@@ -1,5 +1,6 @@
 <script setup lang="ts">
 
+import type { InputConfig } from '@/interfaces/input-config.interface';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import { CompaniesServices } from './companies.services';
 import { useRoute } from 'vue-router';
@@ -12,7 +13,7 @@ const breadcrumbRoutes = [
   { label: 'Edit', to: { name: 'companies-edit' } },
 ];
 
-const inputs = [
+const inputs: InputConfig[] = [
   { label: 'Company name', inputId: 'companyName', inputType: 'input' },
 ];
 
@@ -26,12 +27,6 @@ const updateEntity = async (id: string, data: any) => {
 </script>
 
 <template>
-  <GenericEditForm
-    :breadcrumb-routes="breadcrumbRoutes"
-    view-title="Edit Company"
-    :inputs="inputs"
-    :load-data="loadData"
-    :update-entity="updateEntity"
-    :initial-data="{ companyName: '' }"
-  />
+  <GenericEditForm :breadcrumb-routes="breadcrumbRoutes" view-title="Edit Company" :inputs="inputs"
+    :load-data="loadData" :update-entity="updateEntity" :initial-data="{ companyName: '' }" />
 </template>

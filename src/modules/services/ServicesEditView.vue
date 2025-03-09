@@ -8,6 +8,7 @@ import { UsersServices } from '../users/users.services';
 import { CleanersServices } from './services.services';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import moment from 'moment';
+import type { InputConfig } from '@/interfaces/input-config.interface';
 
 const route = useRoute();
 const serviceId = route.params.id as string;
@@ -17,17 +18,17 @@ const breadcrumbRoutes = [
   { label: 'Edit', to: { name: 'services-edit' } },
 ];
 
-const inputs = [
+const inputs: InputConfig[] = [
   { label: 'Date', inputId: 'date', inputType: 'datepicker', icon: 'calendar' },
   { label: 'Schedule', inputId: 'schedule', inputType: 'datepicker', icon: 'clock', hourFormat: true, timeOnly: true },
   { label: 'Unit size', inputId: 'unitySize', inputType: 'select', options: [] },
-  { label: 'Unit number', inputId: 'unitNumber', inputType: 'numeric', icon: 'address-book' },
+  { label: 'Unit number', inputId: 'unitNumber', inputType: 'numeric', inputNumericMode: 'decimal', icon: 'address-book' },
   { label: 'Community', inputId: 'communityId', inputType: 'select', options: [] },
   { label: 'Type', inputId: 'typeId', inputType: 'select', options: [] },
   { label: 'Status', inputId: 'statusId', inputType: 'select', options: [] },
   { label: 'Extras', inputId: 'extraId', inputType: 'select', options: [] },
   { label: 'Cleaner', inputId: 'userId', inputType: 'select', options: [] },
-  { label: 'Comment', inputId: 'comment', inputType: 'input', style: 'resize:none;' },
+  { label: 'Comment', inputId: 'comment', inputType: 'input' },
 ];
 
 const unitSizeOptions = [
@@ -39,18 +40,26 @@ const unitSizeOptions = [
   { label: '5 Bedroom', value: '5 Bedroom' },
 ];
 
+const keyValueMap = {
+  communityId: 'community.id', // Mapea communityId a community.id
+  typeId: 'type.id', // Mapea typeId a type.id
+  statusId: 'status.id', // Mapea statusId a status.id
+  userId: 'user.id', // Mapea userId a user.id
+  extraId: 'extra.id', // Mapea extraId a extra.id
+};
+
 const loadData = async (id: string) => {
-  const [communityResults, typeResults, statusResults, extrasResults, cleanerResults, serviceResult] = await Promise.all([
+  const [communityResults, typeResults, statusResults, extrasResults, usersResult, serviceResult] = await Promise.all([
     CommunitiesServices.getCommunities(),
     TypesServices.getTypes(),
     StatusesServices.getStatuses(),
     ExtrasServices.getExtras(),
-    UsersServices.getUsers(),
+    UsersServices.getUsers(undefined, 50),
     CleanersServices.getServiceById(id),
   ]);
 
   return {
-    ...serviceResult, // Datos del servicio
+    ...serviceResult,
     unitySizeOptions: unitSizeOptions,
     communityIdOptions: communityResults.data.map((community) => ({
       label: community.communityName,
@@ -68,12 +77,13 @@ const loadData = async (id: string) => {
       label: extra.item,
       value: extra.id,
     })),
-    userIdOptions: cleanerResults.data.map((cleaner) => ({
-      label: cleaner.name,
-      value: cleaner.id,
+    userIdOptions: usersResult.data.map((user) => ({
+      label: user.name,
+      value: user.id,
     })),
   };
 };
+
 
 const updateEntity = async (id: string, data: any) => {
   await CleanersServices.updateService(id, data);
@@ -81,13 +91,8 @@ const updateEntity = async (id: string, data: any) => {
 </script>
 
 <template>
-  <GenericEditForm
-    :breadcrumb-routes="breadcrumbRoutes"
-    view-title="Edit Service"
-    :inputs="inputs"
-    :load-data="loadData"
-    :update-entity="updateEntity"
-    :initial-data="{
+  <GenericEditForm :breadcrumb-routes="breadcrumbRoutes" view-title="Edit Service" :inputs="inputs"
+    :load-data="loadData" :update-entity="updateEntity" :initial-data="{
       date: moment().format('YYYY-MM-DD'),
       schedule: moment().format('HH:mm:ss'),
       comment: '',
@@ -99,6 +104,5 @@ const updateEntity = async (id: string, data: any) => {
       unitySize: '',
       userComment: '',
       userId: '',
-    }"
-  />
+    }" :key-value-map="keyValueMap" />
 </template>

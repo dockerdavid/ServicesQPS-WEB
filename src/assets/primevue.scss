@@ -4,22 +4,25 @@
 }
 
 .p-inputtext,
-.p-select, .p-datepicker, .p-inputnumber  {
+.p-select,
+.p-datepicker,
+.p-inputnumber {
 
     width: 100% !important;
 }
 
-.p-paginator-content{
-    .p-select{
+.p-paginator-content {
+    .p-select {
         width: auto !important;
     }
 }
 
-.p-textarea{
+
+.p-textarea {
     width: 100% !important;
 }
 
-.p-breadcrumb-item-link{
+.p-breadcrumb-item-link {
     gap: 0 !important
 }
 
@@ -34,9 +37,12 @@
     font-size: .875rem !important;
 }
 
-td {
+
+td,
+th {
     white-space: nowrap !important;
 }
+
 
 .p-chip {
     padding: .3rem 1rem !important;

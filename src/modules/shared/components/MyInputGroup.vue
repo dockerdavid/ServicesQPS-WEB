@@ -24,9 +24,8 @@
 import { DatePicker, IconField, InputIcon, InputText, Select, InputNumber } from 'primevue';
 import moment from 'moment';
 import { computed } from 'vue';
+import type { InputNumericMode, InputType } from '@/interfaces/input-config.interface';
 
-type InputType = 'input' | 'select' | 'datepicker' | "numeric";
-type InputNumericMode = 'currency' | 'decimal';
 
 interface InputGroupProps {
     label: string;

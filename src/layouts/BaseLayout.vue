@@ -11,7 +11,13 @@ const props = defineProps({
         type: Array as () => BreadcrumbRoute[],
         required: true,
     },
-});
+    isBreadCrumbVisible: {
+        type: Boolean,
+        required: false
+    }
+}
+
+);
 
 
 </script>
@@ -19,7 +25,7 @@ const props = defineProps({
 <template>
     <div class="py-6">
 
-        <Breadcrumb :model="breadcrumbRoutes" />
+        <Breadcrumb :model="breadcrumbRoutes" v-if="!isBreadCrumbVisible"/>
 
         <div class="flex justify-between items-center">
             <!-- Slot para el título -->

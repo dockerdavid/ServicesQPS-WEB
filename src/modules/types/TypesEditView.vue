@@ -4,6 +4,7 @@ import { TypesServices } from './types.services';
 import { CommunitiesServices } from '../communities/communities.services';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import type { NewType, Type, Community } from '@/interfaces/types/types.interface';
+import type { InputConfig } from '@/interfaces/input-config.interface';
 
 const route = useRoute();
 const currentTypeId = route.params.id as string;
@@ -13,11 +14,11 @@ const breadcrumbRoutes = [
   { label: 'Edit', to: { name: 'types-edit' } },
 ];
 
-const inputs = [
+const inputs: InputConfig[] = [
   { label: 'Description', inputId: 'description', inputType: 'input' },
   { label: 'Cleaning type', inputId: 'cleaningType', inputType: 'input' },
   { label: 'Price', inputId: 'price', inputType: 'numeric' },
-  { label: 'Commission', inputId: 'commission', inputType: 'input' },
+  { label: 'Commission', inputId: 'commission', inputType: 'numeric' },
   { label: 'Community', inputId: 'communityId', inputType: 'select', options: [] },
 ];
 
@@ -32,7 +33,7 @@ const loadData = async (id: string) => {
   ]);
 
   return {
-    ...typeResult, // Datos del tipo
+    ...typeResult, 
     communityIdOptions: communitiesResult.data.map((type: Community) => ({
       label: type.communityName,
       value: type.id,
@@ -41,24 +42,18 @@ const loadData = async (id: string) => {
 };
 
 const updateEntity = async (id: string, data: NewType) => {
+  data.commission = data.commission.toString();
   await TypesServices.updateType(id, data);
 };
 </script>
 
 <template>
-  <GenericEditForm
-    :breadcrumb-routes="breadcrumbRoutes"
-    view-title="Edit Type"
-    :inputs="inputs"
-    :load-data="loadData"
-    :update-entity="updateEntity"
-    :initial-data="{
+  <GenericEditForm :breadcrumb-routes="breadcrumbRoutes" view-title="Edit Type" :inputs="inputs" :load-data="loadData"
+    :update-entity="updateEntity" :initial-data="{
       description: '',
       cleaningType: '',
       price: 0,
       commission: '',
       communityId: '',
-    }"
-    :key-value-map="keyValueMap"
-  />
+    }" :key-value-map="keyValueMap" />
 </template>
