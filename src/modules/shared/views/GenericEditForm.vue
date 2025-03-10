@@ -134,7 +134,7 @@ onMounted(async () => {
         :label="input.label" :inputId="input.inputId" :input-type="input.inputType" :options="input.options"
         :input-numeric-mode="input.inputNumericMode" :time-only="input.timeOnly" :hour-format="input.hourFormat" />
 
-      <div />
+      <div v-if="inputs.length % 2 !== 0" ></div>
 
       <div>
         <LoadingButton label="Edit" @click="updateEntity"></LoadingButton>

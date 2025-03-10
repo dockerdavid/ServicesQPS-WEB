@@ -1,6 +1,9 @@
 <template>
     <div class="card flex justify-center items-center h-[100vh]">
-        <form @submit.prevent="onFormSubmit" class="flex flex-col gap-4 w-full sm:w-80">
+        <form @submit.prevent="onFormSubmit" class="flex flex-col gap-4 w-full sm:w-80 ">
+
+            <img class="w-50 self-center" src="../../assets/img/logoqps.png" alt="">
+
             <div class="flex flex-col gap-1">
                 <InputText type="email" placeholder="Email" v-model="form.username" />
                 <Message v-if="errors.username" severity="error" size="small" variant="simple">{{ errors.username }}

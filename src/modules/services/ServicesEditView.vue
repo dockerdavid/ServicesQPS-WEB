@@ -41,11 +41,13 @@ const unitSizeOptions = [
 ];
 
 const keyValueMap = {
-  communityId: 'community.id', // Mapea communityId a community.id
-  typeId: 'type.id', // Mapea typeId a type.id
-  statusId: 'status.id', // Mapea statusId a status.id
-  userId: 'user.id', // Mapea userId a user.id
-  extraId: 'extra.id', // Mapea extraId a extra.id
+  communityId: 'communityId', 
+  typeId: 'type.id', 
+  statusId: 'status.id', 
+  userId: 'user.id', 
+  extraId: 'extra.id', 
+  schedule: 'schedule',
+  companyId: 'company.id'
 };
 
 const loadData = async (id: string) => {
