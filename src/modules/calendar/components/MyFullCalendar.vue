@@ -32,8 +32,8 @@ const calendarOptions = ref({
     return {
       html: `
         <div class="whitespace-normal">
-          <p>${event.extendedProps.userName}</p>
-          <p class=" "">${event.extendedProps.communityName}</p>
+          <p>${event.extendedProps.userName || 'N/A'}</p>
+          <p class=" "">${event.extendedProps.communityName || 'N/A'} </p>
         </div>
       `,
     };
@@ -70,10 +70,10 @@ onMounted(async () => {
       date: event.date,
       color: getEventColor(parseInt(event.statusId)),
       extendedProps: {
-        userName: event.user.name,
+        userName: event.user?.name || 'N/A',
         communityName: event.community?.communityName || 'N/A',
-        status: event.status.statusName,
-        type: event.type.cleaningType,
+        status: event.status?.statusName || 'N/A',
+        type: event.type?.cleaningType || 'N/A',
       },
     }));
   }
