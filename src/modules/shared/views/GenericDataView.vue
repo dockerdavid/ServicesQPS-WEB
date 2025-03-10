@@ -33,6 +33,7 @@ const currentPage = ref(1);
 const rowsPerPage = ref(10);
 
 const searchWord = ref('');
+const prevSearchWord = ref("");
 
 const breadcrumbRoutes = [
     { label: props.viewTitle.charAt(0).toUpperCase() + props.viewTitle.slice(1), to: { name: `${props.viewTitle.toLowerCase()}-default` } },
@@ -75,22 +76,38 @@ const debounce = (fn: Function, delay: number) => {
 };
 
 const handlePageChange = (event: any) => {
-    currentPage.value = event.page + 1; // Asegúrate de que currentPage sea 1-based
+    currentPage.value = event.page + 1;
     rowsPerPage.value = event.rows;
 
     if (searchWord.value) {
-        onSearch(); // Llama a la búsqueda si hay una palabra clave
+        onSearch();
     } else {
-        fetchDataList(); // Si no hay palabra clave, carga los datos normales
+        fetchDataList();
     }
 };
 
+const clearSearch = () => {
+    searchWord.value = "";
+    prevSearchWord.value = "";
+    onSearch(); 
+};
+
 const debouncedSearch = debounce(async () => {
+
     if (!searchWord.value) {
+        currentPage.value = 1
         await fetchDataList();
         return;
     }
+
+    if (currentPage.value !== 1 && prevSearchWord.value !== searchWord.value) {
+        currentPage.value = 1;
+    }
+
     dataList.value = await props.searchData(searchWord.value, currentPage.value, rowsPerPage.value);
+
+
+    prevSearchWord.value = searchWord.value;
 }, 450);
 
 const onSearch = () => {
@@ -116,9 +133,12 @@ onMounted(async () => {
                 <IconField>
                     <InputIcon class="pi pi-search" />
                     <InputText v-model="searchWord" @input="onSearch" placeholder="Search" />
+                    <InputIcon v-if="searchWord" class="pi pi-times cursor-pointer text-gray-500 hover:text-black"
+                        @click="clearSearch" />
                 </IconField>
             </slot>
         </template>
+
 
         <template #card-content>
             <EditableDataTable :data="dataList.data" :headers="headers" :onDelete="onDelete" :lockEdit="lockEdit"

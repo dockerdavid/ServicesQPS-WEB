@@ -10,9 +10,6 @@ import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import moment from 'moment';
 import type { InputConfig } from '../../interfaces/input-config.interface';
 
-const route = useRoute();
-const serviceId = route.params.id as string;
-
 const breadcrumbRoutes = [
   { label: 'Services', to: { name: 'services-default' } },
   { label: 'Edit', to: { name: 'services-edit' } },

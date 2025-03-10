@@ -1,5 +1,6 @@
 import { apiServicesQps } from "../../api/api";
 import type CreateService from "../../interfaces/services/services.interface";
+import type EditService from "../../interfaces/services/services.interface";
 import type { Service, Services } from "../../interfaces/services/services.interface";
 import { useGlobalStateStore } from "../../store/auth.store";
 import genericNullObject from "../../utils/null-data-meta";
@@ -74,14 +75,15 @@ export class CleanersServices {
         }
     }
 
-    static async updateService(serviceId: string, changedValue: CreateService) {
+    static async updateService(serviceId: string, changedValue: EditService) {
         if (!serviceId) return;
 
         this.store.setIsLoading(true);
-
+        const { id, ...updatedService } = changedValue
         try {
-            await apiServicesQps.patch(`/services/${serviceId}`, changedValue);
+            await apiServicesQps.patch(`/services/${serviceId}`, updatedService);
         } catch (error: any) {
+            console.log(error.response.data);
             throw new Error(error);
         } finally {
             this.store.setIsLoading(false);
