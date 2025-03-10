@@ -108,9 +108,9 @@ const updateEntity = async () => {
     });
 
     await props.updateEntity(entityId, dataToUpdate);
-    showToast(toast, { severity: 'success', summary: 'Entity updated' });
+    showToast(toast, { severity: 'success', summary: 'Entity updated', detail: `Entity ${entityId}` });
   } catch (error) {
-    showToast(toast, { severity: 'error', summary: "Entity wasn't updated" });
+    showToast(toast, { severity: 'error', summary: "Entity wasn't updated", detail: `Entity ${entityId}` });
   }
 };
 

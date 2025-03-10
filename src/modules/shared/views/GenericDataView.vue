@@ -51,14 +51,14 @@ const onDelete = async (item: any) => {
         await props.deleteData(item.id);
         showToast(toast, {
             summary: 'Item deleted',
-            detail: `Item: ${item.name || item.statusName}`,
+            detail: `Item: ${item.id}`,
             severity: "info"
         });
     } catch (error) {
         dataList.value.data = originalData;
         showToast(toast, {
             summary: "Item wasn't deleted",
-            detail: `Item: ${item.name || item.statusName}`,
+            detail: `Item: ${item.id}`,
             severity: "error"
         });
     }
