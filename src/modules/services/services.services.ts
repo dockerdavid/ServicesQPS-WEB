@@ -80,9 +80,9 @@ export class CleanersServices {
         if (!serviceId) return;
 
         this.store.setIsLoading(true);
-        const { id, ...updatedService } = changedValue
+       
         try {
-            await apiServicesQps.patch(`/services/${serviceId}`, updatedService);
+            await apiServicesQps.patch(`/services/${serviceId}`, changedValue);
         } catch (error: any) {
             console.log(error.response.data);
             throw new Error(error);

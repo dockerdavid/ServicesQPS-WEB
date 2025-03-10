@@ -7,9 +7,9 @@ export interface Services {
 
 export interface Service {
     id: string;
-    date: Date;
-    schedule: null;
-    comment: null;
+    date: string;
+    schedule: string;
+    comment: null | string;
     userComment: null | string;
     unitySize: string;
     unitNumber: string;
@@ -22,6 +22,7 @@ export interface Service {
     community: Community;
     type: Type;
     status: Status;
+    extrasByServices: ExtraByService[]
 }
 
 export interface Community {
@@ -73,12 +74,12 @@ export default interface CreateService {
     typeId: string;
     statusId: string;
     userId: string;
-    extraId: string;
+    extraId: string[];
 }
 
 export interface EditService {
     date: string;
-    schedule: string;
+    schedule: Date;
     comment: string;
     userComment: string;
     unitySize: string;
@@ -87,8 +88,7 @@ export interface EditService {
     typeId: string;
     statusId: string;
     userId: string;
-    extraId: string;
-    id: string;
+    extraId: string[];
 }
 
 export interface TypeByCommunity {
@@ -101,4 +101,12 @@ export interface TypeByCommunity {
     createdAt:    Date;
     updatedAt:    Date;
     community:    Community;
+}
+
+export interface ExtraByService{
+    id: string,
+    serviceId: string,
+    extraId: string,
+    createdAt: Date,
+    updatedAt: Date
 }

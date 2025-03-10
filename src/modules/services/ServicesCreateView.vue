@@ -10,7 +10,7 @@ import { CleanersServices } from './services.services';
 import { showToast } from '../../utils/show-toast';
 import type { Communities } from '../../interfaces/communities/communities.interface';
 import genericNullObject from '../../utils/null-data-meta';
-
+import MultiSelect from 'primevue/multiselect';
 import type { Statuses } from '../../interfaces/statuses/statuses.interface';
 import type { Extras } from '../../interfaces/extras/extras.interface';
 import type { Users } from '../../interfaces/users/users.interface';
@@ -33,18 +33,18 @@ const newService = ref<CreateService>({
     schedule: moment().format('HH:mm:ss'),
     comment: '',
     communityId: '',
-    extraId: '',
+    extraId: [],
     statusId: '',
     typeId: '',
     unitNumber: '',
     unitySize: '',
     userComment: '',
     userId: '',
-    
+
 });
 
 const communities = ref<Communities>(genericNullObject);
-const typesByCommunity = ref<TypeByCommunity[]>([]); // Tipado como array
+const typesByCommunity = ref<TypeByCommunity[]>([]);
 const statuses = ref<Statuses>(genericNullObject);
 const extras = ref<Extras>(genericNullObject);
 const cleaners = ref<Users>(genericNullObject);
@@ -106,7 +106,7 @@ const unitSizeOptions = [
 const getTypesByCommunity = async () => {
     if (newService.value.communityId) {
         const types = await TypesServices.getTypesByCommunity(newService.value.communityId);
-        typesByCommunity.value = types; // Asegúrate de que `types` sea un array
+        typesByCommunity.value = types;
     }
 };
 
@@ -126,14 +126,14 @@ const createService = async () => {
             schedule: moment().format('HH:mm:ss'),
             comment: '',
             communityId: '',
-            extraId: '',
+            extraId: [],
             statusId: '',
             typeId: '',
             unitNumber: '',
             unitySize: '',
             userComment: '',
             userId: '',
-            
+
         };
     } catch (error) {
         showToast(toast, { severity: 'error', summary: "Service wasn't created" });
@@ -142,10 +142,10 @@ const createService = async () => {
 
 onMounted(async () => {
     const [communityResults, statusResults, extrasResults, cleanerResults] = await Promise.all([
-        CommunitiesServices.getCommunities(),
-        StatusesServices.getStatuses(),
-        ExtrasServices.getExtras(),
-        UsersServices.getUsers(),
+        CommunitiesServices.getCommunities(undefined, 50),
+        StatusesServices.getStatuses(undefined, 50),
+        ExtrasServices.getExtras(undefined, 50),
+        UsersServices.getUsers(undefined, 50),
     ]);
 
     communities.value = communityResults;
@@ -163,7 +163,8 @@ onMounted(async () => {
         </template>
 
         <template #inputs>
-            <MyInputGroup inputType="datepicker" label="Date" inputId="date" v-model="newService.date" icon="calendar" />
+            <MyInputGroup inputType="datepicker" label="Date" inputId="date" v-model="newService.date"
+                icon="calendar" />
 
             <MyInputGroup inputType="datepicker" label="Schedule" inputId="schedule" v-model="newService.schedule"
                 icon="clock" :hourFormat="true" :timeOnly="true" />
@@ -183,8 +184,12 @@ onMounted(async () => {
             <MyInputGroup inputType="select" label="Status" inputId="status" v-model="newService.statusId"
                 :options="statusOptions" />
 
-            <MyInputGroup inputType="select" label="Extras" inputId="extras" v-model="newService.extraId"
-                :options="extrasOptions" />
+            <fieldset>
+                <label for="extras">Extras</label>
+                <MultiSelect input-id="extras" v-model="newService.extraId" :options="extrasOptions"
+                    optionLabel="label" optionValue="value" filter placeholder="Select Extras" :maxSelectedLabels="3"
+                    class="w-full md:w-80" />
+            </fieldset>
 
             <MyInputGroup inputType="select" label="Cleaner" inputId="cleaner" v-model="newService.userId"
                 :options="cleanerOptions" />
