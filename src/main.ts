@@ -2,7 +2,7 @@ import 'primeicons/primeicons.css';
 
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import { createPersistedStatePlugin } from 'pinia-plugin-persistedstate-2';
+/* import { createPersistedStatePlugin } from 'pinia-plugin-persistedstate-2'; */
 
 import PrimeVue from 'primevue/config';
 import { MyCustomPreset } from './assets/primevue_presets';
@@ -20,8 +20,8 @@ const app = createApp(App);
 const pinia = createPinia();
 
 
-const installPersistedStatePlugin = createPersistedStatePlugin()
-pinia.use((context) => installPersistedStatePlugin(context))
+/* const installPersistedStatePlugin = createPersistedStatePlugin() */
+/* pinia.use((context) => installPersistedStatePlugin(context)) */
 
 
 app.component('Icon', Icon);

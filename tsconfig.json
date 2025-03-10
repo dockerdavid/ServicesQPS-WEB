@@ -1,10 +1,13 @@
 {
-  "extends": "@vue/tsconfig/tsconfig.dom.json", 
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
-  "exclude": ["node_modules", "dist"], 
+  "exclude": ["node_modules", "dist"],
   "compilerOptions": {
     "allowJs": true,
-    "baseUrl": ".", 
-    "types": ["vite/client", "vue"] 
+    "baseUrl": ".",
+    "types": ["vite/client", "vue"],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   }
 }
