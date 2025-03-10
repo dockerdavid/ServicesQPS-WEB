@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia';
+import * as pinia from 'pinia'
+
 
 interface AuthState {
   userToken: string;
