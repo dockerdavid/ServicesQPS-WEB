@@ -1,22 +1,32 @@
 <template>
     <fieldset>
-        <label :for="props.inputId">{{ props.label }}</label>
+        <label :for="props.inputId">{{ props.label }} <span class="text-red-500">{{ props.required ? '*' : '' }}</span>
+        </label>
         <IconField>
-            <InputText :aria-required="true" :placeholder="props.placeholder" v-if="props.inputType === 'input'" v-model="modelValue"
-                :id="props.inputId" />
+            <InputText :aria-required="true" :placeholder="props.placeholder" v-if="props.inputType === 'input'"
+                v-model="modelValue" :required="props.required" :id="props.inputId" />
 
             <DatePicker :placeholder="props.placeholder" v-if="props.inputType === 'datepicker'" v-model="dateValue"
-                :inputId="props.inputId" :hourFormat="props.hourFormat ? '12' : '24'" :timeOnly="props.timeOnly" />
+                :required="props.required" :aria-required="props.required" :inputId="props.inputId"
+                :hourFormat="props.hourFormat ? '12' : '24'" :timeOnly="props.timeOnly" />
 
             <Select :placeholder="props.placeholder" v-if="props.inputType === 'select'" v-model="modelValue"
-                :labelId="props.inputId" :options="props.options" option-label="label" option-value="value" />
+                :required="props.required" :aria-required="props.required" :labelId="props.inputId"
+                :options="props.options" option-label="label" option-value="value" />
 
-            <InputNumber :useGrouping="false" :placeholder="props.placeholder" :mode="props.inputNumericMode" currency="USD"
+            <InputNumber :required="props.required" :aria-required="props.required" :useGrouping="false"
+                :placeholder="props.placeholder" :mode="props.inputNumericMode" currency="USD"
                 v-if="props.inputType === 'numeric'" v-model="numericValue" :inputId="props.inputId" />
+
+
+            <MultiSelect v-if="props.inputType === 'multiselect'" v-model="modelValue" :options="props.options"
+                optionLabel="label" optionValue="value" :placeholder="props.placeholder" :filter="true"
+                :maxSelectedLabels="3" class="w-full md:w-80" />
 
             <InputIcon :placeholder="props.placeholder" v-if="props.inputType !== 'select' && props.icon"
                 :class="`pi pi-${props.icon}`" />
         </IconField>
+        <small v-if="props.required && props.isFormSubmitted && !modelValue" class="text-red-500">Field required</small>
     </fieldset>
 </template>
 
@@ -37,11 +47,16 @@ interface InputGroupProps {
     timeOnly?: boolean;
     options?: Array<{ label: string; value: string }>;
     inputNumericMode?: InputNumericMode;
+    required?: boolean;
+    isFormSubmitted: boolean;
+
 }
 
-const props = withDefaults(defineProps<InputGroupProps>(),
-    { inputNumericMode: 'currency' }
-);
+
+const props = withDefaults(defineProps<InputGroupProps>(), {
+    inputNumericMode: 'currency',
+    required: true,
+});
 
 
 const model = defineModel<string | number | undefined>();

@@ -1,33 +1,45 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import moment from 'moment';
-import { useToast } from 'primevue';
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
+import { MultiSelect, useToast } from 'primevue';
 import CreateLayout from '../../layouts/CreateLayout.vue';
-import type CreateService from '../../interfaces/services/services.interface';
+import MyInputGroup from '../shared/components/MyInputGroup.vue';
 import LoadingButton from '../shared/components/LoadingButton.vue';
 import { CleanersServices } from './services.services';
 import { showToast } from '../../utils/show-toast';
-import type { Communities } from '../../interfaces/communities/communities.interface';
-import genericNullObject from '../../utils/null-data-meta';
-import MultiSelect from 'primevue/multiselect';
-import type { Statuses } from '../../interfaces/statuses/statuses.interface';
-import type { Extras } from '../../interfaces/extras/extras.interface';
-import type { Users } from '../../interfaces/users/users.interface';
 import { CommunitiesServices } from '../communities/communities.services';
 import { TypesServices } from '../types/types.services';
 import { StatusesServices } from '../statuses/statuses.services';
 import { ExtrasServices } from '../extras/extras.services';
 import { UsersServices } from '../users/users.services';
 import type { TypeByCommunity } from '../../interfaces/services/services.interface';
+import type CreateService from '../../interfaces/services/services.interface';
+import type { Community } from '../../../src/interfaces/communities/communities.interface';
+import type {  Statuses } from '../../../src/interfaces/statuses/statuses.interface';
+import type {  Extras } from '../../../src/interfaces/extras/extras.interface';
+import type {  Users } from '../../../src/interfaces/users/users.interface';
+import genericNullObject from '../../../src/utils/null-data-meta';
+
 
 const toast = useToast();
 
+// Configuración del breadcrumb
 const breadcrumbRoutes = [
     { label: 'Services', to: { name: 'services-default' } },
     { label: 'Create', to: { name: 'services-create' } },
 ];
 
+// Opciones predefinidas para el tamaño de la unidad
+const unitSizeOptions = [
+    { label: 'N/A', value: 'N/A' },
+    { label: '1 Bedroom', value: '1 Bedroom' },
+    { label: '2 Bedroom', value: '2 Bedroom' },
+    { label: '3 Bedroom', value: '3 Bedroom' },
+    { label: '4 Bedroom', value: '4 Bedroom' },
+    { label: '5 Bedroom', value: '5 Bedroom' },
+];
+
+// Datos del formulario
 const newService = ref<CreateService>({
     date: moment().format('YYYY-MM-DD'),
     schedule: moment().format('HH:mm:ss'),
@@ -40,87 +52,81 @@ const newService = ref<CreateService>({
     unitySize: '',
     userComment: '',
     userId: '',
-
 });
 
-const communities = ref<Communities>(genericNullObject);
+// Estado para rastrear si el formulario ha sido enviado
+const isFormSubmitted = ref(false);
+
+// Opciones dinámicas para los selects
+const communities = ref<Community[]>([]);
 const typesByCommunity = ref<TypeByCommunity[]>([]);
-const statuses = ref<Statuses>(genericNullObject);
-const extras = ref<Extras>(genericNullObject);
-const cleaners = ref<Users>(genericNullObject);
+const statuses = ref<Statuses>({ data: [], meta: genericNullObject.meta });
+const extras = ref<Extras>({ data: [], meta: genericNullObject.meta });
+const cleaners = ref<Users>({ data: [], meta: genericNullObject.meta });
 
-const communityOptions = computed(() => {
-    return communities.value.data.map((community) => {
-        return {
-            label: community.communityName,
-            value: community.id,
-        };
-    });
-});
+// Cargar opciones dinámicas
+const loadOptions = async () => {
+    const [communityResults, statusResults, extrasResults, cleanerResults] = await Promise.all([
+        CommunitiesServices.getCommunities(undefined, 50),
+        StatusesServices.getStatuses(undefined, 50),
+        ExtrasServices.getExtras(undefined, 50),
+        UsersServices.getUsers(undefined, 50),
+    ]);
 
-const typeOptions = computed(() => {
-    return typesByCommunity.value.map((type: TypeByCommunity) => { // Tipar el parámetro
-        return {
-            label: `${type.cleaningType} (${type.description})`,
-            value: type.id,
-        };
-    });
-});
+    communities.value = communityResults.data;
+    statuses.value = statusResults;
+    extras.value = extrasResults;
+    cleaners.value = cleanerResults;
+};
 
-const statusOptions = computed(() => {
-    return statuses.value.data.map((status) => {
-        return {
-            label: status.statusName,
-            value: status.id,
-        };
-    });
-});
-
-const extrasOptions = computed(() => {
-    return extras.value.data.map((extra) => {
-        return {
-            label: extra.item,
-            value: extra.id,
-        };
-    });
-});
-
-const cleanerOptions = computed(() => {
-    return cleaners.value.data.map((cleaner) => {
-        return {
-            label: cleaner.name,
-            value: cleaner.id,
-        };
-    });
-});
-
-const unitSizeOptions = [
-    { label: 'N/A', value: 'N/A' },
-    { label: '1 Bedroom', value: '1 Bedroom' },
-    { label: '2 Bedroom', value: '2 Bedroom' },
-    { label: '3 Bedroom', value: '3 Bedroom' },
-    { label: '4 Bedroom', value: '4 Bedroom' },
-    { label: '5 Bedroom', value: '5 Bedroom' },
-];
-
-const getTypesByCommunity = async () => {
-    if (newService.value.communityId) {
-        const types = await TypesServices.getTypesByCommunity(newService.value.communityId);
+// Obtener los tipos de servicio por comunidad
+const getTypesByCommunity = async (communityId: string) => {
+    if (communityId) {
+        const types = await TypesServices.getTypesByCommunity(communityId);
         typesByCommunity.value = types;
     }
 };
 
-watch(() => newService.value.communityId, (newCommunityId) => {
-    if (newCommunityId) {
-        getTypesByCommunity();
+// Observar cambios en el campo "Community"
+watch(
+    () => newService.value.communityId,
+    (newCommunityId) => {
+        if (newCommunityId) {
+            getTypesByCommunity(newCommunityId);
+        }
     }
-});
+);
 
+// Función para crear el servicio
 const createService = async () => {
-    newService.value.unitNumber = newService.value.unitNumber.toString();
+    isFormSubmitted.value = true;
+
+    // Validar campos requeridos
+    const requiredFields = [
+        { field: newService.value.communityId, label: 'Community' },
+        { field: newService.value.typeId, label: 'Type' },
+        { field: newService.value.statusId, label: 'Status' },
+        { field: newService.value.userId, label: 'Cleaner' },
+    ];
+
+    const missingFields = requiredFields.filter((field) => !field.field).map((field) => field.label);
+
+    if (missingFields.length > 0) {
+        showToast(toast, {
+            severity: 'error',
+            summary: 'Missing required fields',
+            detail: `The following fields are required: ${missingFields.join(', ')}`,
+        });
+        return;
+    }
+
     try {
+        newService.value.unitNumber = newService.value.unitNumber.toString();
+
         await CleanersServices.createService(newService.value);
         showToast(toast, { severity: 'success', detail: 'Service was created' });
+
+        // Resetear el formulario después de la creación
         newService.value = {
             date: moment().format('YYYY-MM-DD'),
             schedule: moment().format('HH:mm:ss'),
@@ -133,74 +139,80 @@ const createService = async () => {
             unitySize: '',
             userComment: '',
             userId: '',
-
         };
+
+        // Reiniciar el estado de isFormSubmitted
+        isFormSubmitted.value = false;
     } catch (error) {
         showToast(toast, { severity: 'error', summary: "Service wasn't created" });
     }
 };
 
+// Cargar opciones al montar el componente
 onMounted(async () => {
-    const [communityResults, statusResults, extrasResults, cleanerResults] = await Promise.all([
-        CommunitiesServices.getCommunities(undefined, 50),
-        StatusesServices.getStatuses(undefined, 50),
-        ExtrasServices.getExtras(undefined, 50),
-        UsersServices.getUsers(undefined, 50),
-    ]);
-
-    communities.value = communityResults;
-    statuses.value = statusResults;
-    extras.value = extrasResults;
-    cleaners.value = cleanerResults;
+    await loadOptions();
 });
 </script>
 
-
 <template>
     <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
-        <template #view-title>
-            Create service
-        </template>
+        <template #view-title>Create service</template>
 
         <template #inputs>
-            <MyInputGroup inputType="datepicker" label="Date" inputId="date" v-model="newService.date"
-                icon="calendar" />
+            <!-- Campo: Fecha -->
+            <MyInputGroup v-model="newService.date" label="Date" inputId="date" inputType="datepicker" icon="calendar"
+                :is-form-submitted="isFormSubmitted" />
 
-            <MyInputGroup inputType="datepicker" label="Schedule" inputId="schedule" v-model="newService.schedule"
-                icon="clock" :hourFormat="true" :timeOnly="true" />
+            <!-- Campo: Horario -->
+            <MyInputGroup v-model="newService.schedule" label="Schedule" inputId="schedule" inputType="datepicker"
+                icon="clock" :hourFormat="true" :timeOnly="true" :is-form-submitted="isFormSubmitted" />
 
-            <MyInputGroup :options="unitSizeOptions" inputType="select" label="Unit size" inputId="unit-size"
-                v-model="newService.unitySize" />
+            <!-- Campo: Tamaño de la unidad -->
+            <MyInputGroup v-model="newService.unitySize" label="Unit size" inputId="unitySize" inputType="select"
+                :options="unitSizeOptions" :is-form-submitted="isFormSubmitted" />
 
-            <MyInputGroup inputType="numeric" input-numeric-mode="decimal" label="Unit number" inputId="unit-number"
-                v-model="newService.unitNumber" icon="address-book" />
+            <!-- Campo: Número de unidad -->
+            <MyInputGroup v-model="newService.unitNumber" label="Unit number" inputId="unitNumber" inputType="numeric"
+                icon="address-book" :is-form-submitted="isFormSubmitted" input-numeric-mode="decimal" />
 
-            <MyInputGroup inputType="select" label="Community" inputId="community" v-model="newService.communityId"
-                :options="communityOptions" />
+            <!-- Campo: Comunidad -->
+            <MyInputGroup v-model="newService.communityId" label="Community" inputId="communityId" inputType="select"
+                :options="communities.map((c) => ({ label: c.communityName, value: c.id }))" :required="true"
+                :is-form-submitted="isFormSubmitted" />
 
-            <MyInputGroup inputType="select" label="Type" inputId="type" v-model="newService.typeId"
-                :options="typeOptions" />
+            <!-- Campo: Tipo de servicio -->
+            <MyInputGroup v-model="newService.typeId" label="Type" inputId="typeId" inputType="select"
+                :options="typesByCommunity.map((t) => ({ label: `${t.cleaningType} (${t.description})`, value: t.id }))"
+                :required="true" :is-form-submitted="isFormSubmitted" />
 
-            <MyInputGroup inputType="select" label="Status" inputId="status" v-model="newService.statusId"
-                :options="statusOptions" />
+            <!-- Campo: Estado -->
+            <MyInputGroup v-model="newService.statusId" label="Status" inputId="statusId" inputType="select"
+                :options="statuses.data.map((s) => ({ label: s.statusName, value: s.id }))" :required="true"
+                :is-form-submitted="isFormSubmitted" />
 
+            <!-- Campo: Extras (Multiselect) -->
             <fieldset>
                 <label for="extras">Extras</label>
-                <MultiSelect input-id="extras" v-model="newService.extraId" :options="extrasOptions"
-                    optionLabel="label" optionValue="value" filter placeholder="Select Extras" :maxSelectedLabels="3"
-                    class="w-full md:w-80" />
+                <MultiSelect v-model="newService.extraId"
+                    :options="extras.data.map((e) => ({ label: e.item, value: e.id }))" optionLabel="label"
+                    optionValue="value" placeholder="Select extras" class="w-full md:w-80" />
             </fieldset>
 
-            <MyInputGroup inputType="select" label="Cleaner" inputId="cleaner" v-model="newService.userId"
-                :options="cleanerOptions" />
+            <!-- Campo: Limpiador -->
+            <MyInputGroup v-model="newService.userId" label="Cleaner" inputId="userId" inputType="select"
+                :options="cleaners.data.map((c) => ({ label: c.name, value: c.id }))" :required="true"
+                :is-form-submitted="isFormSubmitted" />
 
-            <MyInputGroup inputType="input" label="Comment" inputId="comment" v-model="newService.comment"
-                style="resize:none;" />
+            <!-- Campo: Comentario -->
+            <MyInputGroup v-model="newService.comment" label="Comment" inputId="comment" inputType="input"
+                :is-form-submitted="isFormSubmitted" />
 
+            <!-- Espacio adicional -->
             <div />
 
+            <!-- Botón de creación -->
             <div>
-                <LoadingButton @click="createService" />
+                <LoadingButton label="Create" @click="createService" />
             </div>
         </template>
     </CreateLayout>

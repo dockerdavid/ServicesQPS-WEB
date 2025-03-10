@@ -1,101 +1,50 @@
 <script setup lang="ts">
 
-import CreateLayout from '../../layouts/CreateLayout.vue';
-import { computed, onMounted, ref } from 'vue';
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import LoadingButton from '../shared/components/LoadingButton.vue';
 import { CommunitiesServices } from './communities.services';
-import type { NewCommunity } from '../../interfaces/communities/communities.interface';
 import { CompaniesServices } from '../companies/companies.services';
-import type { Companies } from '../../interfaces/companies/companies.interface';
-import genericNullObject from '../../utils/null-data-meta';
-import type { Users } from '../../interfaces/users/users.interface';
 import { UsersServices } from '../users/users.services';
-import { useToast } from 'primevue';
-import { showToast } from '../../utils/show-toast';
+import type { NewCommunity } from '../../interfaces/communities/communities.interface';
+import type { InputConfig } from 'src/interfaces/input-config.interface';
+import GenericCreateForm from '../shared/views/GenericCreateForm.vue';
 
-const toast = useToast();
-
-const companies = ref<Companies>(genericNullObject);
-const companiesOptions = computed(() => {
-    return companies.value.data.map((company) => {
-        return {
-            label: company.companyName,
-            value: company.id
-        };
-    });
-})
-
-const users = ref<Users>(genericNullObject);
-const usersOptions = computed(() => {
-    return users.value.data.map((user) => {
-        return {
-            label: user.name,
-            value: user.id
-        }
-    })
-})
-
-const newCommunity = ref<NewCommunity>({
-    communityName: '',
-    companyId: '',
-    userId: ''
-})
-
-const createCommunity = async () => {
-    try {
-        await CommunitiesServices.createCommunity(newCommunity.value);
-        newCommunity.value = {
-            communityName: '',
-            companyId: '',
-            userId: ''
-        }
-        showToast(toast,{ severity: 'success', summary: 'Community created' })
-    } catch (error) {
-        showToast(toast,{ severity: 'error', summary: "Community wasn't created" })
-    }
-}
-
+// Configuración del breadcrumb
 const breadcrumbRoutes = [
-  { label: 'Communities', to: { name: 'communities-default' } },
-  { label: 'Create', to: { name: 'communities-create' } },
+  { label: 'Comunidades', to: { name: 'communities-default' } },
+  { label: 'Crear', to: { name: 'communities-create' } },
 ];
 
-onMounted(async () => {
-    const [companiesResult, usersResult] = await Promise.all([
-        CompaniesServices.getCompanies(),
-        UsersServices.getUsers()
-    ]);
-    companies.value = companiesResult;
-    users.value = usersResult;
-});
+// Configuración de los campos del formulario
+const inputs:InputConfig[] = [
+  { inputId: 'communityName', label: 'Nombre de la comunidad', inputType: 'input',  },
+  { inputId: 'userId', label: 'Manager', inputType: 'select',  },
+  { inputId: 'companyId', label: 'Compañía', inputType: 'select', },
+];
 
+// Función para cargar opciones de selects
+const loadOptions = async () => {
+  const [companies, users] = await Promise.all([
+    CompaniesServices.getCompanies(),
+    UsersServices.getUsers(),
+  ]);
+
+  return {
+    userId: users.data.map((user) => ({ label: user.name, value: user.id })),
+    companyId: companies.data.map((company) => ({ label: company.companyName, value: company.id })),
+  };
+};
+
+// Función para crear la entidad
+const createEntity = async (data: NewCommunity) => {
+  await CommunitiesServices.createCommunity(data);
+};
 </script>
 
 <template>
-    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
-
-        <template #view-title> Create Community </template>
-
-        <template #inputs>
-
-            <MyInputGroup v-model="newCommunity.communityName" label="Community name" inputId="name"
-                input-type="input" />
-            <MyInputGroup :options="usersOptions" v-model="newCommunity.userId" label="Manager" inputId="manager"
-                input-type="select" />
-            <MyInputGroup :options="companiesOptions" v-model="newCommunity.companyId" label="Company" inputId="company"
-                input-type="select" />
-
-            <div />
-
-            <div>
-                <LoadingButton label="Create" @click="createCommunity"></LoadingButton>
-            </div>
-
-        </template>
-
-    </CreateLayout>
+  <GenericCreateForm
+    :breadcrumb-routes="breadcrumbRoutes"
+    view-title="Crear Comunidad"
+    :inputs="inputs"
+    :create-entity="createEntity"
+    :load-options="loadOptions"
+  />
 </template>
-
-
-

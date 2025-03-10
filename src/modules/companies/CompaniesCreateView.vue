@@ -1,52 +1,35 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import CreateLayout from '../../layouts/CreateLayout.vue';
-import { useToast } from 'primevue';
+
 import { CompaniesServices } from './companies.services';
-import LoadingButton from '../shared/components/LoadingButton.vue';
+import { useToast } from 'primevue';
 import { showToast } from '../../utils/show-toast';
+import GenericCreateForm from '../shared/views/GenericCreateForm.vue';
+import type { InputConfig } from 'src/interfaces/input-config.interface';
 
-const companyName = ref('');
-const toast = useToast();
-
+// Configuración del breadcrumb
 const breadcrumbRoutes = [
-    { label: 'Companies', to: { name: 'companies-default' } },
-    { label: 'Create', to: { name: 'companies-create' } },
+  { label: 'Companies', to: { name: 'companies-default' } },
+  { label: 'Create', to: { name: 'companies-create' } },
 ];
 
-const createCompany = async () => {
+// Configuración de los campos del formulario
+const inputs:InputConfig[] = [
+  { inputId: 'companyName', label: 'Company name', inputType: 'input'},
+];
 
-    try {
-        await CompaniesServices.createCompany(companyName.value);
-        showToast(toast, { severity: 'success', summary: 'Community created' })
-        companyName.value = '';
-    } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Community wasn't created" })
-    }
+// Función para crear la entidad
+const createEntity = async (data: { companyName: string }) => {
+    await CompaniesServices.createCompany(data.companyName);
+};
 
-}
 
 </script>
 
 <template>
-    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
-
-        <template #view-title> Create Company </template>
-
-        <template #inputs>
-
-            <MyInputGroup v-model="companyName" label="Company name" inputId="name" input-type="input" />
-
-            <div />
-
-            <div>
-                <LoadingButton @click="createCompany"></LoadingButton>
-            </div>
-
-        </template>
-
-
-
-    </CreateLayout>
+  <GenericCreateForm
+    :breadcrumb-routes="breadcrumbRoutes"
+    view-title="Create Company"
+    :inputs="inputs"
+    :create-entity="createEntity"
+  />
 </template>

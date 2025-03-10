@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia';
-import * as pinia from 'pinia'
 
 
 interface AuthState {
@@ -30,7 +29,7 @@ export const useAuthStore = defineStore('auth', {
   },
 
 
-/*   persist: true */
+  /* persist: true  */
 
 });
 

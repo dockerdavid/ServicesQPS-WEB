@@ -28,11 +28,12 @@ const breadcrumbRoutes = [
   { label: 'Edit', to: { name: 'services-edit' } },
 ];
 
+const isFormSubmitted = ref(false);
 
 const fillInitialData = (service: Service) => {
   updatedService.value = {
     date: service.date,
-    schedule: moment(`${service.date}T${service.schedule}`).toDate(),
+    schedule: moment().format('HH:mm:ss'),
     comment: service.comment || '',
     communityId: service.communityId,
     extraId: service.extrasByServices.map(extra => extra.extraId),
@@ -47,7 +48,7 @@ const fillInitialData = (service: Service) => {
 
 const updatedService = ref<EditService>({
   date: moment().format('YYYY-MM-DD'),
-  schedule: moment().toDate(),
+  schedule: moment().format('HH:mm:ss'),
   comment: '',
   communityId: '',
   extraId: [],
@@ -133,26 +134,15 @@ watch(() => updatedService.value.communityId, (newCommunityId) => {
 });
 
 const updateService = async () => {
+  isFormSubmitted.value = true;
   updatedService.value.unitNumber = updatedService.value.unitNumber.toString();
   try {
     await CleanersServices.updateService(entityId, updatedService.value);
     showToast(toast, { severity: 'success', detail: 'Service was updated' });
-    updatedService.value = {
-      date: moment().format('YYYY-MM-DD'),
-      schedule: moment().toDate(),
-      comment: '',
-      communityId: '',
-      extraId: [],
-      statusId: '',
-      typeId: '',
-      unitNumber: '',
-      unitySize: '',
-      userComment: '',
-      userId: '',
-
-    };
   } catch (error) {
     showToast(toast, { severity: 'error', summary: "Service wasn't updated" });
+  }finally{
+    isFormSubmitted.value = true;
   }
 };
 
@@ -177,9 +167,7 @@ onMounted(async () => {
 </script>
 
 <template>
-
   <div class="py-6">
-
     <Breadcrumb :model="breadcrumbRoutes">
       <template #item="{ item, props }">
         <router-link v-if="item.to" v-slot="{ href, navigate }" :to="item.to" custom>
@@ -194,45 +182,108 @@ onMounted(async () => {
       </template>
     </Breadcrumb>
 
-
-    <h1 class="text-3xl">
-      Edit service
-    </h1>
+    <h1 class="text-3xl">Edit service</h1>
   </div>
 
   <form class="form-grid">
+    <!-- Campo: Fecha -->
+    <MyInputGroup
+      v-model="updatedService.date"
+      label="Date"
+      inputType="datepicker"
+      inputId="date"
+      :is-form-submitted="isFormSubmitted"
+    />
 
-    <MyInputGroup v-model="updatedService.date" label="Date" input-type="datepicker" input-id="date" />
-    <fieldset>
+    <!-- Campo: Horario -->
+    <MyInputGroup v-model="updatedService.schedule" label="Schedule" inputId="schedule" inputType="datepicker"
+    icon="clock" :hourFormat="true" :timeOnly="true" :is-form-submitted="isFormSubmitted" />
 
-      <label for="schedule">Schedule</label>
-      <DatePicker v-model="updatedService.schedule" label="Schedule" input-type="datepicker" input-id="schedule"
-        :time-only="true" hour-format="12" />
+    <!-- Campo: Tamaño de la unidad -->
+    <MyInputGroup
+      v-model="updatedService.unitySize"
+      label="Unit size"
+      inputType="select"
+      inputId="unit-size"
+      :options="unitSizeOptions"
+      :is-form-submitted="isFormSubmitted"
+    />
 
-    </fieldset>
-    <MyInputGroup :options="unitSizeOptions" v-model="updatedService.unitySize" label="Unit size" input-type="select"
-      input-id="unit-size" />
-    <MyInputGroup v-model="updatedService.unitNumber" label="Unit number" input-type="input" input-id="unit-number" />
-    <MyInputGroup :options="communityOptions" v-model="updatedService.communityId" label="Community" input-type="select"
-      input-id="community" />
-    <MyInputGroup :options="typeOptions" v-model="updatedService.typeId" label="Type" input-type="select"
-      input-id="type" />
-    <MyInputGroup :options="statusOptions" v-model="updatedService.statusId" label="Status" input-type="select"
-      input-id="status" />
+    <!-- Campo: Número de unidad -->
+    <MyInputGroup
+      v-model="updatedService.unitNumber"
+      label="Unit number"
+      inputType="numeric"
+      inputId="unit-number"
+      :is-form-submitted="isFormSubmitted"
+      input-numeric-mode="decimal"
+    />
 
+    <!-- Campo: Comunidad -->
+    <MyInputGroup
+      v-model="updatedService.communityId"
+      label="Community"
+      inputType="select"
+      inputId="community"
+      :options="communityOptions"
+      :is-form-submitted="isFormSubmitted"
+    />
+
+    <!-- Campo: Tipo de servicio -->
+    <MyInputGroup
+      v-model="updatedService.typeId"
+      label="Type"
+      inputType="select"
+      inputId="type"
+      :options="typeOptions"
+      :is-form-submitted="isFormSubmitted"
+    />
+
+    <!-- Campo: Estado -->
+    <MyInputGroup
+      v-model="updatedService.statusId"
+      label="Status"
+      inputType="select"
+      inputId="status"
+      :options="statusOptions"
+      :is-form-submitted="isFormSubmitted"
+    />
+
+    <!-- Campo: Extras -->
     <fieldset>
       <label for="extras">Extras</label>
-      <MultiSelect input-id="extras" v-model="updatedService.extraId" :options="extrasOptions" optionLabel="label"
-        optionValue="value" filter placeholder="Select Extras" :maxSelectedLabels="3" class="w-full md:w-80" />
+      <MultiSelect
+        v-model="updatedService.extraId"
+        :options="extrasOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select Extras"
+        class="w-full md:w-80"
+      />
     </fieldset>
 
-    <MyInputGroup :options="cleanerOptions" v-model="updatedService.userId" label="Cleaner" input-type="select"
-      input-id="cleaner" />
-    <MyInputGroup v-model="updatedService.comment" label="Comment" input-type="input" input-id="comment" />
+    <!-- Campo: Limpiador -->
+    <MyInputGroup
+      v-model="updatedService.userId"
+      label="Cleaner"
+      inputType="select"
+      inputId="cleaner"
+      :options="cleanerOptions"
+      :is-form-submitted="isFormSubmitted"
+    />
 
+    <!-- Campo: Comentario -->
+    <MyInputGroup
+      v-model="updatedService.comment"
+      label="Comment"
+      inputType="input"
+      inputId="comment"
+      :is-form-submitted="isFormSubmitted"
+    />
   </form>
-  <LoadingButton label="Edit" @click="updateService"></LoadingButton>
 
+  <!-- Botón de actualización -->
+  <LoadingButton label="Edit" @click="updateService" />
 </template>
 
 

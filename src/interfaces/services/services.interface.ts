@@ -79,7 +79,7 @@ export default interface CreateService {
 
 export interface EditService {
     date: string;
-    schedule: Date;
+    schedule: string;
     comment: string;
     userComment: string;
     unitySize: string;

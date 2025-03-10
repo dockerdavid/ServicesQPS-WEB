@@ -14,10 +14,10 @@ const breadcrumbRoutes = [
   { label: 'Edit', to: { name: 'communities-edit' } },
 ];
 
-const inputs:InputConfig[] = [
-  { label: 'Community name', inputId: 'communityName', inputType: 'input' },
-  { label: 'Manager', inputId: 'userId', inputType: 'select', options: [] },
-  { label: 'Company', inputId: 'companyId', inputType: 'select', options: [] },
+const inputs: InputConfig[] = [
+  { label: 'Community name', inputId: 'communityName', inputType: 'input', required: true },
+  { label: 'Manager', inputId: 'userId', inputType: 'select', options: [], required: true },
+  { label: 'Company', inputId: 'companyId', inputType: 'select', options: [], required: true },
 ];
 
 const keyValueMap = {
@@ -33,7 +33,7 @@ const loadData = async (id: string) => {
   ]);
 
   return {
-    ...communityResult, // Datos de la comunidad
+    ...communityResult,
     userIdOptions: usersResult.data.map((user) => ({
       label: user.name,
       value: user.id,

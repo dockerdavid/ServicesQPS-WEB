@@ -10,8 +10,6 @@ import type { InputConfig } from '../../../interfaces/input-config.interface';
 
 
 
-
-// Props
 const props = defineProps({
   breadcrumbRoutes: {
     type: Array as () => Array<{ label: string; to: { name: string } }>,
@@ -43,17 +41,19 @@ const props = defineProps({
   },
 });
 
+const isFormSubmitted = ref(false);
+
 const toast = useToast();
 const route = useRoute();
 const entityId = route.params.id as string;
 const entityData = ref({ ...props.initialData });
 
-// Función para acceder a valores anidados dinámicamente
+
 const getNestedValue = (source: Record<string, any>, path: string) => {
   return path.split('.').reduce((obj, key) => (obj && obj[key] !== undefined ? obj[key] : ''), source);
 };
 
-// Función para llenar los valores iniciales
+
 const fillInitialData = (source: Record<string, any>, target: Record<string, any>) => {
   props.inputs.forEach((input) => {
     if (input.inputType === 'select') {
@@ -72,7 +72,7 @@ const fillInitialData = (source: Record<string, any>, target: Record<string, any
   }
 };
 
-// Función para actualizar las opciones de los selects
+
 const updateSelectOptions = (data: Record<string, any>) => {
   props.inputs.forEach((input) => {
     if (input.inputType === 'select' && data[input.inputId + 'Options']) {
@@ -81,13 +81,13 @@ const updateSelectOptions = (data: Record<string, any>) => {
   });
 };
 
-// Watcher para sincronizar el valor inicial de los selects con las opciones
+
 watch(
   () => props.inputs,
   (newInputs) => {
     newInputs.forEach((input) => {
       if (input.inputType === 'select' && input.options) {
-        // Si el valor inicial no está en las opciones, lo reseteamos
+        
         if (entityData.value[input.inputId] && !input.options.some((option) => option.value === entityData.value[input.inputId])) {
           entityData.value[input.inputId] = '';
         }
@@ -98,8 +98,24 @@ watch(
 );
 
 const updateEntity = async () => {
+
+  isFormSubmitted.value = true;
+
+  const errors = props.inputs
+    .filter((input) => input.required && !entityData.value[input.inputId])
+    .map((input) => input.label);
+
+  if (errors.length > 0) {
+    showToast(toast, {
+      severity: 'error',
+      summary: 'Campos requeridos',
+      detail: `Los siguientes campos son obligatorios: ${errors.join(', ')}`,
+    });
+    return;
+  }
+
   try {
-    // Convertir campos numéricos a number antes de enviar
+    
     const dataToUpdate = { ...entityData.value };
     props.inputs.forEach((input) => {
       if (input.inputType === 'numeric' && typeof dataToUpdate[input.inputId] === 'string') {
@@ -109,8 +125,13 @@ const updateEntity = async () => {
 
     await props.updateEntity(entityId, dataToUpdate);
     showToast(toast, { severity: 'success', summary: 'Entity updated', detail: `Entity ${entityId}` });
+
+    
+
   } catch (error) {
     showToast(toast, { severity: 'error', summary: "Entity wasn't updated", detail: `Entity ${entityId}` });
+  }finally{
+    isFormSubmitted.value = false;
   }
 };
 
@@ -131,8 +152,9 @@ onMounted(async () => {
 
     <template #inputs>
       <MyInputGroup v-for="input in inputs" :key="input.inputId" v-model="entityData[input.inputId]"
-        :label="input.label" :inputId="input.inputId" :input-type="input.inputType" :options="input.options"
-        :input-numeric-mode="input.inputNumericMode" :time-only="input.timeOnly" :hour-format="input.hourFormat" />
+        :required="input.required" :label="input.label" :inputId="input.inputId" :input-type="input.inputType" :options="input.options"
+        :input-numeric-mode="input.inputNumericMode" :time-only="input.timeOnly" :hour-format="input.hourFormat"
+        :is-form-submitted="isFormSubmitted" />
 
       <div v-if="inputs.length % 2 !== 0" ></div>
 

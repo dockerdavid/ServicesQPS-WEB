@@ -1,97 +1,45 @@
-<script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import { useToast } from 'primevue';
-import CreateLayout from '../../layouts/CreateLayout.vue';
-
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import LoadingButton from '../shared/components/LoadingButton.vue';
-
+<script lang="ts" setup>
+import type { InputConfig } from 'src/interfaces/input-config.interface';
+import GenericCreateForm from '../shared/views/GenericCreateForm.vue';
 import { TypesServices } from './types.services';
-
-import type { NewType } from '../../interfaces/types/types.interface';
-
-import { showToast } from '../../utils/show-toast';
+import type { NewType } from 'src/interfaces/types/types.interface';
 import { CommunitiesServices } from '../communities/communities.services';
-import type { Communities } from '../../interfaces/communities/communities.interface';
-import genericNullObject from '../../utils/null-data-meta';
 
-const toast = useToast();
+
 
 const breadcrumbRoutes = [
     { label: 'Types', to: { name: 'types-default' } },
     { label: 'Create', to: { name: 'types-create' } },
 ];
 
-const communities = ref<Communities>(genericNullObject)
-const communitiesOptions = computed(() => {
-    return communities.value.data.map((community) => {
-        return {
-            label: community.communityName,
-            value: community.id
-        }
-    })
-})
+const inputs: InputConfig[] = [
+    { label: 'Description', inputId: 'description', inputType: 'input' },
+    { label: 'Cleaning type', inputId: 'cleaningType', inputType: 'input' },
+    { label: 'Price', inputId: 'price', inputType: 'numeric' },
+    { label: 'Community', inputId: 'communityId', inputType: 'select' },
+    { label: 'Commission', inputId: 'commission', inputType: 'numeric' },
+]
 
-const newType = ref<NewType>({
-    cleaningType: '',
-    commission: '',
-    communityId: '',
-    description: '',
-    price: 0
-});
+const loadOptions = async () => {
 
-const createType = async () => {
+    const { data } = await CommunitiesServices.getCommunities();
+    return {
+        communityId: data.map((community) => { return { label: community.communityName, value: community.id } })
+    }
+};
 
-    try {
-        newType.value.commission = newType.value.commission.toString()
-        await TypesServices.createType(newType.value);
-        showToast(toast, { severity: 'success', detail: 'Type was created' })
-        newType.value = {
-            cleaningType: '',
-            commission: '',
-            communityId: '',
-            description: '',
-            price: 0
-        }
-    } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Type wasn't created" })
+const createEntity = async (newType: NewType) => {
+    if (newType.commission) {
+        newType.commission = newType.commission.toString()
     }
 
+    await TypesServices.createType(newType)
 }
-
-onMounted(async () => {
-
-    communities.value = await CommunitiesServices.getCommunities();
-
-
-})
 
 </script>
 
+
 <template>
-
-    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
-
-        <template #view-title>Create Type</template>
-
-        <template #inputs>
-
-            <MyInputGroup v-model="newType.description" label="Description" input-id="description" input-type="input" />
-            <MyInputGroup v-model="newType.cleaningType" label="Cleaning type" input-id="cleaning-type"
-                input-type="input" />
-            <MyInputGroup v-model="newType.price" label="Price" input-id="price" input-type="numeric" />
-            <MyInputGroup v-model="newType.communityId" :options="communitiesOptions" label="Community"
-                input-id="community" input-type="select" />
-            <MyInputGroup v-model="newType.commission" label="Commision" input-id="commision" input-type="numeric" />
-
-            <div />
-
-            <div>
-                <LoadingButton @click="createType" />
-            </div>
-
-        </template>
-
-    </CreateLayout>
-
+    <GenericCreateForm :breadcrumb-routes="breadcrumbRoutes" view-title="Create type" :inputs="inputs"
+        :create-entity="createEntity" :load-options="loadOptions" />
 </template>

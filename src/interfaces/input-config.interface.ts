@@ -1,4 +1,4 @@
-export type InputType = 'input' | 'select' | 'datepicker' | "numeric";
+export type InputType = 'input' | 'select' | 'datepicker' | "numeric" | "multiselect";
 export type InputNumericMode = 'currency' | 'decimal';
 
 
@@ -17,4 +17,5 @@ export interface InputConfig {
     hourFormat?: boolean;
     timeOnly?: boolean;
     icon?:string;
+    required?:boolean;
 }

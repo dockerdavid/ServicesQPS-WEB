@@ -1,58 +1,37 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 
-import type { NewCost } from '../../interfaces/costs/costs.interface';
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
-
-import CreateLayout from '../../layouts/CreateLayout.vue';
-import LoadingButton from '../shared/components/LoadingButton.vue';
+import type { InputConfig } from 'src/interfaces/input-config.interface';
+import GenericCreateForm from '../shared/views/GenericCreateForm.vue';
 import { CostsServices } from './costs.services';
-import { useToast } from 'primevue';
-import { showToast } from '../../utils/show-toast';
+import type { NewCost } from 'src/interfaces/costs/costs.interface';
 
-const toast = useToast();
-
-const newCost = ref<NewCost>({ amount: '', date: '', description: '' });
 
 const breadcrumbRoutes = [
-    { label: 'Costs', to: { name: 'costs-default' } },
-    { label: 'Create', to: { name: 'costs-create' } },
+  { label: 'Costs', to: { name: 'costs-default' } },
+  { label: 'Create', to: { name: 'costs-create' } },
 ];
 
-const createCost = async () => {
-    newCost.value.amount = newCost.value.amount.toString();
-    try {
-        await CostsServices.createCost(newCost.value)
-        showToast(toast, { severity: 'success', summary: 'Cost created' })
-        newCost.value = { amount: '', date: '', description: '' }
-    } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Cost wasn't created" })
-    }
-}
 
+const inputs:InputConfig[] = [
+  { inputId: 'date', label: 'Date', inputType: 'datepicker' },
+  { inputId: 'description', label: 'Description', inputType: 'input' },
+  { inputId: 'amount', label: 'Amount', inputType: 'numeric'},
+];
+
+
+
+const createEntity = async (data: NewCost) => {
+data.amount = data.amount.toString();
+  await CostsServices.createCost(data);
+};
 </script>
 
-
 <template>
-    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
-
-        <template #view-title> Create Cost </template>
-
-        <template #inputs>
-
-            <MyInputGroup v-model="newCost.date" label="Date" inputId="date" input-type="datepicker" icon="calendar" />
-            <MyInputGroup v-model="newCost.description" label="Description" inputId="description" input-type="input" />
-            <MyInputGroup v-model="newCost.amount" label="Amount" inputId="amount" input-type="numeric" />
-
-            <div />
-
-            <div>
-                <LoadingButton @click="createCost" />
-            </div>
-
-        </template>
-
-
-
-    </CreateLayout>
+  <GenericCreateForm
+    :breadcrumb-routes="breadcrumbRoutes"
+    view-title="Create cost"
+    :inputs="inputs"
+    :create-entity="createEntity"
+ 
+  />
 </template>

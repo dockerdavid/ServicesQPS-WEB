@@ -1,54 +1,26 @@
-<script setup lang="ts">
-import { ref } from 'vue';
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import CreateLayout from '../../layouts/CreateLayout.vue';
-
-import { useToast } from 'primevue';
-import LoadingButton from '../shared/components/LoadingButton.vue';
+<script lang="ts" setup>
+import type { InputConfig } from 'src/interfaces/input-config.interface';
+import GenericCreateForm from '../shared/views/GenericCreateForm.vue';
 import { StatusesServices } from './statuses.services';
-import { showToast } from '../../utils/show-toast';
 
-const statusName = ref('');
-const toast = useToast();
 
 const breadcrumbRoutes = [
     { label: 'Statuses', to: { name: 'statuses-default' } },
     { label: 'Create', to: { name: 'statuses-create' } },
 ];
 
-const createStatus = async () => {
+const inputs: InputConfig[] = [
+    { label: 'Status', inputId: 'status', inputType: 'input' },
+]
 
-    try {
-        console.log(statusName.value)
-        await StatusesServices.createStatus(statusName.value);
-        showToast(toast, { severity: 'success', summary: 'Status created' })
-        statusName.value = '';
-    } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Status wasn't created" })
-    }
+const createEntity = async (data: { status: string }) => {
+    await StatusesServices.createStatus(data.status)
 }
 
 </script>
 
 
 <template>
-
-    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
-
-        <template #view-title>Create Status</template>
-
-        <template #inputs>
-
-            <MyInputGroup v-model="statusName" input-type="input" input-id="name" label="Status name" />
-
-            <div />
-
-            <div>
-                <LoadingButton @click="createStatus" />
-            </div>
-
-        </template>
-
-    </CreateLayout>
-
+    <GenericCreateForm :breadcrumb-routes="breadcrumbRoutes" view-title="Create status" :inputs="inputs"
+        :create-entity="createEntity" />
 </template>

@@ -32,7 +32,7 @@ export class StatusesServices {
         this.store.setIsLoading(true)
 
         try {
-            await apiServicesQps.post('/statuses', { statusName })
+            await apiServicesQps.post('/statuses',  {statusName })
         } catch (error: any) {
             throw new Error(error)
         } finally {

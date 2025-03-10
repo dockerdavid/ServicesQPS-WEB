@@ -1,94 +1,46 @@
-<script setup lang="ts">
+<script lang="ts" setup>
+import type { InputConfig } from 'src/interfaces/input-config.interface';
+import GenericCreateForm from '../shared/views/GenericCreateForm.vue';
 
-import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import CreateLayout from '../../layouts/CreateLayout.vue';
-import { showToast } from '../../utils/show-toast';
-import { Button, useToast } from 'primevue';
+import type { NewType } from 'src/interfaces/types/types.interface';
+import { CommunitiesServices } from '../communities/communities.services';
+import type { NewUser } from 'src/interfaces/users/users.interface';
 import { UsersServices } from './users.services';
-import type { NewUser, UserRoles } from '../../interfaces/users/users.interface';
-import { computed, onMounted, ref } from 'vue';
-import LoadingButton from '../shared/components/LoadingButton.vue';
 
 
-const toast = useToast();
 
 const breadcrumbRoutes = [
-    { label: 'Users', to: { name: 'users-default' } },
-    { label: 'Create', to: { name: 'users-create' } },
+    { label: 'Types', to: { name: 'types-default' } },
+    { label: 'Create', to: { name: 'types-create' } },
 ];
 
-const usersRoles = ref<UserRoles[]>([]);
-const userRolesOptions = computed(() => {
-    return usersRoles.value?.map((rol) => {
-        return {
-            label: rol.name,
-            value: rol.id
-        }
-    })
-})
+const inputs: InputConfig[] = [
+    { label: 'Name', inputId: 'name', inputType: 'input' },
+    { label: 'Email', inputId: 'email', inputType: 'input' },
+    { label: 'Password', inputId: 'password', inputType: 'input' },
+    { label: 'Role', inputId: 'roleId', inputType: 'select' },
+    { label: 'Phone number', inputId: 'phoneNumber', inputType: 'numeric', inputNumericMode: 'decimal' },
+]
 
-const newUser = ref<NewUser>({
-    email: '',
-    name: '',
-    password: '',
-    phoneNumber: '',
-    roleId: ''
-});
+const loadOptions = async () => {
 
-const createUser = async () => {
-
-    try {
-        newUser.value.phoneNumber = `+${newUser.value.phoneNumber.toString()}`
-        await UsersServices.createUser(newUser.value);
-        showToast(toast, { severity: 'success', detail: 'User was created' })
-        newUser.value = {
-            email: '',
-            name: '',
-            password: '',
-            phoneNumber: '',
-            roleId: ''
-        }
-    } catch (error) {
-        showToast(toast, { severity: 'error', summary: "User wasn't created" })
+    const data = await UsersServices.getUsersRoles();
+    return {
+        roleId: data.map((rol) => { return { label: rol.name, value: rol.id } })
     }
+};
 
+const createEntity = async (newUser: NewUser) => {
+
+    newUser.phoneNumber = `+${newUser.phoneNumber.toString()}`
+
+    await UsersServices.createUser(newUser)
 }
-
-onMounted(async () => {
-    usersRoles.value = await UsersServices.getUsersRoles();
-})
-
-
 
 </script>
 
 
 <template>
-
-    <CreateLayout :breadcrumb-routes="breadcrumbRoutes">
-
-
-        <template #view-title>Create user</template>
-
-
-        <template #inputs>
-
-            <MyInputGroup v-model="newUser.name" input-type="input" label="Name" input-id="name" />
-            <MyInputGroup v-model="newUser.email" input-type="input" label="Email" input-id="email" />
-            <MyInputGroup v-model="newUser.password" input-type="input" label="Password" input-id="password" />
-            <MyInputGroup :options="userRolesOptions" v-model="newUser.roleId" input-type="select" label="Role"
-                input-id="role" />
-            <MyInputGroup v-model="newUser.phoneNumber" input-type="numeric" input-numeric-mode="decimal"
-                label="Phone number" input-id="phone-number" />
-
-            <div />
-
-            <div>
-                <LoadingButton @click="createUser" />
-            </div>
-
-        </template>
-
-    </CreateLayout>
-
+    <GenericCreateForm :breadcrumb-routes="breadcrumbRoutes" view-title="Create type" :inputs="inputs"
+        :create-entity="createEntity" :load-options="loadOptions" />
 </template>
