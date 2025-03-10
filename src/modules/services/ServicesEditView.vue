@@ -53,9 +53,9 @@ const keyValueMap = {
 const loadData = async (id: string) => {
   const [communityResults, typeResults, statusResults, extrasResults, usersResult, serviceResult] = await Promise.all([
     CommunitiesServices.getCommunities(),
-    TypesServices.getTypes(),
-    StatusesServices.getStatuses(),
-    ExtrasServices.getExtras(),
+    TypesServices.getTypes(undefined, 50),
+    StatusesServices.getStatuses(undefined, 50),
+    ExtrasServices.getExtras(undefined, 50),
     UsersServices.getUsers(undefined, 50),
     CleanersServices.getServiceById(id),
   ]);

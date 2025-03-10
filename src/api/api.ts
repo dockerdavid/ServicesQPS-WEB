@@ -3,9 +3,10 @@ import type { InternalAxiosRequestConfig } from 'axios';
 
 import { useAuthStore } from '@/store/auth.store';
 
+const apiUrl = import.meta.env.VITE_API_URL;
 
 export const apiServicesQps = axios.create({
-    baseURL: '/api',
+    baseURL: apiUrl,
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json', 
@@ -13,7 +14,6 @@ export const apiServicesQps = axios.create({
 });
 
 apiServicesQps.interceptors.request.use(async function (config: InternalAxiosRequestConfig) {
-    
     const { token } = useAuthStore();
     
     if (token) {

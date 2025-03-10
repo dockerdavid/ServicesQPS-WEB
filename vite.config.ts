@@ -18,11 +18,11 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // Configura el proxy para redirigir solicitudes que comiencen con /api
+
       '/api': {
-        target: 'https://api.servicesqps.com',  // URL de tu backend
-        changeOrigin: true,  // Cambia el origen de la solicitud al backend
-        rewrite: (path) => path.replace(/^\/api/, ''),  // Elimina el prefijo /api
+        target: 'https://api.servicesqps.com',  
+        changeOrigin: true,  
+        rewrite: (path) => path.replace(/^\/api/, ''),  
       },
     },
   },
