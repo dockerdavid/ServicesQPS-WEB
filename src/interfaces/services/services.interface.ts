@@ -75,7 +75,8 @@ export default interface CreateService {
     userId: string;
     extraId: string;
 }
-export default interface EditService {
+
+export interface EditService {
     date: string;
     schedule: string;
     comment: string;

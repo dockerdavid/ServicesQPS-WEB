@@ -10,7 +10,7 @@ import { CleanersServices } from './services.services';
 import { showToast } from '../../utils/show-toast';
 import type { Communities } from '../../interfaces/communities/communities.interface';
 import genericNullObject from '../../utils/null-data-meta';
-import type { Types } from '../../interfaces/types/types.interface';
+
 import type { Statuses } from '../../interfaces/statuses/statuses.interface';
 import type { Extras } from '../../interfaces/extras/extras.interface';
 import type { Users } from '../../interfaces/users/users.interface';
@@ -39,7 +39,8 @@ const newService = ref<CreateService>({
     unitNumber: '',
     unitySize: '',
     userComment: '',
-    userId: ''
+    userId: '',
+    
 });
 
 const communities = ref<Communities>(genericNullObject);
@@ -131,7 +132,8 @@ const createService = async () => {
             unitNumber: '',
             unitySize: '',
             userComment: '',
-            userId: ''
+            userId: '',
+            
         };
     } catch (error) {
         showToast(toast, { severity: 'error', summary: "Service wasn't created" });
