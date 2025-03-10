@@ -3,9 +3,8 @@ import { useRoute } from 'vue-router';
 import { useToast } from 'primevue';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import { UsersServices } from './users.services';
-import { showToast } from '@/utils/show-toast';
-import type { NewUser, UserRoles, User, Role } from '@/interfaces/users/users.interface';
-import type { InputConfig } from '@/interfaces/input-config.interface';
+import type { NewUser, UserRoles, User, Role } from '../../interfaces/users/users.interface';
+import type { InputConfig } from '../../interfaces/input-config.interface';
 
 const route = useRoute();
 const toast = useToast();

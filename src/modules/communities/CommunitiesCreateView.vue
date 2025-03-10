@@ -1,18 +1,18 @@
 <script setup lang="ts">
 
-import CreateLayout from '@/layouts/CreateLayout.vue';
+import CreateLayout from '../../layouts/CreateLayout.vue';
 import { computed, onMounted, ref } from 'vue';
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
 import LoadingButton from '../shared/components/LoadingButton.vue';
 import { CommunitiesServices } from './communities.services';
-import type { NewCommunity } from '@/interfaces/communities/communities.interface';
+import type { NewCommunity } from '../../interfaces/communities/communities.interface';
 import { CompaniesServices } from '../companies/companies.services';
-import type { Companies } from '@/interfaces/companies/companies.interface';
-import genericNullObject from '@/utils/null-data-meta';
-import type { Users } from '@/interfaces/users/users.interface';
+import type { Companies } from '../../interfaces/companies/companies.interface';
+import genericNullObject from '../../utils/null-data-meta';
+import type { Users } from '../../interfaces/users/users.interface';
 import { UsersServices } from '../users/users.services';
 import { useToast } from 'primevue';
-import { showToast } from '@/utils/show-toast';
+import { showToast } from '../../utils/show-toast';
 
 const toast = useToast();
 

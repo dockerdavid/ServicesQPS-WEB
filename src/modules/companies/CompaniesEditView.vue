@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import type { InputConfig } from '@/interfaces/input-config.interface';
+import type { InputConfig } from '../../interfaces/input-config.interface';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import { CompaniesServices } from './companies.services';
 import { useRoute } from 'vue-router';

@@ -4,8 +4,8 @@ import { useRoute } from 'vue-router';
 import { useToast } from 'primevue';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import { StatusesServices } from './statuses.services';
-import { showToast } from '@/utils/show-toast';
-import type { InputConfig } from '@/interfaces/input-config.interface';
+import { showToast } from '../../utils/show-toast';
+import type { InputConfig } from '../../interfaces/input-config.interface';
 
 const route = useRoute();
 const toast = useToast();

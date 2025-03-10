@@ -3,9 +3,9 @@ import { ref } from 'vue';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import { ExtrasServices } from './extras.services';
 import { useToast } from 'primevue';
-import { showToast } from '@/utils/show-toast';
+import { showToast } from '../../utils/show-toast';
 import { useRoute } from 'vue-router';
-import type { InputConfig } from '@/interfaces/input-config.interface';
+import type { InputConfig } from '../../interfaces/input-config.interface';
 
 const toast = useToast();
 const route = useRoute();

@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import { CostsServices } from './costs.services';
 import { useToast } from 'primevue';
-import { showToast } from '@/utils/show-toast';
 import { useRoute } from 'vue-router';
-import type { InputConfig } from '@/interfaces/input-config.interface';
+import type { InputConfig } from '../../interfaces/input-config.interface';
 
-const toast = useToast();
+
 const route = useRoute();
-const costId = route.params.id as string;
+
 
 const breadcrumbRoutes = [
   { label: 'Costs', to: { name: 'costs-default' } },

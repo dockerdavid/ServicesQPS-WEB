@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { Button } from 'primevue';
 
-import { useGlobalStateStore } from '@/store/auth.store';
+import { useGlobalStateStore } from '../../../store/auth.store';
 import { storeToRefs } from 'pinia';
 
 type severity = 'secondary' | 'success' | 'info' | 'warn' | 'help' | 'danger' | 'contrast'

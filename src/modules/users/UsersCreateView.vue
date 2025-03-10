@@ -1,11 +1,11 @@
 <script setup lang="ts">
 
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import CreateLayout from '@/layouts/CreateLayout.vue';
-import { showToast } from '@/utils/show-toast';
+import CreateLayout from '../../layouts/CreateLayout.vue';
+import { showToast } from '../../utils/show-toast';
 import { Button, useToast } from 'primevue';
 import { UsersServices } from './users.services';
-import type { NewUser, UserRoles } from '@/interfaces/users/users.interface';
+import type { NewUser, UserRoles } from '../../interfaces/users/users.interface';
 import { computed, onMounted, ref } from 'vue';
 import LoadingButton from '../shared/components/LoadingButton.vue';
 

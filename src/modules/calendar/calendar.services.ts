@@ -1,6 +1,6 @@
-import { apiServicesQps } from "@/api/api";
-import type { CalendarInterface } from "@/interfaces/calendar/calendar.interface";
-import { useGlobalStateStore } from "@/store/auth.store";
+import { apiServicesQps } from "../../api/api";
+import type { CalendarInterface } from "../../interfaces/calendar/calendar.interface";
+import { useGlobalStateStore } from "../../store/auth.store";
 
 
 

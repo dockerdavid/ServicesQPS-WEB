@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useToast } from 'primevue';
-import CreateLayout from '@/layouts/CreateLayout.vue';
+import CreateLayout from '../../layouts/CreateLayout.vue';
 
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
 import LoadingButton from '../shared/components/LoadingButton.vue';
 
 import { TypesServices } from './types.services';
 
-import type { NewType } from '@/interfaces/types/types.interface';
+import type { NewType } from '../../interfaces/types/types.interface';
 
-import { showToast } from '@/utils/show-toast';
+import { showToast } from '../../utils/show-toast';
 import { CommunitiesServices } from '../communities/communities.services';
-import type { Communities } from '@/interfaces/communities/communities.interface';
-import genericNullObject from '@/utils/null-data-meta';
+import type { Communities } from '../../interfaces/communities/communities.interface';
+import genericNullObject from '../../utils/null-data-meta';
 
 const toast = useToast();
 

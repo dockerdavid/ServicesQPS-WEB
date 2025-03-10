@@ -1,9 +1,9 @@
-import { apiServicesQps } from "@/api/api";
-import type { Status } from "@/interfaces/services/services.interface";
-import type { Statuses } from "@/interfaces/statuses/statuses.interface";
-import { useGlobalStateStore } from "@/store/auth.store";
-import genericNullObject from "@/utils/null-data-meta";
-import { removeTimestamps } from "@/utils/remove-time-stamps";
+import { apiServicesQps } from "../../api/api";
+import type { Status } from "../../interfaces/services/services.interface";
+import type { Statuses } from "../../interfaces/statuses/statuses.interface";
+import { useGlobalStateStore } from "../../store/auth.store";
+import genericNullObject from "../../utils/null-data-meta";
+import { removeTimestamps } from "../../utils/remove-time-stamps";
 
 
 export class StatusesServices {

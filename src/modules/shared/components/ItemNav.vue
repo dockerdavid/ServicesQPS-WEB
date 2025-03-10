@@ -7,8 +7,8 @@
 </template>
 
 <script setup lang="ts">
-import type { RouteLink } from '@/interfaces/routeLink';
-import { useSidebarStore } from '@/store/sidebar.store';
+import type { RouteLink } from '../../../interfaces/routeLink';
+import { useSidebarStore } from '../../../store/sidebar.store';
 
 const sidebarState = useSidebarStore();
 

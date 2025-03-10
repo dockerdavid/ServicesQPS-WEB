@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
-import CreateLayout from '@/layouts/CreateLayout.vue';
+import CreateLayout from '../../../layouts/CreateLayout.vue';
 import MyInputGroup from '../components/MyInputGroup.vue';
 import LoadingButton from '../components/LoadingButton.vue';
 import { useToast } from 'primevue';
-import { showToast } from '@/utils/show-toast';
+import { showToast } from '../../../utils/show-toast';
 import { useRoute } from 'vue-router';
-import type { InputConfig } from '@/interfaces/input-config.interface';
+import type { InputConfig } from '../../../interfaces/input-config.interface';
 
 
 

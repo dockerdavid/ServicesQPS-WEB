@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import type { NewExtra } from '@/interfaces/extras/extras.interface';
+import type { NewExtra } from '../../interfaces/extras/extras.interface';
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import CreateLayout from '@/layouts/CreateLayout.vue';
+import CreateLayout from '../../layouts/CreateLayout.vue';
 import LoadingButton from '../shared/components/LoadingButton.vue';
-import { showToast } from '@/utils/show-toast';
+import { showToast } from '../../utils/show-toast';
 import { useToast } from 'primevue';
 import { ExtrasServices } from './extras.services';
 

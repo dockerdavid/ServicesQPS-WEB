@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-import type { NewCost } from '@/interfaces/costs/costs.interface';
+import type { NewCost } from '../../interfaces/costs/costs.interface';
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
 
-import CreateLayout from '@/layouts/CreateLayout.vue';
+import CreateLayout from '../../layouts/CreateLayout.vue';
 import LoadingButton from '../shared/components/LoadingButton.vue';
 import { CostsServices } from './costs.services';
 import { useToast } from 'primevue';
-import { showToast } from '@/utils/show-toast';
+import { showToast } from '../../utils/show-toast';
 
 const toast = useToast();
 

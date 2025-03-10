@@ -24,7 +24,7 @@
 import { DatePicker, IconField, InputIcon, InputText, Select, InputNumber } from 'primevue';
 import moment from 'moment';
 import { computed } from 'vue';
-import type { InputNumericMode, InputType } from '@/interfaces/input-config.interface';
+import type { InputNumericMode, InputType } from '../../../interfaces/input-config.interface';
 
 
 interface InputGroupProps {

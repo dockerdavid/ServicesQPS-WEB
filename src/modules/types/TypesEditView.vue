@@ -3,8 +3,8 @@ import { useRoute } from 'vue-router';
 import { TypesServices } from './types.services';
 import { CommunitiesServices } from '../communities/communities.services';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
-import type { NewType, Type, Community } from '@/interfaces/types/types.interface';
-import type { InputConfig } from '@/interfaces/input-config.interface';
+import type { NewType, Type, Community } from '../../interfaces/types/types.interface';
+import type { InputConfig } from '../../interfaces/input-config.interface';
 
 const route = useRoute();
 const currentTypeId = route.params.id as string;

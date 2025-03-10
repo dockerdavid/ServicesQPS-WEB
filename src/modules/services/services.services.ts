@@ -1,8 +1,8 @@
-import { apiServicesQps } from "@/api/api";
-import type CreateService from "@/interfaces/services/services.interface";
-import type { Service, Services } from "@/interfaces/services/services.interface";
-import { useGlobalStateStore } from "@/store/auth.store";
-import genericNullObject from "@/utils/null-data-meta";
+import { apiServicesQps } from "../../api/api";
+import type CreateService from "../../interfaces/services/services.interface";
+import type { Service, Services } from "../../interfaces/services/services.interface";
+import { useGlobalStateStore } from "../../store/auth.store";
+import genericNullObject from "../../utils/null-data-meta";
 
 
 export class CleanersServices {

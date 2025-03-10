@@ -1,13 +1,13 @@
 <script setup>
 import { ref } from 'vue';
-import router from '@/router';
+import router from '../router';
 import { Avatar, Button, Card, Popover } from 'primevue';
 
 
-import MySidebar from '@/modules/shared/components/MySidebar.vue';
+import MySidebar from '../modules/shared/components/MySidebar.vue';
 
-import { useSidebarStore } from '@/store/sidebar.store';
-import { useAuthStore } from '@/store/auth.store';
+import { useSidebarStore } from '../store/sidebar.store';
+import { useAuthStore } from '../store/auth.store';
 
 const sidebarState = useSidebarStore();
 

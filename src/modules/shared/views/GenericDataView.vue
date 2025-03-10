@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, type VNode } from "vue";
 import { IconField, InputIcon, InputText, useToast } from 'primevue';
-import BaseLayout from '@/layouts/BaseLayout.vue';
-import { showToast } from "@/utils/show-toast";
+import BaseLayout from '../../../layouts/BaseLayout.vue';
+import { showToast } from "../../../utils/show-toast";
 import EditableDataTable from "../components/DataTable.vue";
 
 interface Header {

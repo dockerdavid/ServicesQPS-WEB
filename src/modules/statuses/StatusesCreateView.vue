@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
-import CreateLayout from '@/layouts/CreateLayout.vue';
+import CreateLayout from '../../layouts/CreateLayout.vue';
 
 import { useToast } from 'primevue';
 import LoadingButton from '../shared/components/LoadingButton.vue';
 import { StatusesServices } from './statuses.services';
-import { showToast } from '@/utils/show-toast';
+import { showToast } from '../../utils/show-toast';
 
 const statusName = ref('');
 const toast = useToast();

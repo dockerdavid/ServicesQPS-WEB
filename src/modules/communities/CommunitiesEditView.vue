@@ -4,7 +4,7 @@ import { CommunitiesServices } from './communities.services';
 import { UsersServices } from '../users/users.services';
 import { CompaniesServices } from '../companies/companies.services';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
-import type { InputConfig } from '@/interfaces/input-config.interface';
+import type { InputConfig } from '../../interfaces/input-config.interface';
 
 const route = useRoute();
 const currentCommunityId = route.params.id as string;

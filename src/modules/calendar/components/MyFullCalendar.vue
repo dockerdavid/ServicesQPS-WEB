@@ -10,7 +10,7 @@ import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useRouter } from 'vue-router';
-import type { CalendarInterface } from '@/interfaces/calendar/calendar.interface';
+import type { CalendarInterface } from '../../../interfaces/calendar/calendar.interface';
 import { CalendarServices } from '../calendar.services';
 import type { EventInput } from '@fullcalendar/core/index.js';
 import tippy from 'tippy.js'; // Importa Tippy.js

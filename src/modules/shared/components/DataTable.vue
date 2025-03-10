@@ -3,9 +3,9 @@ import { ref, computed } from "vue";
 import { useToast } from 'primevue/usetoast';
 import { Column, DataTable, InputText, Button, Skeleton, Paginator } from "primevue";
 import MyDeleteToast from "./MyDeleteToast.vue";
-import { useGlobalStateStore } from "@/store/auth.store";
+import { useGlobalStateStore } from "../../../store/auth.store";
 import { storeToRefs } from "pinia";
-import router from "@/router";
+import router from "../../../router";
 
 interface TableI {
     data: any[];

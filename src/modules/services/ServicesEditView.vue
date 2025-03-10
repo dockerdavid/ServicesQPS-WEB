@@ -8,7 +8,7 @@ import { UsersServices } from '../users/users.services';
 import { CleanersServices } from './services.services';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import moment from 'moment';
-import type { InputConfig } from '@/interfaces/input-config.interface';
+import type { InputConfig } from '../../interfaces/input-config.interface';
 
 const route = useRoute();
 const serviceId = route.params.id as string;

@@ -1,7 +1,7 @@
-import { apiServicesQps } from "@/api/api";
-import type { Communities, Community, NewCommunity } from "@/interfaces/communities/communities.interface";
-import { useGlobalStateStore } from "@/store/auth.store";
-import genericNullObject from "@/utils/null-data-meta";
+import { apiServicesQps } from "../../api/api";
+import type { Communities, Community, NewCommunity } from "../../interfaces/communities/communities.interface";
+import { useGlobalStateStore } from "../../store/auth.store";
+import genericNullObject from "../../utils/null-data-meta";
 
 
 export class CommunitiesServices {

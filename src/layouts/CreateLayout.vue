@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 
-import SharedForm from '@/modules/shared/components/SharedForm.vue';
+import SharedForm from '../modules/shared/components/SharedForm.vue';
 import { Breadcrumb } from 'primevue';
 
 interface BreadcrumbRoute {

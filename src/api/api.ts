@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
 
-import { useAuthStore } from '@/store/auth.store';
+import { useAuthStore } from '../store/auth.store';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 

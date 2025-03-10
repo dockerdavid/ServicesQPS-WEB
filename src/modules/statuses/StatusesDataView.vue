@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import type { Status } from "@/interfaces/services/services.interface";
+import type { Status } from "../../interfaces/services/services.interface";
 import GenericDataView from "../shared/views/GenericDataView.vue";
 import { StatusesServices } from "./statuses.services";
 

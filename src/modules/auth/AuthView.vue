@@ -28,11 +28,11 @@ import { z } from 'zod';
 
 import LoadingButton from '../shared/components/LoadingButton.vue';
 
-import { apiServicesQps } from '@/api/api';
+import { apiServicesQps } from '../../api/api';
 
-import type { AuthResponse } from '@/interfaces/auth/auth.interface';
-import { useAuthStore, useGlobalStateStore } from '@/store/auth.store';
-import router from '@/router';
+import type { AuthResponse } from '../../interfaces/auth/auth.interface';
+import { useAuthStore, useGlobalStateStore } from '../../store/auth.store';
+import router from '../../router';
 
 interface Form {
     username: string;

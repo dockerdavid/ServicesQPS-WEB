@@ -1,4 +1,3 @@
-// @/utils/show-toast.ts
 import type { ToastMessageOptions } from 'primevue/toast';
 
 export const showToast = (toast: any, options: ToastMessageOptions) => {
