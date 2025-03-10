@@ -1,6 +1,6 @@
 import DefaultLayout from '@/layouts/DefaultLayout.vue';
 import AuthView from '@/modules/auth/AuthView.vue';
-import NotFoundView from '@/modules/shared/views/NotFoundView.vue';
+import NotFoundView from '../modules/shared/views/NotFoundView.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 import authGuard from './authGuard';
 
