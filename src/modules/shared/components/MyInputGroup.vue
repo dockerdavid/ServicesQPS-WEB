@@ -2,7 +2,7 @@
     <fieldset>
         <label :for="props.inputId">{{ props.label }}</label>
         <IconField>
-            <InputText :placeholder="props.placeholder" v-if="props.inputType === 'input'" v-model="modelValue"
+            <InputText :aria-required="true" :placeholder="props.placeholder" v-if="props.inputType === 'input'" v-model="modelValue"
                 :id="props.inputId" />
 
             <DatePicker :placeholder="props.placeholder" v-if="props.inputType === 'datepicker'" v-model="dateValue"

@@ -1,5 +1,5 @@
 <template>
-    <form class="form-grid">
+    <form class="form-grid" >
         <slot name="inputs"></slot>
     </form>
 </template>
