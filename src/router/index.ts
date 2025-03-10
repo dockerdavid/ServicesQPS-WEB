@@ -1,11 +1,11 @@
 import DefaultLayout from '../layouts/DefaultLayout.vue';
 import AuthView from '../modules/auth/AuthView.vue';
 import NotFoundView from '../modules/shared/views/NotFoundView.vue';
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router';
 import authGuard from './authGuard';
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/auth',
