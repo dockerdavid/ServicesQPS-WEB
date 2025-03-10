@@ -6,8 +6,8 @@ import { useAuthStore } from '../store/auth.store';
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export const apiServicesQps = axios.create({
+
     baseURL: apiUrl,
-    withCredentials: true,
     headers: {
         'Content-Type': 'application/json', 
       },
