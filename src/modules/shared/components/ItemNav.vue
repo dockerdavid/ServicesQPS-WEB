@@ -51,12 +51,15 @@ const props = defineProps<RouteLink>();
 }
 
 .router-link-active {
+
+    background-color: rgb(242, 242, 242);
+    
     span {
-        color: red; 
+        color: var(--orange-500);  
     }
 
     .iconify {
-        color: red; 
+        color: var(--orange-500); 
     }
 }
 
