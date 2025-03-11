@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, watch } from 'vue';
 import moment from 'moment';
-import { MultiSelect, useToast } from 'primevue';
+import { DatePicker, MultiSelect, useToast } from 'primevue';
 import CreateLayout from '../../layouts/CreateLayout.vue';
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
 import LoadingButton from '../shared/components/LoadingButton.vue';
@@ -15,11 +15,10 @@ import { UsersServices } from '../users/users.services';
 import type { TypeByCommunity } from '../../interfaces/services/services.interface';
 import type CreateService from '../../interfaces/services/services.interface';
 import type { Community } from '../../../src/interfaces/communities/communities.interface';
-import type {  Statuses } from '../../../src/interfaces/statuses/statuses.interface';
-import type {  Extras } from '../../../src/interfaces/extras/extras.interface';
-import type {  Users } from '../../../src/interfaces/users/users.interface';
+import type { Statuses } from '../../../src/interfaces/statuses/statuses.interface';
+import type { Extras } from '../../../src/interfaces/extras/extras.interface';
+import type { Users } from '../../../src/interfaces/users/users.interface';
 import genericNullObject from '../../../src/utils/null-data-meta';
-
 
 const toast = useToast();
 
@@ -42,7 +41,7 @@ const unitSizeOptions = [
 // Datos del formulario
 const newService = ref<CreateService>({
     date: moment().format('YYYY-MM-DD'),
-    schedule: moment().format('HH:mm:ss'),
+    schedule: '', // Ahora es un string
     comment: '',
     communityId: '',
     extraId: [],
@@ -53,6 +52,9 @@ const newService = ref<CreateService>({
     userComment: '',
     userId: '',
 });
+
+// Variable adicional para el DatePicker (tipo Date)
+const scheduleDate = ref<Date>(moment().toDate());
 
 // Estado para rastrear si el formulario ha sido enviado
 const isFormSubmitted = ref(false);
@@ -97,6 +99,17 @@ watch(
     }
 );
 
+// Observar cambios en el campo "scheduleDate" para actualizar "newService.schedule"
+watch(
+    () => scheduleDate.value,
+    (newScheduleDate) => {
+        if (newScheduleDate) {
+            // Formatear la hora como string y asignarla a newService.schedule
+            newService.value.schedule = moment(newScheduleDate).format('HH:mm:ss');
+        }
+    }
+);
+
 // Función para crear el servicio
 const createService = async () => {
     isFormSubmitted.value = true;
@@ -121,15 +134,20 @@ const createService = async () => {
     }
 
     try {
-        newService.value.unitNumber = newService.value.unitNumber.toString();
+        // Crear un objeto con los datos formateados para enviar al backend
+        const payload = {
+            ...newService.value,
+            unitNumber: newService.value.unitNumber.toString(), // Convertir a string
+        };
 
-        await CleanersServices.createService(newService.value);
+        // Enviar la solicitud al backend
+        await CleanersServices.createService(payload);
         showToast(toast, { severity: 'success', detail: 'Service was created' });
 
         // Resetear el formulario después de la creación
         newService.value = {
             date: moment().format('YYYY-MM-DD'),
-            schedule: moment().format('HH:mm:ss'),
+            schedule: '', // Reiniciar a string vacío
             comment: '',
             communityId: '',
             extraId: [],
@@ -163,9 +181,10 @@ onMounted(async () => {
             <MyInputGroup v-model="newService.date" label="Date" inputId="date" inputType="datepicker" icon="calendar"
                 :is-form-submitted="isFormSubmitted" />
 
-            <!-- Campo: Horario -->
-            <MyInputGroup v-model="newService.schedule" label="Schedule" inputId="schedule" inputType="datepicker"
-                icon="clock" :hourFormat="true" :timeOnly="true" :is-form-submitted="isFormSubmitted" />
+            <fieldset>
+                <label for="schedule">Schedule</label>
+                <DatePicker v-model="scheduleDate" :time-only="true" hour-format="12" id="schedule" />
+            </fieldset>
 
             <!-- Campo: Tamaño de la unidad -->
             <MyInputGroup v-model="newService.unitySize" label="Unit size" inputId="unitySize" inputType="select"

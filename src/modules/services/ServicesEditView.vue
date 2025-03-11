@@ -30,10 +30,13 @@ const breadcrumbRoutes = [
 
 const isFormSubmitted = ref(false);
 
+// Variable adicional para el DatePicker (tipo Date)
+const scheduleDate = ref<Date>(moment().toDate());
+
 const fillInitialData = (service: Service) => {
   updatedService.value = {
     date: service.date,
-    schedule: moment().format('HH:mm:ss'),
+    schedule: service.schedule, // Mantener como string
     comment: service.comment || '',
     communityId: service.communityId,
     extraId: service.extrasByServices.map(extra => extra.extraId),
@@ -43,12 +46,15 @@ const fillInitialData = (service: Service) => {
     unitySize: service.unitySize,
     userComment: service.userComment || '',
     userId: service.userId || '',
-  }
-}
+  };
+
+  // Convertir el schedule inicial a un objeto Date para el DatePicker
+  scheduleDate.value = moment(service.schedule, 'HH:mm:ss').toDate();
+};
 
 const updatedService = ref<EditService>({
   date: moment().format('YYYY-MM-DD'),
-  schedule: moment().format('HH:mm:ss'),
+  schedule: moment().format('HH:mm:ss'), // Mantener como string
   comment: '',
   communityId: '',
   extraId: [],
@@ -133,6 +139,17 @@ watch(() => updatedService.value.communityId, (newCommunityId) => {
   }
 });
 
+// Observar cambios en el campo "scheduleDate" para actualizar "updatedService.schedule"
+watch(
+  () => scheduleDate.value,
+  (newScheduleDate) => {
+    if (newScheduleDate) {
+      // Formatear la hora como string y asignarla a updatedService.schedule
+      updatedService.value.schedule = moment(newScheduleDate).format('HH:mm:ss');
+    }
+  }
+);
+
 const updateService = async () => {
   isFormSubmitted.value = true;
   updatedService.value.unitNumber = updatedService.value.unitNumber.toString();
@@ -141,8 +158,8 @@ const updateService = async () => {
     showToast(toast, { severity: 'success', detail: 'Service was updated' });
   } catch (error) {
     showToast(toast, { severity: 'error', summary: "Service wasn't updated" });
-  }finally{
-    isFormSubmitted.value = true;
+  } finally {
+    isFormSubmitted.value = false;
   }
 };
 
@@ -159,11 +176,8 @@ onMounted(async () => {
   statuses.value = statusResults;
   extras.value = extrasResults;
   cleaners.value = cleanerResults;
-  fillInitialData(initialData)
-
+  fillInitialData(initialData);
 });
-
-
 </script>
 
 <template>
@@ -187,99 +201,49 @@ onMounted(async () => {
 
   <form class="form-grid">
     <!-- Campo: Fecha -->
-    <MyInputGroup
-      v-model="updatedService.date"
-      label="Date"
-      inputType="datepicker"
-      inputId="date"
-      :is-form-submitted="isFormSubmitted"
-    />
+    <MyInputGroup v-model="updatedService.date" label="Date" inputType="datepicker" inputId="date"
+      :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Horario -->
-    <MyInputGroup v-model="updatedService.schedule" label="Schedule" inputId="schedule" inputType="datepicker"
-    icon="clock" :hourFormat="true" :timeOnly="true" :is-form-submitted="isFormSubmitted" />
+    <fieldset>
+      <label for="schedule">Schedule</label>
+      <DatePicker v-model="scheduleDate" :time-only="true" hour-format="12" id="schedule" />
+    </fieldset>
 
     <!-- Campo: Tamaño de la unidad -->
-    <MyInputGroup
-      v-model="updatedService.unitySize"
-      label="Unit size"
-      inputType="select"
-      inputId="unit-size"
-      :options="unitSizeOptions"
-      :is-form-submitted="isFormSubmitted"
-    />
+    <MyInputGroup v-model="updatedService.unitySize" label="Unit size" inputType="select" inputId="unit-size"
+      :options="unitSizeOptions" :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Número de unidad -->
-    <MyInputGroup
-      v-model="updatedService.unitNumber"
-      label="Unit number"
-      inputType="numeric"
-      inputId="unit-number"
-      :is-form-submitted="isFormSubmitted"
-      input-numeric-mode="decimal"
-    />
+    <MyInputGroup v-model="updatedService.unitNumber" label="Unit number" inputType="numeric" inputId="unit-number"
+      :is-form-submitted="isFormSubmitted" input-numeric-mode="decimal" />
 
     <!-- Campo: Comunidad -->
-    <MyInputGroup
-      v-model="updatedService.communityId"
-      label="Community"
-      inputType="select"
-      inputId="community"
-      :options="communityOptions"
-      :is-form-submitted="isFormSubmitted"
-    />
+    <MyInputGroup v-model="updatedService.communityId" label="Community" inputType="select" inputId="community"
+      :options="communityOptions" :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Tipo de servicio -->
-    <MyInputGroup
-      v-model="updatedService.typeId"
-      label="Type"
-      inputType="select"
-      inputId="type"
-      :options="typeOptions"
-      :is-form-submitted="isFormSubmitted"
-    />
+    <MyInputGroup v-model="updatedService.typeId" label="Type" inputType="select" inputId="type" :options="typeOptions"
+      :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Estado -->
-    <MyInputGroup
-      v-model="updatedService.statusId"
-      label="Status"
-      inputType="select"
-      inputId="status"
-      :options="statusOptions"
-      :is-form-submitted="isFormSubmitted"
-    />
+    <MyInputGroup v-model="updatedService.statusId" label="Status" inputType="select" inputId="status"
+      :options="statusOptions" :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Extras -->
     <fieldset>
       <label for="extras">Extras</label>
-      <MultiSelect
-        v-model="updatedService.extraId"
-        :options="extrasOptions"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Select Extras"
-        class="w-full md:w-80"
-      />
+      <MultiSelect v-model="updatedService.extraId" :options="extrasOptions" optionLabel="label" optionValue="value"
+        placeholder="Select Extras" class="w-full md:w-80" />
     </fieldset>
 
     <!-- Campo: Limpiador -->
-    <MyInputGroup
-      v-model="updatedService.userId"
-      label="Cleaner"
-      inputType="select"
-      inputId="cleaner"
-      :options="cleanerOptions"
-      :is-form-submitted="isFormSubmitted"
-    />
+    <MyInputGroup v-model="updatedService.userId" label="Cleaner" inputType="select" inputId="cleaner"
+      :options="cleanerOptions" :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Comentario -->
-    <MyInputGroup
-      v-model="updatedService.comment"
-      label="Comment"
-      inputType="input"
-      inputId="comment"
-      :is-form-submitted="isFormSubmitted"
-    />
+    <MyInputGroup v-model="updatedService.comment" label="Comment" inputType="input" inputId="comment"
+      :is-form-submitted="isFormSubmitted" />
   </form>
 
   <!-- Botón de actualización -->
