@@ -23,6 +23,7 @@ const searchCost = async (searchWord: any, page: number, rows: number) => {
     <GenericDataView view-title="Costs" create-new-route="/costs/create" :headers="[
         { field: 'date', name: 'Date' },
         { field: 'description', name: 'Description' },
+        { field: 'amount', name: 'Amount' },
     ]"  :fetch-data="fetchCosts" :delete-data="deleteCost"
          :search-data="searchCost" />
 </template>
