@@ -29,11 +29,12 @@ const calendarOptions = ref({
   },
   eventContent: (arg: any) => {
     const event = arg.event;
+    const textBlack = event.extendedProps.status.toLowerCase() === "pending" ? 'text-black' : '';
     return {
       html: `
         <div class="whitespace-normal">
-          <p>${event.extendedProps.userName || 'N/A'}</p>
-          <p class=" "">${event.extendedProps.communityName || 'N/A'} </p>
+          <p class="${textBlack}" >${event.extendedProps.userName || 'N/A'}</p>
+          <p class="${textBlack}"  >${event.extendedProps.communityName || 'N/A'} </p>
         </div>
       `,
     };
@@ -57,9 +58,25 @@ const calendarOptions = ref({
   },
 });
 
-const getEventColor = (statusId: number): string => {
-  const colors = ['#18ad32', '#18ad32', '#18ad32', '#AE33A1', '#A133FF', '#A29AA1'];
-  return colors[statusId];
+const getEventColor = (status: string): string => {
+  // Normalizar el valor de status (minúsculas y sin espacios)
+  const statusFormatted = status ? status.toLowerCase().trim() : '';
+
+  // Asignar el color según el estado
+  switch (statusFormatted) {
+    case "created":
+      return '#da1919'; // Rojo
+    case "pending":
+      return '#f7e83a'; // Amarillo
+    case "approved":
+      return '#00e01f'; // Verde
+    case "rejected":
+      return '#9500c1'; // Morado
+    case "completed":
+      return '#000000'; // Negro
+    default:
+      return '#00a7b2';
+  }
 };
 
 onMounted(async () => {
@@ -68,7 +85,7 @@ onMounted(async () => {
     calendarOptions.value.events = events.map((event: CalendarInterface) => ({
       id: event.id,
       date: event.date,
-      color: getEventColor(parseInt(event.statusId)),
+      color: getEventColor(event.status?.statusName),
       extendedProps: {
         userName: event.user?.name || 'N/A',
         communityName: event.community?.communityName || 'N/A',
@@ -105,5 +122,4 @@ defineExpose({
 .tippy-box[data-theme="custom-tooltip"] .tippy-arrow {
   color: #ffffff;
 }
-
 </style>
