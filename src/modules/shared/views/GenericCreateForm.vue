@@ -64,9 +64,35 @@ onMounted(async () => {
 const createEntity = async (leave: boolean) => {
   isFormSubmitted.value = true;
 
+  // Validación de campos requeridos
   const errors = props.inputs
-    .filter((input) => input.required && !entityData.value[input.inputId])
+    .filter((input) => {
+      if (input.required === undefined || true) {
+        const value = entityData.value[input.inputId];
+
+        // Verifica si el valor está vacío
+        if (input.inputType === 'input' || input.inputType === 'numeric') {
+          return !value || value.toString().trim() === '';
+        }
+
+        // Verifica si el valor está vacío para selects y datepickers
+        if (input.inputType === 'select' || input.inputType === 'datepicker') {
+          return !value || value === '';
+        }
+      }
+      return false;
+    })
     .map((input) => input.label);
+
+  // Si hay errores, muestra un toast y detén la ejecución
+  if (errors.length > 0) {
+    showToast(toast, {
+      severity: 'error',
+      summary: 'Campos requeridos',
+      detail: `Los siguientes campos son obligatorios: ${errors.join(', ')}`,
+    });
+    return; // Detén la ejecución si hay errores
+  }
 
   if (errors.length > 0) {
     showToast(toast, {
@@ -120,7 +146,6 @@ const clearForm = () => {
         :options="selectOptions[input.inputId]" :input-numeric-mode="input.inputNumericMode" :time-only="input.timeOnly"
         :hour-format="input.hourFormat" :is-form-submitted="isFormSubmitted" />
 
-      <!-- Espacio adicional si el número de inputs es impar -->
       <div v-if="inputs.length % 2 !== 0"></div>
 
       <!-- Botón de creación -->

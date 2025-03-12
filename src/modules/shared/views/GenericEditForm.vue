@@ -57,16 +57,13 @@ const getNestedValue = (source: Record<string, any>, path: string) => {
 const fillInitialData = (source: Record<string, any>, target: Record<string, any>) => {
   props.inputs.forEach((input) => {
     if (input.inputType === 'select') {
-      // Usar el keyValueMap para asignar el valor inicial
       const sourceKey = props.keyValueMap[input.inputId] || input.inputId;
       target[input.inputId] = getNestedValue(source, sourceKey);
     } else {
-      // Para otros campos (inputs, fechas, etc.)
       target[input.inputId] = source[input.inputId] || '';
     }
   });
 
-  // Mantener el ID original si está presente en los datos cargados
   if (source.id) {
     target.id = source.id;
   }
@@ -87,7 +84,7 @@ watch(
   (newInputs) => {
     newInputs.forEach((input) => {
       if (input.inputType === 'select' && input.options) {
-        
+
         if (entityData.value[input.inputId] && !input.options.some((option) => option.value === entityData.value[input.inputId])) {
           entityData.value[input.inputId] = '';
         }
@@ -102,7 +99,22 @@ const updateEntity = async () => {
   isFormSubmitted.value = true;
 
   const errors = props.inputs
-    .filter((input) => input.required && !entityData.value[input.inputId])
+    .filter((input) => {
+  
+      if (input.required === undefined || true) {
+
+        const value = entityData.value[input.inputId];
+
+        if (input.inputType === 'input') {
+          return !value || value.toString().trim() === '';
+        }
+        if (input.inputType === 'numeric') {
+          return value === null || value === undefined || value.toString().trim() === '';
+        }
+
+      }
+      return false;
+    })
     .map((input) => input.label);
 
   if (errors.length > 0) {
@@ -115,8 +127,19 @@ const updateEntity = async () => {
   }
 
   try {
-    
-    const dataToUpdate = { ...entityData.value };
+
+
+    const dataToUpdate = Object.keys(entityData.value).reduce((acc, key) => {
+
+      const inputConfig = props.inputs.find(input => input.inputId === key);
+      if (inputConfig?.isNotNeccesary && entityData.value[key] === '') {
+        return acc;
+      }
+      acc[key] = entityData.value[key];
+      return acc;
+    }, {} as Record<string, any>);
+
+
     props.inputs.forEach((input) => {
       if (input.inputType === 'numeric' && typeof dataToUpdate[input.inputId] === 'string') {
         dataToUpdate[input.inputId] = parseFloat(dataToUpdate[input.inputId]);
@@ -126,11 +149,11 @@ const updateEntity = async () => {
     await props.updateEntity(entityId, dataToUpdate);
     showToast(toast, { severity: 'success', summary: 'Entity updated', detail: `Entity ${entityId}` });
 
-    
+
 
   } catch (error) {
     showToast(toast, { severity: 'error', summary: "Entity wasn't updated", detail: `Entity ${entityId}` });
-  }finally{
+  } finally {
     isFormSubmitted.value = false;
   }
 };
@@ -152,11 +175,11 @@ onMounted(async () => {
 
     <template #inputs>
       <MyInputGroup v-for="input in inputs" :key="input.inputId" v-model="entityData[input.inputId]"
-        :required="input.required" :label="input.label" :inputId="input.inputId" :input-type="input.inputType" :options="input.options"
-        :input-numeric-mode="input.inputNumericMode" :time-only="input.timeOnly" :hour-format="input.hourFormat"
-        :is-form-submitted="isFormSubmitted" />
+        :required="input.required" :label="input.label" :inputId="input.inputId" :input-type="input.inputType"
+        :options="input.options" :input-numeric-mode="input.inputNumericMode" :time-only="input.timeOnly"
+        :hour-format="input.hourFormat" :is-form-submitted="isFormSubmitted" />
 
-      <div v-if="inputs.length % 2 !== 0" ></div>
+      <div v-if="inputs.length % 2 !== 0"></div>
 
       <div>
         <LoadingButton label="Edit" @click="updateEntity"></LoadingButton>
