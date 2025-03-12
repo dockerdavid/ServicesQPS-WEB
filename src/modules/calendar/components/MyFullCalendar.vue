@@ -43,7 +43,9 @@ const calendarOptions = ref({
     tippy(info.el, {
       content: `
         <div class="p-2"> 
-          <p style="font-weight: 600">${info.event.extendedProps.userName} (${info.event.extendedProps.communityName || 'N/A'})</p>
+          <p style="font-weight: 600">${info.event.extendedProps.userName}</p>
+          <p> <p style="font-weight: 600" > Community: </p> ${info.event.extendedProps.communityName || 'N/A'}</p>
+          <p> <p style="font-weight: 600" > Unit number: </p> ${info.event.extendedProps.unitNumber || 'N/A'}</p>
           <p> <p style="font-weight: 600" > Date: </p> ${info.event.start.toLocaleDateString()}</p>
           <p> <p style="font-weight: 600" > Type: </p> ${info.event.extendedProps.type}</p>
           <p> <p style="font-weight: 600" > Status: </p> ${info.event.extendedProps.status}</p>
@@ -91,6 +93,7 @@ onMounted(async () => {
         communityName: event.community?.communityName || 'N/A',
         status: event.status?.statusName || 'N/A',
         type: event.type?.cleaningType || 'N/A',
+        unitNumber: event.unitNumber || 'N/A',
       },
     }));
   }
