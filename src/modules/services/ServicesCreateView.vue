@@ -23,13 +23,11 @@ import router from '../../../src/router';
 
 const toast = useToast();
 
-// Configuración del breadcrumb
 const breadcrumbRoutes = [
     { label: 'Services', to: { name: 'services-default' } },
     { label: 'Create', to: { name: 'services-create' } },
 ];
 
-// Opciones predefinidas para el tamaño de la unidad
 const unitSizeOptions = [
     { label: 'N/A', value: 'N/A' },
     { label: '1 Bedroom', value: '1 Bedroom' },
@@ -39,10 +37,10 @@ const unitSizeOptions = [
     { label: '5 Bedroom', value: '5 Bedroom' },
 ];
 
-// Datos del formulario
+
 const newService = ref<CreateService>({
     date: moment().format('YYYY-MM-DD'),
-    schedule: '', // Ahora es un string
+    schedule: '',
     comment: '',
     communityId: '',
     extraId: [],
@@ -54,20 +52,17 @@ const newService = ref<CreateService>({
     userId: '',
 });
 
-// Variable adicional para el DatePicker (tipo Date)
 const scheduleDate = ref<Date>(moment().toDate());
 
-// Estado para rastrear si el formulario ha sido enviado
 const isFormSubmitted = ref(false);
 
-// Opciones dinámicas para los selects
 const communities = ref<Community[]>([]);
 const typesByCommunity = ref<TypeByCommunity[]>([]);
 const statuses = ref<Statuses>({ data: [], meta: genericNullObject.meta });
 const extras = ref<Extras>({ data: [], meta: genericNullObject.meta });
 const cleaners = ref<Users>({ data: [], meta: genericNullObject.meta });
 
-// Cargar opciones dinámicas
+
 const loadOptions = async () => {
     const [communityResults, statusResults, extrasResults, cleanerResults] = await Promise.all([
         CommunitiesServices.getCommunities(undefined, 50),
@@ -82,7 +77,7 @@ const loadOptions = async () => {
     cleaners.value = cleanerResults;
 };
 
-// Obtener los tipos de servicio por comunidad
+
 const getTypesByCommunity = async (communityId: string) => {
     if (communityId) {
         const types = await TypesServices.getTypesByCommunity(communityId);
@@ -90,7 +85,7 @@ const getTypesByCommunity = async (communityId: string) => {
     }
 };
 
-// Observar cambios en el campo "Community"
+
 watch(
     () => newService.value.communityId,
     (newCommunityId) => {
@@ -100,27 +95,24 @@ watch(
     }
 );
 
-// Observar cambios en el campo "scheduleDate" para actualizar "newService.schedule"
 watch(
     () => scheduleDate.value,
     (newScheduleDate) => {
         if (newScheduleDate) {
-            // Formatear la hora como string y asignarla a newService.schedule
             newService.value.schedule = moment(newScheduleDate).format('HH:mm:ss');
         }
     }
 );
 
-// Función para crear el servicio
 const createService = async (leave: boolean) => {
     isFormSubmitted.value = true;
 
-    // Validar campos requeridos
     const requiredFields = [
         { field: newService.value.communityId, label: 'Community' },
         { field: newService.value.typeId, label: 'Type' },
         { field: newService.value.statusId, label: 'Status' },
-        { field: newService.value.userId, label: 'Cleaner' },
+        { field: newService.value.date, label: 'Date' },
+        { field: newService.value.unitNumber, label: 'Unit number' },
     ];
 
     const missingFields = requiredFields.filter((field) => !field.field).map((field) => field.label);
@@ -142,9 +134,7 @@ const createService = async (leave: boolean) => {
 
         await CleanersServices.createService(payload);
         showToast(toast, { severity: 'success', detail: 'Service was created' });
-
         leave ? router.back() : clearForm();
-
     } catch (error) {
         showToast(toast, { severity: 'error', summary: "Service wasn't created" });
     }
@@ -226,13 +216,13 @@ onMounted(async () => {
             </fieldset>
 
             <!-- Campo: Limpiador -->
-            <MyInputGroup v-model="newService.userId" label="Cleaner" inputId="userId" inputType="select"
-                :options="cleaners.data.map((c) => ({ label: c.name, value: c.id }))" :required="true"
+            <MyInputGroup :required="false" v-model="newService.userId" label="Cleaner" inputId="userId"
+                inputType="select" :options="cleaners.data.map((c) => ({ label: c.name, value: c.id }))"
                 :is-form-submitted="isFormSubmitted" />
 
             <!-- Campo: Comentario -->
-            <MyInputGroup v-model="newService.comment" label="Comment" inputId="comment" inputType="input"
-                :is-form-submitted="isFormSubmitted" />
+            <MyInputGroup :required="false" v-model="newService.comment" label="Comment" inputId="comment"
+                inputType="input" :is-form-submitted="isFormSubmitted" />
 
             <!-- Botón de creación -->
             <div class="flex">
