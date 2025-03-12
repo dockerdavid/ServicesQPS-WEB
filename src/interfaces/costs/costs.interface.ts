@@ -20,3 +20,15 @@ export interface NewCost {
     amount:      string;
 }
 
+export class CostAdapter {
+    static fromExternalToInternal(externalCost: Cost) {
+        return {
+            id: externalCost.id,
+            date: externalCost.date,
+            description: externalCost.description,
+            amount: `$${externalCost.amount}`,
+            createdAt: externalCost.createdAt,
+            updatedAt: externalCost.updatedAt,
+        }
+    }
+}

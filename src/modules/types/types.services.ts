@@ -1,6 +1,6 @@
 import { apiServicesQps } from "../../api/api";
 import type { Type, TypeByCommunity } from "../../interfaces/services/services.interface";
-import type { NewType, Types } from "../../interfaces/types/types.interface";
+import { TypesAdapter, type NewType, type Types } from "../../interfaces/types/types.interface";
 import { useGlobalStateStore } from "../../store/auth.store";
 import genericNullObject from "../../utils/null-data-meta";
 
@@ -15,9 +15,11 @@ export class TypesServices {
 
         try {
             const { data } = await apiServicesQps.get(`/types?page=${page}&take=${take}`)
-            return data
+            return {
+                data: data.data.map(TypesAdapter.fromExternalToInternal),
+                meta: data.meta
+            }
         } catch (error) {
-            console.log(error)
             return {
                 data: [],
                 meta: genericNullObject.meta

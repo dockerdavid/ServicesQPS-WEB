@@ -2,7 +2,7 @@ import { apiServicesQps } from "../../api/api";
 import type { Communities, Community } from "../../interfaces/communities/communities.interface";
 import type { Companies } from "../../interfaces/companies/companies.interface";
 import type { Costs } from "../../interfaces/costs/costs.interface";
-import type { Extra, Extras, NewExtra } from "../../interfaces/extras/extras.interface";
+import { ExtraAdapter, type Extra, type Extras, type NewExtra } from "../../interfaces/extras/extras.interface";
 import { useGlobalStateStore } from "../../store/auth.store";
 import genericNullObject from "../../utils/null-data-meta";
 
@@ -17,7 +17,10 @@ export class ExtrasServices {
 
         try {
             const { data } = await apiServicesQps.get(`/extras?page=${page}&take=${take}`)
-            return data
+            return {
+                data: data.data.map(ExtraAdapter.fromExternalToInternal),
+                meta: data.meta
+            }
         } catch (error) {
             console.log(error)
             return {

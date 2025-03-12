@@ -1,7 +1,7 @@
 import { apiServicesQps } from "../../api/api";
 import type { Communities, Community } from "../../interfaces/communities/communities.interface";
 import type { Companies } from "../../interfaces/companies/companies.interface";
-import type { Cost, Costs, NewCost } from "../../interfaces/costs/costs.interface";
+import { CostAdapter, type Cost, type Costs, type NewCost } from "../../interfaces/costs/costs.interface";
 import { useGlobalStateStore } from "../../store/auth.store";
 import genericNullObject from "../../utils/null-data-meta";
 
@@ -15,9 +15,12 @@ export class CostsServices {
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get(`/costs?page=${page}&take=${take}`)
-            console.log(data)
-            return data
+            const { data } = await apiServicesQps.get(`/costs?order=DESC&page=${page}&take=${take}`)
+
+            return {
+                data: data.data.map(CostAdapter.fromExternalToInternal),
+                meta: data.meta
+            }
         } catch (error) {
             console.log(error)
             return {
