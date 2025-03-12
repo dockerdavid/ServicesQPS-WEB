@@ -1,5 +1,5 @@
 <template>
-    <Button :loading="isLoading" :severity="severity || 'warn'">
+    <Button  :loading="isLoading">
         <p v-if="!isLoading"> {{ label || 'Create' }} </p>
     </Button>
 </template>
@@ -10,11 +10,8 @@ import { Button } from 'primevue';
 import { useGlobalStateStore } from '../../../store/auth.store';
 import { storeToRefs } from 'pinia';
 
-type severity = 'secondary' | 'success' | 'info' | 'warn' | 'help' | 'danger' | 'contrast'
-
 interface ButtonProps {
-    label?: string
-    severity?: severity
+    label?: string 
 }
 
 const { isLoading } = storeToRefs(useGlobalStateStore());
