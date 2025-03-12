@@ -19,6 +19,7 @@ import type { Statuses } from '../../../src/interfaces/statuses/statuses.interfa
 import type { Extras } from '../../../src/interfaces/extras/extras.interface';
 import type { Users } from '../../../src/interfaces/users/users.interface';
 import genericNullObject from '../../../src/utils/null-data-meta';
+import router from '../../../src/router';
 
 const toast = useToast();
 
@@ -111,7 +112,7 @@ watch(
 );
 
 // Función para crear el servicio
-const createService = async () => {
+const createService = async (leave: boolean) => {
     isFormSubmitted.value = true;
 
     // Validar campos requeridos
@@ -134,37 +135,44 @@ const createService = async () => {
     }
 
     try {
-        // Crear un objeto con los datos formateados para enviar al backend
         const payload = {
             ...newService.value,
-            unitNumber: newService.value.unitNumber.toString(), // Convertir a string
+            unitNumber: newService.value.unitNumber.toString(),
         };
 
-        // Enviar la solicitud al backend
         await CleanersServices.createService(payload);
         showToast(toast, { severity: 'success', detail: 'Service was created' });
 
-        // Resetear el formulario después de la creación
-        newService.value = {
-            date: moment().format('YYYY-MM-DD'),
-            schedule: '', // Reiniciar a string vacío
-            comment: '',
-            communityId: '',
-            extraId: [],
-            statusId: '',
-            typeId: '',
-            unitNumber: '',
-            unitySize: '',
-            userComment: '',
-            userId: '',
-        };
+        leave ? router.back() : clearForm();
 
-        // Reiniciar el estado de isFormSubmitted
-        isFormSubmitted.value = false;
     } catch (error) {
         showToast(toast, { severity: 'error', summary: "Service wasn't created" });
     }
 };
+
+const clearForm = () => {
+
+    isFormSubmitted.value = false
+
+    newService.value = {
+        date: moment().format('YYYY-MM-DD'),
+        schedule: '',
+        comment: '',
+        communityId: '',
+        extraId: [],
+        statusId: '',
+        typeId: '',
+        unitNumber: '',
+        unitySize: '',
+        userComment: '',
+        userId: '',
+    };
+
+    scheduleDate.value = moment().toDate();
+
+
+
+}
 
 // Cargar opciones al montar el componente
 onMounted(async () => {
@@ -226,12 +234,13 @@ onMounted(async () => {
             <MyInputGroup v-model="newService.comment" label="Comment" inputId="comment" inputType="input"
                 :is-form-submitted="isFormSubmitted" />
 
-            <!-- Espacio adicional -->
-            <div />
-
             <!-- Botón de creación -->
-            <div>
-                <LoadingButton label="Create" @click="createService" />
+            <div class="flex">
+                <LoadingButton label="Create" @click="createService(false)" />
+                <div class="px-4">
+                    <LoadingButton :outlined="true" label="Create and leave" @click="createService(true)" />
+                </div>
+                <LoadingButton severity="danger" :outlined="true" label="Clear form" @click="clearForm" />
             </div>
         </template>
     </CreateLayout>

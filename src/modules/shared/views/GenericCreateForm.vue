@@ -6,6 +6,7 @@ import LoadingButton from '../components/LoadingButton.vue';
 import { useToast } from 'primevue';
 import { showToast } from '../../../utils/show-toast';
 import type { InputConfig } from '../../../interfaces/input-config.interface';
+import router from '../../../../src/router';
 
 const props = defineProps({
   breadcrumbRoutes: {
@@ -60,9 +61,8 @@ onMounted(async () => {
   }
 });
 
-const createEntity = async () => {
+const createEntity = async (leave: boolean) => {
   isFormSubmitted.value = true;
-
 
   const errors = props.inputs
     .filter((input) => input.required && !entityData.value[input.inputId])
@@ -78,7 +78,7 @@ const createEntity = async () => {
   }
 
   try {
-  
+
     const dataToCreate = { ...entityData.value };
     props.inputs.forEach((input) => {
       if (input.inputType === 'numeric' && typeof dataToCreate[input.inputId] === 'string') {
@@ -89,7 +89,7 @@ const createEntity = async () => {
     // Llamar a la función de creación
     await props.createEntity(dataToCreate);
     showToast(toast, { severity: 'success', summary: 'Entidad creada', detail: 'La entidad se creó correctamente.' });
-
+    if (leave) router.back()
     // Resetear el formulario después de una creación exitosa
     props.inputs.forEach((input) => {
       entityData.value[input.inputId] = '';
@@ -100,6 +100,14 @@ const createEntity = async () => {
     isFormSubmitted.value = false;
   }
 };
+
+const clearForm = () => {
+  props.inputs.forEach((input) => {
+    entityData.value[input.inputId] = '';
+  });
+
+  isFormSubmitted.value = false;
+}
 </script>
 
 <template>
@@ -107,28 +115,25 @@ const createEntity = async () => {
     <template #view-title>{{ viewTitle }}</template>
 
     <template #inputs>
-      <MyInputGroup
-        v-for="input in inputs"
-        :key="input.inputId"
-        v-model="entityData[input.inputId]"
-        :required="input.required"
-        :label="input.label"
-        :inputId="input.inputId"
-        :input-type="input.inputType"
-        :options="selectOptions[input.inputId]"
-        :input-numeric-mode="input.inputNumericMode"
-        :time-only="input.timeOnly"
-        :hour-format="input.hourFormat"
-        :is-form-submitted="isFormSubmitted"
-      />
+      <MyInputGroup v-for="input in inputs" :key="input.inputId" v-model="entityData[input.inputId]"
+        :required="input.required" :label="input.label" :inputId="input.inputId" :input-type="input.inputType"
+        :options="selectOptions[input.inputId]" :input-numeric-mode="input.inputNumericMode" :time-only="input.timeOnly"
+        :hour-format="input.hourFormat" :is-form-submitted="isFormSubmitted" />
 
       <!-- Espacio adicional si el número de inputs es impar -->
       <div v-if="inputs.length % 2 !== 0"></div>
 
       <!-- Botón de creación -->
-      <div>
-        <LoadingButton label="Crear" @click="createEntity"></LoadingButton>
+      <div class="flex">
+        <LoadingButton label="Create" @click="createEntity(false)"></LoadingButton>
+        <div class="px-4">
+          <LoadingButton :outlined="true" label="Create and leave" @click="createEntity(true)"></LoadingButton>
+        </div>
+        <LoadingButton severity="danger" :outlined="true" label="Clear form" @click="clearForm()" />
+
       </div>
+
+
     </template>
   </CreateLayout>
 </template>
