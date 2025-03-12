@@ -18,4 +18,6 @@ export interface InputConfig {
     timeOnly?: boolean;
     icon?:string;
     required?:boolean;
+    isNotNeccesary?:boolean;
 }
+
