@@ -1,8 +1,8 @@
 import 'primeicons/primeicons.css';
 
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
-/* import { createPersistedStatePlugin } from 'pinia-plugin-persistedstate-2'; */
+import { createApp, markRaw } from 'vue'
+import { createPinia } from 'pinia'
+import { createPersistedState } from 'pinia-plugin-persistedstate'
 
 import PrimeVue from 'primevue/config';
 import { MyCustomPreset } from './assets/primevue_presets';
@@ -16,13 +16,16 @@ import './assets/main.css';
 
 import { Icon } from '@iconify/vue';
 
-const app = createApp(App);
 const pinia = createPinia();
 
+pinia.use(({store})=>{
+  store.router = markRaw(router);
+});
 
-/* const installPersistedStatePlugin = createPersistedStatePlugin() */
-/* pinia.use((context) => installPersistedStatePlugin(context)) */
+pinia.use(createPersistedState());
 
+
+const app = createApp(App);
 
 app.component('Icon', Icon);
 
