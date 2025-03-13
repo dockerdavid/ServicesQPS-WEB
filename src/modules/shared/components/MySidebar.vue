@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import ItemNav from './ItemNav.vue';
-import { onMounted, ref, watchEffect } from 'vue';
+import { computed, onMounted, ref, watchEffect } from 'vue';
 import { useSidebarStore } from '../../../store/sidebar.store';
+import { useUserStore } from '../../../store/user.store';
 import type { RouteLink } from '../../../interfaces/routeLink';
 
-const routes: RouteLink[] = [
+const adminRoutes: RouteLink[] = [
   { route: 'dashboard', icon: 'ph:house-line', label: 'dashboard' },
   { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
   { route: 'communities-default', icon: 'ph:fediverse-logo-duotone', label: 'communities' },
@@ -17,8 +18,43 @@ const routes: RouteLink[] = [
   { route: 'users-default', icon: 'ph:users-three-duotone', label: 'users' },
 ]
 
+const cleanerRoutes: RouteLink[] = [
+  { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
+]
+
+const managerRoutes: RouteLink[] = [
+  { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
+]
+
+const cheoRoutes: RouteLink[] = [
+  { route: 'dashboard', icon: 'ph:house-line', label: 'dashboard' },
+  { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
+  { route: 'costs-default', icon: 'ph:calculator-duotone', label: 'cost' },
+]
+
 const store = useSidebarStore();
+const userStore = useUserStore();
 const windowWidth = ref(window.innerWidth);
+
+
+const routes = computed(() => {
+
+  switch (userStore?.userData?.roleId) {
+    case "1":
+      return adminRoutes;
+    case "3":
+      return managerRoutes;
+    case "4":
+      return cleanerRoutes;
+    case "5":
+      return cheoRoutes;
+    default:
+      return [
+        { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
+      ];
+  }
+});
+
 
 onMounted(() => {
   store.isSidebarOpen = windowWidth.value > 992;
@@ -42,13 +78,14 @@ window.addEventListener('resize', () => {
   <aside class="relative" :class="['sidebar', store.isSidebarOpen ? 'sidebar--open' : 'sidebar--close']">
 
     <div class="flex">
-      <Icon @click="store.toggleSidebar" v-if="store.isSidebarOpen" class="absolute right-5 icon-close" icon="ph:x"></Icon>
+      <Icon @click="store.toggleSidebar" v-if="store.isSidebarOpen" class="absolute right-5 icon-close" icon="ph:x">
+      </Icon>
     </div>
 
     <!-- <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjsScWYmyfPv3XdkNdEFVJ1wlDKMOgcSWUcg&s"
       alt="qps-logo"> -->
 
-    <ul>
+    <ul v-if="userStore?.userData?.roleId">
       <li v-for="route in routes" :key="route.route">
         <ItemNav :icon="route.icon" :label="route.label" :route="route.route" />
       </li>
