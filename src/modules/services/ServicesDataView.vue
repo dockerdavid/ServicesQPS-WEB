@@ -11,7 +11,7 @@ const fetchServices = async (page: number, rows: number) => {
 
     let data: Services;
 
-    switch (store.userData.roleId) {
+    switch (store.userData?.roleId) {
         case "1":
             data = await CleanersServices.getServices(page, rows);
             break;
@@ -33,6 +33,7 @@ const deleteService = async (id: string) => {
     return await CleanersServices.deleteService(id);
 };
 
+
 const searchService = async (searchWord: any, page: number, rows: number) => {
     return await CleanersServices.searchService(searchWord, page, rows)
 };
@@ -40,7 +41,7 @@ const searchService = async (searchWord: any, page: number, rows: number) => {
 </script>
 
 <template>
-    <GenericDataView view-title="Services" create-new-route="/services/create" :headers="[
+    <GenericDataView :use-services-table="true" view-title="Services" create-new-route="/services/create" :headers="[
         { field: 'date', name: 'Date' },
         { field: 'schedule', name: 'Schedule' },
         { field: 'unitySize', name: 'Unit size' },
