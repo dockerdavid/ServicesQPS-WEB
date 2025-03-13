@@ -17,13 +17,7 @@ export interface User {
 
 export interface Role {
     id:   string;
-    name: Name;
-}
-
-export enum Name {
-    Cleaner = "Cleaner",
-    Manager = "Manager",
-    SuperAdmin = "super_admin",
+    name: string;
 }
 
 export interface NewUser {

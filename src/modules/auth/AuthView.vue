@@ -31,7 +31,12 @@ import LoadingButton from '../shared/components/LoadingButton.vue';
 import { apiServicesQps } from '../../api/api';
 
 import type { AuthResponse } from '../../interfaces/auth/auth.interface';
+
 import { useAuthStore, useGlobalStateStore } from '../../store/auth.store';
+import { useUserStore } from '../../store/user.store';
+
+import { UsersServices } from '../users/users.services';
+
 import router from '../../router';
 
 interface Form {
@@ -47,6 +52,7 @@ interface Errors {
 const toast = useToast();
 
 const store = useAuthStore();
+const userstore = useUserStore();
 const { setIsLoading } = useGlobalStateStore();
 
 const schema = z.object({
@@ -88,7 +94,6 @@ const validateForm = (): boolean => {
     }
 };
 
-
 const onFormSubmit = async (): Promise<void> => {
 
     errors.username = '';
@@ -99,6 +104,7 @@ const onFormSubmit = async (): Promise<void> => {
         try {
             const { data } = await apiServicesQps.post<AuthResponse>('/auth', form);
             store.setToken(data.token)
+            getUserData(data.id)
             router.push('/')
         } catch (error: any) {
             toast.add({ severity: 'error', summary: 'Error', detail: error.response.data.message, life: 3000 });
@@ -107,5 +113,10 @@ const onFormSubmit = async (): Promise<void> => {
         }
     }
 };
+
+const getUserData = async (userId: string) => {
+    const data = await UsersServices.getUserById(userId)
+    userstore.setUserData(data)
+}
 
 </script>

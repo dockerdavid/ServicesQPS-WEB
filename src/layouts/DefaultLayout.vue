@@ -8,8 +8,10 @@ import MySidebar from '../modules/shared/components/MySidebar.vue';
 
 import { useSidebarStore } from '../store/sidebar.store';
 import { useAuthStore } from '../store/auth.store';
+import { useUserStore } from '../store/user.store';
 
 const sidebarState = useSidebarStore();
+const store = useUserStore();
 
 const op = ref(false);
 
@@ -38,7 +40,7 @@ const signOut = () => {
                         <Icon icon="ph:arrows-left-right" @click="sidebarState.toggleSidebar()" />
                         <div>
                             <Button class="cursor-pointer" unstyled @click="toggle">
-                                <Avatar label="F" class="mr-2" size="normal" shape="circle" />
+                                <Avatar :label="store.userData.name.charAt(0)" class="mr-2" size="normal" shape="circle" />
                             </Button>
                             <Popover ref="op">
                                 <div class="w-[10rem]">
