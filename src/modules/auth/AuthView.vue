@@ -38,6 +38,7 @@ import { useUserStore } from '../../store/user.store';
 import { UsersServices } from '../users/users.services';
 
 import router from '../../router';
+import roleRoutes from '../../../src/router/role-routes';
 
 interface Form {
     username: string;
@@ -105,7 +106,7 @@ const onFormSubmit = async (): Promise<void> => {
             const { data } = await apiServicesQps.post<AuthResponse>('/auth', form);
             store.setToken(data.token)
             getUserData(data.id)
-            router.push('/')
+
         } catch (error: any) {
             toast.add({ severity: 'error', summary: 'Error', detail: error.response.data.message, life: 3000 });
         } finally {
@@ -117,6 +118,8 @@ const onFormSubmit = async (): Promise<void> => {
 const getUserData = async (userId: string) => {
     const data = await UsersServices.getUserById(userId)
     userstore.setUserData(data)
+    const userRole = data.role.name.toLowerCase() as keyof typeof roleRoutes;
+    router.push(roleRoutes[userRole][0])
 }
 
 </script>
