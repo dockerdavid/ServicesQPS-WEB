@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Breadcrumb, Button, Card } from 'primevue';
+import { useUserStore } from '../../src/store/user.store';
 
 interface BreadcrumbRoute {
     label: string;
@@ -19,13 +20,14 @@ const props = defineProps({
 
 );
 
+const userStore = useUserStore();
 
 </script>
 
 <template>
     <div class="py-6">
 
-        <Breadcrumb :model="breadcrumbRoutes" v-if="!isBreadCrumbVisible"/>
+        <Breadcrumb :model="breadcrumbRoutes" v-if="!isBreadCrumbVisible" />
 
         <div class="flex justify-between items-center">
             <!-- Slot para el título -->
@@ -36,7 +38,7 @@ const props = defineProps({
             </h1>
             <!-- Slot para el botón "Create new" -->
             <div v-if="$slots['create-new']">
-                <Button>
+                <Button v-if="userStore.userData?.roleId !== '4' ">
                     <slot name="create-new"></slot>
                 </Button>
             </div>
