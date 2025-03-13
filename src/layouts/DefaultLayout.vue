@@ -40,7 +40,7 @@ const signOut = () => {
                         <Icon icon="ph:arrows-left-right" @click="sidebarState.toggleSidebar()" />
                         <div>
                             <Button class="cursor-pointer" unstyled @click="toggle">
-                                <Avatar :label="store.userData.name.charAt(0)" class="mr-2" size="normal" shape="circle" />
+                                <Avatar :label="store.userData.name.charAt(0).toUpperCase()" class="mr-2" size="normal" shape="circle" />
                             </Button>
                             <Popover ref="op">
                                 <div class="w-[10rem]">
