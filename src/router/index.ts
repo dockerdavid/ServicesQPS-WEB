@@ -11,12 +11,10 @@ const router = createRouter({
       path: '/auth',
       name: 'auth',
       component: AuthView,
-      beforeEnter: [authGuard]
     },
     {
       path: '/',
       component: DefaultLayout,
-      beforeEnter: [authGuard],
       redirect: '/dashboard',
       children: [
         {
@@ -214,5 +212,7 @@ const router = createRouter({
     },
   ],
 });
+
+router.beforeEach(authGuard);
 
 export default router;

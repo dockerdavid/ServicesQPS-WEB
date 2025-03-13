@@ -1,5 +1,8 @@
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 import { useAuthStore } from '../store/auth.store';
+import { useUserStore } from '../store/user.store';
+import roleRoutes from './role-routes';
+
 
 const authGuard = (
   to: RouteLocationNormalized,
@@ -7,20 +10,28 @@ const authGuard = (
   next: NavigationGuardNext
 ): void => {
   const authStore = useAuthStore();
+  const userStore = useUserStore();
   const isAuthenticated = authStore.token;
 
-  if (isAuthenticated) {
-    if (to.path === '/auth') {
-      next('/');
-    } else {
-      next();
-    }
-  } else {
+  if (!isAuthenticated) {
+    // Si no está autenticado, redirige a la página de autenticación
     if (to.path !== '/auth') {
       next('/auth');
     } else {
       next();
     }
+    return;
+  }
+
+  const userRole = userStore?.userData?.role.name.toLowerCase() as keyof typeof roleRoutes;
+  const allowedRoutes = roleRoutes[userRole] || [];
+  console.log(userRole);
+  console.log(to.name);
+  if (allowedRoutes.includes(to.name as string)) {
+    next();
+  } else {
+
+    next('/notFound');
   }
 };
 
