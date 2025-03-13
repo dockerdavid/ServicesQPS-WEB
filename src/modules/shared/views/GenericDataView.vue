@@ -3,7 +3,8 @@ import { onMounted, ref, type VNode } from "vue";
 import { IconField, InputIcon, InputText, useToast } from 'primevue';
 import BaseLayout from '../../../layouts/BaseLayout.vue';
 import { showToast } from "../../../utils/show-toast";
-import EditableDataTable from "../components/DataTable.vue";
+import DataTable from "../components/DataTable.vue";
+import DataTableServices from "../../../../src/modules/services/components/DataTableServices.vue";
 
 interface Header {
     field: string;
@@ -20,6 +21,7 @@ interface Props {
     lockEdit?: boolean;
     lockCreateNew?: boolean;
     dontShowBreadCrumb?: boolean;
+    useServicesTable?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -86,10 +88,11 @@ const handlePageChange = (event: any) => {
     }
 };
 
+
 const clearSearch = () => {
     searchWord.value = "";
     prevSearchWord.value = "";
-    onSearch(); 
+    onSearch();
 };
 
 const debouncedSearch = debounce(async () => {
@@ -141,8 +144,15 @@ onMounted(async () => {
 
 
         <template #card-content>
-            <EditableDataTable :data="dataList.data" :headers="headers" :onDelete="onDelete" :lockEdit="lockEdit"
-                @page-change="handlePageChange" :total-records="dataList.meta.totalCount" :edit-route="editRoute" />
+
+            <DataTable v-if="!props.useServicesTable" :data="dataList.data" :headers="headers" :onDelete="onDelete"
+                :lockEdit="lockEdit" @page-change="handlePageChange" :total-records="dataList.meta.totalCount"
+                :edit-route="editRoute" />
+
+            <DataTableServices v-if="props.useServicesTable" :data="dataList.data" :headers="headers"
+                :onDelete="onDelete" :lockEdit="lockEdit" @page-change="handlePageChange"
+                :total-records="dataList.meta.totalCount" :edit-route="editRoute" @update="fetchDataList" />
+
         </template>
     </BaseLayout>
 </template>
