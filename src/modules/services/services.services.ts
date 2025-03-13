@@ -35,7 +35,7 @@ export class CleanersServices {
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.post(`/services/by-cleaner/${this.userStore.userData.id}?page=${page}&take=${take}`)
+            const { data } = await apiServicesQps.post(`/services/by-cleaner/${this.userStore?.userData?.id}?page=${page}&take=${take}`)
             return data
         } catch (error) {
             return {

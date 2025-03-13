@@ -32,7 +32,7 @@ export class CommunitiesServices {
         this.store.setIsLoading(true)
         let communities: string[] = [];
         try {
-            const { data } = await apiServicesQps.get<Community[]>(`/communities/by-manager/${this.userStore.userData.id}`)
+            const { data } = await apiServicesQps.get<Community[]>(`/communities/by-manager/${this.userStore?.userData?.id}`)
             data.map((community) => communities.push(community.id));
             return communities;
         } catch (error: any) {
