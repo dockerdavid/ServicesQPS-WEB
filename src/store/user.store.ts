@@ -3,7 +3,7 @@ import type { User } from '../../src/interfaces/users/users.interface';
 
 
 interface UserState {
-    user: User;
+    user: User | null;
 }
 
 export const useUserStore = defineStore('user', {
@@ -23,12 +23,15 @@ export const useUserStore = defineStore('user', {
     }),
 
     getters: {
-        userData: (state): User => state.user
+        userData: (state): User | null => state.user
     },
 
     actions: {
         setUserData(userData: User): void {
             this.user = userData;
+        },
+        removeUserData () {
+            this.user = null
         }
     },
 
