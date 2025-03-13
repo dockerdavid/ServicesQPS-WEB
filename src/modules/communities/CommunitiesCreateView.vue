@@ -24,7 +24,7 @@ const inputs:InputConfig[] = [
 const loadOptions = async () => {
   const [companies, users] = await Promise.all([
     CompaniesServices.getCompanies(),
-    UsersServices.getUsers(),
+    UsersServices.getUsers(undefined, 50),
   ]);
 
   return {

@@ -1,3 +1,4 @@
+import { useUserStore } from "../../../src/store/user.store";
 import { apiServicesQps } from "../../api/api";
 import type { Communities, Community, NewCommunity } from "../../interfaces/communities/communities.interface";
 import { useGlobalStateStore } from "../../store/auth.store";
@@ -7,6 +8,7 @@ import genericNullObject from "../../utils/null-data-meta";
 export class CommunitiesServices {
 
     static store = useGlobalStateStore();
+    static userStore = useUserStore();
 
     static async getCommunities(page: number = 1, take: number = 10): Promise<Communities> {
 
@@ -20,6 +22,21 @@ export class CommunitiesServices {
                 data: [],
                 meta: genericNullObject.meta
             }
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
+
+    static async getCommunitiesByManager(): Promise<string[]> {
+
+        this.store.setIsLoading(true)
+        let communities: string[] = [];
+        try {
+            const { data } = await apiServicesQps.get<Community[]>(`/communities/by-manager/${this.userStore.userData.id}`)
+            data.map((community) => communities.push(community.id));
+            return communities;
+        } catch (error: any) {
+            return []
         } finally {
             this.store.setIsLoading(false)
         }

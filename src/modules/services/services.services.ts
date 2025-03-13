@@ -1,14 +1,17 @@
+import { useUserStore } from "../../../src/store/user.store";
 import { apiServicesQps } from "../../api/api";
 import type CreateService from "../../interfaces/services/services.interface";
-import type {EditService} from "../../interfaces/services/services.interface";
+import type { EditService } from "../../interfaces/services/services.interface";
 import type { Service, Services } from "../../interfaces/services/services.interface";
 import { useGlobalStateStore } from "../../store/auth.store";
 import genericNullObject from "../../utils/null-data-meta";
+import { CommunitiesServices } from "../communities/communities.services";
 
 
 export class CleanersServices {
 
     static store = useGlobalStateStore();
+    static userStore = useUserStore();
 
     static async getServices(page: number = 1, take: number = 10): Promise<Services> {
 
@@ -16,10 +19,44 @@ export class CleanersServices {
 
         try {
             const { data } = await apiServicesQps.get(`/services?page=${page}&take=${take}`)
-            console.log(data)
             return data
         } catch (error) {
-            console.log(error)
+            return {
+                data: [],
+                meta: genericNullObject.meta
+            }
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
+
+    static async getServicesByCleaner(page: number = 1, take: number = 10): Promise<Services> {
+
+        this.store.setIsLoading(true)
+
+        try {
+            const { data } = await apiServicesQps.post(`/services/by-cleaner/${this.userStore.userData.id}?page=${page}&take=${take}`)
+            return data
+        } catch (error) {
+            return {
+                data: [],
+                meta: genericNullObject.meta
+            }
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
+
+    static async getServicesByCommunities(page: number = 1, take: number = 10): Promise<Services> {
+
+        this.store.setIsLoading(true)
+
+        const communities = await CommunitiesServices.getCommunitiesByManager();
+
+        try {
+            const { data } = await apiServicesQps.post(`/services/by-communities?page=${page}&take=${take}`, { communities })
+            return data
+        } catch (error) {
             return {
                 data: [],
                 meta: genericNullObject.meta
@@ -80,7 +117,7 @@ export class CleanersServices {
         if (!serviceId) return;
 
         this.store.setIsLoading(true);
-       
+
         try {
             await apiServicesQps.patch(`/services/${serviceId}`, changedValue);
         } catch (error: any) {
@@ -90,5 +127,7 @@ export class CleanersServices {
             this.store.setIsLoading(false);
         }
     }
+
+
 
 }
