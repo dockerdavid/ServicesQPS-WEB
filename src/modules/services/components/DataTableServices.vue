@@ -162,7 +162,7 @@ const closeToastByAction = (group: string) => {
                         <div class="flex justify-around">
                             <Button variant="text" icon="pi pi-pencil" severity="warn" label="Edit"
                                 @click="redirectToEdit(data.id)" />
-                            <Button variant="text" icon="pi pi-trash" severity="danger" label="Delete"
+                            <Button v-if="!props.lockEdit && store.userData?.roleId === '1'"  variant="text" icon="pi pi-trash" severity="danger" label="Delete"
                                 @click="showDeleteToast(data)" />
                         </div>
                     </template>

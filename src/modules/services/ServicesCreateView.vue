@@ -20,8 +20,11 @@ import type { Extras } from '../../../src/interfaces/extras/extras.interface';
 import type { Users } from '../../../src/interfaces/users/users.interface';
 import genericNullObject from '../../../src/utils/null-data-meta';
 import router from '../../../src/router';
+import { useUserStore } from '../../../src/store/user.store';
 
 const toast = useToast();
+
+const userStore = useUserStore();
 
 const breadcrumbRoutes = [
     { label: 'Services', to: { name: 'services-default' } },
@@ -132,6 +135,10 @@ const createService = async (leave: boolean) => {
             unitNumber: newService.value.unitNumber.toString(),
         };
 
+        if(payload.userId === "" || payload.userId === undefined){
+            delete payload.userId
+        }
+
         await CleanersServices.createService(payload);
         showToast(toast, { severity: 'success', detail: 'Service was created' });
         leave ? router.back() : clearForm();
@@ -216,7 +223,7 @@ onMounted(async () => {
             </fieldset>
 
             <!-- Campo: Limpiador -->
-            <MyInputGroup :required="false" v-model="newService.userId" label="Cleaner" inputId="userId"
+            <MyInputGroup v-if="userStore.userData?.roleId === '1'" :required="false" v-model="newService.userId" label="Cleaner" inputId="userId"
                 inputType="select" :options="cleaners.data.map((c) => ({ label: c.name, value: c.id }))"
                 :is-form-submitted="isFormSubmitted" />
 
@@ -225,6 +232,9 @@ onMounted(async () => {
                 inputType="input" :is-form-submitted="isFormSubmitted" />
 
             <!-- Botón de creación -->
+
+            <div v-if="userStore.userData?.roleId !== '1'" />
+
             <div class="flex">
                 <LoadingButton label="Create" @click="createService(false)" />
                 <div class="px-4">

@@ -18,10 +18,13 @@ import type { Statuses } from '../../interfaces/statuses/statuses.interface';
 import type { Extras } from '../../interfaces/extras/extras.interface';
 import type { Users } from '../../interfaces/users/users.interface';
 import genericNullObject from '../../utils/null-data-meta';
+import { useUserStore } from '../../../src/store/user.store';
 
 const toast = useToast();
 const route = useRoute();
 const entityId = route.params.id as string;
+
+const userStore = useUserStore();
 
 const breadcrumbRoutes = [
   { label: 'Services', to: { name: 'services-default' } },
@@ -155,31 +158,35 @@ const updateService = async () => {
   isFormSubmitted.value = true;
 
   const requiredFields = [
-        { field: updatedService.value.communityId, label: 'Community' },
-        { field: updatedService.value.typeId, label: 'Type' },
-        { field: updatedService.value.statusId, label: 'Status' },
-        { field: updatedService.value.date, label: 'Date' },
-        { field: updatedService.value.unitNumber, label: 'Unit number' },
-    ];
+    { field: updatedService.value.communityId, label: 'Community' },
+    { field: updatedService.value.typeId, label: 'Type' },
+    { field: updatedService.value.statusId, label: 'Status' },
+    { field: updatedService.value.date, label: 'Date' },
+    { field: updatedService.value.unitNumber, label: 'Unit number' },
+  ];
 
-    const missingFields = requiredFields.filter((field) => !field.field).map((field) => field.label);
+  const missingFields = requiredFields.filter((field) => !field.field).map((field) => field.label);
 
-    if (missingFields.length > 0) {
-        showToast(toast, {
-            severity: 'error',
-            summary: 'Missing required fields',
-            detail: `The following fields are required: ${missingFields.join(', ')}`,
-        });
-        return;
-    }
+  if (missingFields.length > 0) {
+    showToast(toast, {
+      severity: 'error',
+      summary: 'Missing required fields',
+      detail: `The following fields are required: ${missingFields.join(', ')}`,
+    });
+    return;
+  }
 
 
   try {
 
     const payload = {
-            ...updatedService.value,
-            unitNumber: updatedService.value.unitNumber.toString(),
-        };
+      ...updatedService.value,
+      unitNumber: updatedService.value.unitNumber.toString(),
+    };
+
+    if (payload.userId === "" || payload.userId === undefined) {
+      delete payload.userId
+    }
 
     await CleanersServices.updateService(entityId, payload);
     showToast(toast, { severity: 'success', detail: 'Service was updated' });
@@ -265,8 +272,9 @@ onMounted(async () => {
     </fieldset>
 
     <!-- Campo: Limpiador -->
-    <MyInputGroup v-model="updatedService.userId" label="Cleaner" inputType="select" inputId="cleaner"
-     :required="false"  :options="cleanerOptions" :is-form-submitted="isFormSubmitted" />
+    <MyInputGroup v-if="userStore.userData?.roleId === '1'" v-model="updatedService.userId" label="Cleaner"
+      inputType="select" inputId="cleaner" :required="false" :options="cleanerOptions"
+      :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Comentario -->
     <MyInputGroup :required="false" v-model="updatedService.comment" label="Comment" inputType="input" inputId="comment"
