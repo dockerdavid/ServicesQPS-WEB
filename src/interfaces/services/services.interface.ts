@@ -65,30 +65,30 @@ export enum CleaningType {
 
 export default interface CreateService {
     date: string;
-    schedule: string;
-    comment: string;
-    userComment: string;
+    schedule?: string;
+    comment?: string;
+    userComment?: string;
     unitySize: string;
     unitNumber: string;
     communityId: string;
     typeId: string;
     statusId: string;
-    userId: string;
-    extraId: string[];
+    userId?: string;
+    extraId?: string[];
 }
 
 export interface EditService {
     date: string;
-    schedule: string;
-    comment: string;
-    userComment: string;
+    schedule?: string;
+    comment?: string;
+    userComment?: string;
     unitySize: string;
     unitNumber: string;
     communityId: string;
     typeId: string;
     statusId: string;
-    userId: string;
-    extraId: string[];
+    userId?: string;
+    extraId?: string[];
 }
 
 export interface TypeByCommunity {
