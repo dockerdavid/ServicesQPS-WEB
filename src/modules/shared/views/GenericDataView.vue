@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, type VNode } from "vue";
+import { onMounted, ref } from "vue";
 import { IconField, InputIcon, InputText, useToast } from 'primevue';
 import BaseLayout from '../../../layouts/BaseLayout.vue';
 import { showToast } from "../../../utils/show-toast";
@@ -140,6 +140,11 @@ onMounted(async () => {
                         @click="clearSearch" />
                 </IconField>
             </slot>
+
+        </template>
+
+        <template #header-button v-if="$slots['header-button']">
+            <slot name="header-button"></slot>
         </template>
 
 
