@@ -6,12 +6,12 @@ import { CostsServices } from "./costs.services";
 import { useGlobalStateStore } from "../../../src/store/auth.store";
 import { computed, ref } from "vue";
 import moment from "moment";
-
+import { DatePicker, FloatLabel, InputGroup, InputGroupAddon } from "primevue";
 
 const reportDate = ref(new Date());
 
-const formattedDate = computed(() => 
-  reportDate.value ? moment(reportDate.value).format('YYYY-MM-DD') : ''
+const formattedDate = computed(() =>
+    reportDate.value ? moment(reportDate.value).format('YYYY-MM-DD') : ''
 );
 
 const { setIsLoading } = useGlobalStateStore();
@@ -62,9 +62,25 @@ const getWeeklyCosts = async () => {
         { field: 'amount', name: 'Amount' },
     ]" :fetch-data="fetchCosts" :delete-data="deleteCost" :search-data="searchCost">
 
-        <template #header-button>
-            <LoadingButton @click="getWeeklyCosts" label="Export costs"/>
+        <template #header-search>
+            <div class=" w-full flex justify-between">
+                <div class="flex items-center px-3 min-w-[12rem]">
+                    <InputGroup>
+                        <InputGroupAddon>
+                            <i class="pi pi-calendar"></i>
+                        </InputGroupAddon>
+                        <FloatLabel variant="on">
+                            <DatePicker v-model="reportDate" />
+                            <label>Select date</label>
+                        </FloatLabel>
+                    </InputGroup>
+                </div>
+
+                <LoadingButton @click="getWeeklyCosts" label="Export costs" />
+            </div>
+
         </template>
+
 
     </GenericDataView>
 </template>
