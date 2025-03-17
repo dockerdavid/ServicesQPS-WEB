@@ -7,8 +7,8 @@ export interface Services {
 
 export interface Service {
     id: string;
-    date: Date;
-    schedule: null | string;
+    date: string;
+    schedule: string;
     comment: null | string;
     userComment: null | string;
     unitySize: string;

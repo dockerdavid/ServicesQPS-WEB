@@ -39,7 +39,7 @@ const scheduleDate = ref<Date>(moment().toDate());
 const fillInitialData = (service: Service) => {
   updatedService.value = {
     date: service.date,
-    schedule: service.schedule, // Mantener como string
+    schedule: service.schedule,
     comment: service.comment || '',
     communityId: service.communityId,
     extraId: service.extrasByServices.map(extra => extra.extraId),
