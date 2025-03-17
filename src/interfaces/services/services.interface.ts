@@ -191,3 +191,41 @@ export class ServiceAdapter {
     }
 
 }
+
+
+export class CleanerServiceAdapter {
+
+    static internalToExternal(service: Service) {
+        return {
+            id: service.id,
+            date: service.date,
+            schedule: service.schedule,
+            comment: service.comment,
+            userComment: service.userComment,
+            unitySize: service.unitySize,
+            unitNumber: service.unitNumber,
+            communityId: service.communityId,
+            typeId: service.typeId,
+            statusId: service.statusId,
+            userId: service.userId,
+            createdAt: service.createdAt,
+            updatedAt: service.updatedAt,
+            community: service.community,
+            extras: service.extrasByServices.map((extra: any) => extra.extra.item).join(' / '),
+            type: {
+                cleaningType: service.type.cleaningType,
+                price: `$ ${service.type.price.toFixed(2)}`,
+                commission: `$ ${service.type.commission}`,
+            },
+            status: service.status,
+            user: service.user,
+            extrasPrice: service.extrasByServices
+                .map((extraService: any) => `$${extraService.extra.itemPrice.toFixed(2)}`)
+                .join('; '),
+            extrasCommission: service.extrasByServices
+                .map((extraService: any) => `$${extraService.extra.commission.toFixed(2)}`)
+                .join('; '),
+        };
+    }
+
+}

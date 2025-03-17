@@ -1,7 +1,7 @@
 import { useUserStore } from "../../../src/store/user.store";
 import { apiServicesQps } from "../../api/api";
 import type CreateService from "../../interfaces/services/services.interface";
-import { ServiceAdapter, type EditService } from "../../interfaces/services/services.interface";
+import { CleanerServiceAdapter, ServiceAdapter, type EditService } from "../../interfaces/services/services.interface";
 import type { Service, Services } from "../../interfaces/services/services.interface";
 import { useGlobalStateStore } from "../../store/auth.store";
 import genericNullObject from "../../utils/null-data-meta";
@@ -39,7 +39,10 @@ export class CleanersServices {
 
         try {
             const { data } = await apiServicesQps.post(`/services/by-cleaner/${this.userStore?.userData?.id}?page=${page}&take=${take}`)
-            return data
+            return {
+                data: data.data.map(CleanerServiceAdapter.internalToExternal),
+                meta: data.meta
+            }
         } catch (error) {
             return {
                 data: [],
