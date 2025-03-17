@@ -56,7 +56,7 @@ const headersSuperAdmin = [
     { field: 'type.cleaningType', name: 'Type' },
     { field: 'status.statusName', name: 'Status' },
     { field: 'comment', name: 'Comment' },
-    { field: 'extrasByServices', name: 'Extras' },
+    { field: 'extras', name: 'Extras' },
     { field: 'user.name', name: 'Cleaner' },
 ]
 
@@ -71,7 +71,7 @@ const headersCleaner = [
     { field: 'status.statusName', name: 'Status' },
     { field: 'comment', name: 'Comment' },
     { field: 'type.commission', name: 'Commission' },
-    { field: 'extrasByServices', name: 'Extras' },
+    { field: 'extras', name: 'Extras' },
 ]
 
 </script>
