@@ -24,8 +24,8 @@ const searchService = async (searchWord: any, page: number, rows: number) => {
 
 const reportDate = ref(new Date());
 
-const formattedDate = computed(() => 
-  reportDate.value ? moment(reportDate.value).format('YYYY-MM-DD') : ''
+const formattedDate = computed(() =>
+    reportDate.value ? moment(reportDate.value).format('YYYY-MM-DD') : ''
 );
 
 const { setIsLoading } = useGlobalStateStore();
@@ -34,14 +34,14 @@ const getWeeklyReports = async () => {
     setIsLoading(true);
     try {
         const { data } = await apiServicesQps.get(`/reports/reporte-semana/${formattedDate.value}`, {
-            responseType: 'blob' 
+            responseType: 'blob'
         });
 
-    
+
         const url = window.URL.createObjectURL(new Blob([data]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `reporte-semana-${formattedDate.value}.pdf`); 
+        link.setAttribute('download', `reporte-semana-${formattedDate.value}.pdf`);
         document.body.appendChild(link);
         link.click();
 
@@ -53,6 +53,55 @@ const getWeeklyReports = async () => {
         setIsLoading(false);
     }
 };
+
+const getGeneralReport = async () => {
+    setIsLoading(true);
+    try {
+        const { data } = await apiServicesQps.get(`/reports/reporte-general/${formattedDate.value}`, {
+            responseType: 'blob'
+        });
+
+
+        const url = window.URL.createObjectURL(new Blob([data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `reporte-general-${formattedDate.value}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error("Error al obtener el reporte:", error);
+    } finally {
+        setIsLoading(false);
+    }
+}
+
+const getCleanerReport = async () => {
+    setIsLoading(true);
+    try {
+        const { data } = await apiServicesQps.get(`/reports/reporte-cleaner/${formattedDate.value}`, {
+            responseType: 'blob'
+        });
+
+
+        const url = window.URL.createObjectURL(new Blob([data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `reporte-cleaner-${formattedDate.value}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error("Error al obtener el reporte:", error);
+    } finally {
+        setIsLoading(false);
+    }
+}
+
 
 
 </script>
@@ -68,14 +117,14 @@ const getWeeklyReports = async () => {
 
             { field: 'type.price', name: 'Service price' },
             { field: 'type.commission', name: 'Commission' },
-            { field: 'extras.price', name: 'Extras price' },
-            { field: 'unitNumber', name: 'Extras commission' },
+            { field: 'extrasPrice', name: 'Extras price' },
+            { field: 'extrasCommission', name: 'Extras commission' },
 
-            { field: 'unitNumber', name: 'Total cleaner' },
-            { field: 'unitNumber', name: 'Partner' },
-            { field: 'unitNumber', name: 'Total' },
+            { field: 'totalCleaner', name: 'Total cleaner' },
+            { field: 'totalParner', name: 'Partner' },
+            { field: 'total', name: 'Total' },
 
-            { field: 'userId', name: 'Cleaner' },
+            { field: 'user.name', name: 'Cleaner' },
 
             { field: 'status.statusName', name: 'Status' },
 
@@ -97,11 +146,9 @@ const getWeeklyReports = async () => {
                 </div>
 
                 <div class="flex">
-                    <LoadingButton label="Export general reports" @click="getWeeklyReports" />
-                    <div class="px-3">
-                        <Button  class="h-full">Export cleaner reports</Button>
-                    </div>
-                    <Button>Invoices</Button>
+                    <LoadingButton label="Export general reports" @click="getGeneralReport" />
+                    <div class="px-3"></div>
+                    <LoadingButton label="Export cleaner reports" @click="getCleanerReport" />
                 </div>
             </div>
         </template>
