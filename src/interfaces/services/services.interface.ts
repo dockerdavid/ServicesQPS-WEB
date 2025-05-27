@@ -29,6 +29,36 @@ export interface Service {
     total: number;
 }
 
+<<<<<<< HEAD
+=======
+export interface ExternalService {
+    id: string;
+    date: string;
+    schedule: string;
+    comment: null | string;
+    userComment: null | string;
+    unitySize: string;
+    unitNumber: string;
+    communityId: string;
+    typeId: string;
+    statusId: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+    community: Community;
+    type: {
+        cleaningType: string;
+        price: string;
+        commission: string;
+    };
+    status: Status;
+    user: User;
+    extras: string;
+    extrasPrice: string;
+    extrasCommission: string;
+}
+
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 export interface Community {
     id: string;
     communityName: CommunityName;
@@ -147,12 +177,16 @@ export interface Extra {
     updatedAt: Date;
 }
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 export class ServiceAdapter {
 
     static internalToExternal(service: Service) {
 
+<<<<<<< HEAD
         return {
             id: service.id,
             date: service.date,
@@ -190,6 +224,41 @@ export class ServiceAdapter {
 
     }
 
+=======
+        const extrasByServices = service.extrasByServices || [];
+
+        return {
+            id: service.id ?? '',
+            date: service.date ?? '',
+            schedule: service.schedule ?? '',
+            comment: service.comment ?? '',
+            userComment: service.userComment ?? '',
+            unitySize: service.unitySize ?? '',
+            unitNumber: service.unitNumber ?? '',
+            communityId: service.communityId ?? '',
+            typeId: service.typeId ?? '',
+            statusId: service.statusId ?? '',
+            userId: service.userId ?? '',
+            createdAt: service.createdAt ?? '',
+            updatedAt: service.updatedAt ?? '',
+            community: service.community ?? '',
+            extras: extrasByServices.map(extra => extra?.extra?.item ?? '').join('; '),
+            type: {
+                cleaningType: service?.type?.cleaningType ?? '',
+                price: service?.type?.price != null ? `$ ${service.type.price.toFixed(2)}` : '$ 0.00',
+                commission: service?.type?.commission != null ? `$ ${service.type.commission}` : '$ 0.00',
+            },
+            status: service.status ?? '',
+            user: service.user ?? '',
+            extrasPrice: extrasByServices
+                .map(extraService => `$${extraService?.extra?.itemPrice?.toFixed(2) ?? '0.00'}`)
+                .join('; '),
+            extrasCommission: extrasByServices
+                .map(extraService => `$${extraService?.extra?.commission?.toFixed(2) ?? '0.00'}`)
+                .join('; '),
+        };
+    }
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 }
 
 
@@ -228,4 +297,61 @@ export class CleanerServiceAdapter {
         };
     }
 
+<<<<<<< HEAD
+=======
+}
+
+export class CleanerServiceAdapterExternal {
+    static externalToInternal(externalService: ExternalService): EditService {
+        return {
+            date: externalService.date,
+            schedule: externalService.schedule,
+            comment: externalService.comment || undefined,
+            userComment: externalService.userComment || undefined,
+            unitySize: externalService.unitySize,
+            unitNumber: externalService.unitNumber,
+            communityId: externalService.communityId,
+            typeId: externalService.typeId,
+            statusId: externalService.statusId,
+            userId: externalService.userId || undefined,
+            extraId: externalService.extras ? externalService.extras.split('; ').map(extra => extra.trim()) : [],
+        };
+    }
+}
+
+export class ManagerServiceAdapter {
+
+    static internalToExternal(service: Service) {
+        return {
+            id: service.id,
+            date: service.date,
+            schedule: service.schedule,
+            comment: service.comment,
+            userComment: service.userComment,
+            unitySize: service.unitySize,
+            unitNumber: service.unitNumber,
+            communityId: service.communityId,
+            typeId: service.typeId,
+            statusId: service.statusId,
+            userId: service.userId,
+            createdAt: service.createdAt,
+            updatedAt: service.updatedAt,
+            community: service.community,
+            extras: service.extrasByServices.map(extra => extra.extra.item).join(' / '),
+            type: {
+                cleaningType: service.type.cleaningType,
+                price: `$ ${service.type.price.toFixed(2)}`,
+                commission: `$ ${service.type.commission}`,
+            },
+            status: service.status,
+            user: service.user,
+            extrasPrice: service.extrasByServices
+                .map(extraService => `$${extraService.extra.itemPrice.toFixed(2)}`)
+                .join('; '),
+            extrasCommission: service.extrasByServices
+                .map(extraService => `$${extraService.extra.commission.toFixed(2)}`)
+                .join('; '),
+        };
+    }
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 }

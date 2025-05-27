@@ -24,18 +24,27 @@ import { ColorPicker } from 'primevue';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import MyFullCalendar from './components/MyFullCalendar.vue';
 
+<<<<<<< HEAD
 // Referencias al calendario y su contenedor
 const calendarContainer = ref<HTMLElement | null>(null);
 const fullCalendar = ref<InstanceType<typeof MyFullCalendar> | null>(null);
 
 // Observador de cambios en el tamaño del contenedor
+=======
+const calendarContainer = ref<HTMLElement | null>(null);
+const fullCalendar = ref<InstanceType<typeof MyFullCalendar> | null>(null);
+
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 let resizeObserver: ResizeObserver | null = null;
 
 onMounted(() => {
   if (calendarContainer.value) {
     resizeObserver = new ResizeObserver(() => {
       if (fullCalendar.value) {
+<<<<<<< HEAD
         // Llamar al método updateSize del calendario
+=======
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
         fullCalendar.value.getApi()?.updateSize();
       }
     });

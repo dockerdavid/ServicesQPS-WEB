@@ -3,7 +3,11 @@ import type { Status } from "../../interfaces/services/services.interface";
 import type { Statuses } from "../../interfaces/statuses/statuses.interface";
 import { useGlobalStateStore } from "../../store/auth.store";
 import genericNullObject from "../../utils/null-data-meta";
+<<<<<<< HEAD
 import { removeTimestamps } from "../../utils/remove-time-stamps";
+=======
+
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 
 
 export class StatusesServices {
@@ -18,7 +22,10 @@ export class StatusesServices {
             const { data } = await apiServicesQps.get(`/statuses?page=${page}&take=${take}`)
             return data
         } catch (error) {
+<<<<<<< HEAD
             console.log(error)
+=======
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
             return {
                 data: [],
                 meta: genericNullObject.meta

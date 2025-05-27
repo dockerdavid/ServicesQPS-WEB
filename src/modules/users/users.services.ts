@@ -17,7 +17,10 @@ export class UsersServices {
             const { data } = await apiServicesQps.get(`/users?page=${page}&take=${take}`)
             return data
         } catch (error) {
+<<<<<<< HEAD
             console.log(error)
+=======
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
             return {
                 data: [],
                 meta: genericNullObject.meta
@@ -36,7 +39,10 @@ export class UsersServices {
             const { data } = await apiServicesQps.get('/users/roles')
             return data
         } catch (error) {
+<<<<<<< HEAD
             console.log(error)
+=======
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
             return []
         } finally {
             store.setIsLoading(false)

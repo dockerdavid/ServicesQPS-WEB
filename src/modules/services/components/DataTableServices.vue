@@ -7,12 +7,21 @@ import { useGlobalStateStore } from "../../../store/auth.store";
 import { storeToRefs } from "pinia";
 import router from "../../../router";
 import { useUserStore } from "../../../store/user.store";
+<<<<<<< HEAD
 import { CleanersServices } from "../../../../src/modules/services/services.services";
 import type { EditService, Service } from "../../../../src/interfaces/services/services.interface";
+=======
+import {  CleanerServiceAdapterExternal, type EditService, type ExternalService, type Service } from "../../../../src/interfaces/services/services.interface";
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 import MyConfirmToast from "./MyCompleteToast.vue";
 import MyAcceptToast from "./MyAcceptToast.vue";
 import MyRejectToast from "./MyRejectToast.vue";
 import { showToast } from "../../../../src/utils/show-toast";
+<<<<<<< HEAD
+=======
+import { CleanersServices } from "../services.services";
+
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 
 
 interface TableI {
@@ -47,7 +56,12 @@ const redirectToEdit = (id: string) => {
 }
 
 const itemToDelete = ref<Service | null>();
+<<<<<<< HEAD
 const itemToUpdate = ref<Service | null>();
+=======
+const itemToUpdate = ref<EditService | null>();
+const itemToUpdateId = ref('');
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 
 const showDeleteToast = (item: Service) => {
     itemToDelete.value = item;
@@ -71,8 +85,16 @@ const closeDeleteToast = () => {
 };
 
 //** ACCEPT, REJECT OR CONFIRM TOAST */
+<<<<<<< HEAD
 const showToastByAction = (item: Service, newStatus: string) => {
     itemToUpdate.value = item;
+=======
+const showToastByAction = (item: ExternalService, newStatus: string) => {
+    console.log(item);
+    itemToUpdateId.value = item.id
+    const internalItem = CleanerServiceAdapterExternal.externalToInternal(item);
+    itemToUpdate.value = internalItem;
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 
     let group: string;
     let summary: string;
@@ -111,6 +133,7 @@ const handleAction = async (newStatus: string, group: string, comment?: string) 
 };
 
 const handleCleanerDecision = async (newStatus: string, comment?: string) => {
+<<<<<<< HEAD
 
     if (!itemToUpdate.value) return;
 
@@ -126,10 +149,19 @@ const handleCleanerDecision = async (newStatus: string, comment?: string) => {
         typeId: itemToUpdate.value.typeId,
         unitNumber: itemToUpdate.value.unitNumber,
         unitySize: itemToUpdate.value.unitySize,
+=======
+    if (!itemToUpdate.value) return;
+
+    // Convertimos itemToUpdate a EditService
+    const updatedService: EditService = {
+        ...itemToUpdate.value,
+        statusId: newStatus,
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
         userComment: comment || itemToUpdate.value.userComment || '',
         userId: itemToUpdate.value.userId || store.userData?.id || '',
     };
 
+<<<<<<< HEAD
     await CleanersServices.updateService(itemToUpdate.value.id, updatedService);
 
     showToast(toast, { summary: 'Service status updated', severity: 'success' })
@@ -137,6 +169,15 @@ const handleCleanerDecision = async (newStatus: string, comment?: string) => {
 
 };
 
+=======
+    await CleanersServices.updateService(itemToUpdateId.value, updatedService);
+
+    showToast(toast, { summary: 'Service status updated', severity: 'success' });
+    emit('update');
+};
+
+
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 const closeToastByAction = (group: string) => {
     toast.removeGroup(group);
 };
@@ -169,6 +210,7 @@ const closeToastByAction = (group: string) => {
                 </Column>
 
                 <Column v-if="store.userData?.roleId === '4'" field="actions" style="width: 25%">
+<<<<<<< HEAD
                     <template #body="{ data }: { data: Service }">
                         <div class="flex justify-around">
 
@@ -176,6 +218,15 @@ const closeToastByAction = (group: string) => {
                                 label="Accept" @click="showToastByAction(data, '3')" />
 
                             <Button v-if="data.statusId === '1'" variant="text" icon="pi pi-times" severity="danger"
+=======
+                    <template #body="{ data }: { data: ExternalService }">
+                        <div class="flex justify-around">
+
+                            <Button v-if="data.statusId == '2'" variant="text" icon="pi pi-check" severity="warn"
+                                label="Accept" @click="showToastByAction(data, '3')" />
+
+                            <Button v-if="data.statusId === '2'" variant="text" icon="pi pi-times" severity="danger"
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
                                 label="Reject" @click="showToastByAction(data, '4')" />
 
                             <Button v-if="data.statusId === '3'" variant="text" icon="pi pi-verified" severity="warn"
@@ -194,7 +245,11 @@ const closeToastByAction = (group: string) => {
             <a href="https://storyset.com/search"></a>
             <picture class="flex items-center flex-col">
                 <p class="text-2xl text-center py-4">There is no data. Please try a different search.</p>
+<<<<<<< HEAD
                 <img class="w-70 " src="../../../assets/empty.svg">
+=======
+                <img class="w-70 " src="../../../../public/svgs/empty.svg">
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
             </picture>
         </div>
 

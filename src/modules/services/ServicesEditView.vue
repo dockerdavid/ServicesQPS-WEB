@@ -33,7 +33,11 @@ const breadcrumbRoutes = [
 
 const isFormSubmitted = ref(false);
 
+<<<<<<< HEAD
 // Variable adicional para el DatePicker (tipo Date)
+=======
+
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 const scheduleDate = ref<Date>(moment().toDate());
 
 const fillInitialData = (service: Service) => {
@@ -51,13 +55,20 @@ const fillInitialData = (service: Service) => {
     userId: service.userId || '',
   };
 
+<<<<<<< HEAD
   // Convertir el schedule inicial a un objeto Date para el DatePicker
+=======
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
   scheduleDate.value = moment(service.schedule, 'HH:mm:ss').toDate();
 };
 
 const updatedService = ref<EditService>({
   date: moment().format('YYYY-MM-DD'),
+<<<<<<< HEAD
   schedule: moment().format('HH:mm:ss'), // Mantener como string
+=======
+  schedule: moment().format('HH:mm:ss'), 
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
   comment: '',
   communityId: '',
   extraId: [],
@@ -142,12 +153,18 @@ watch(() => updatedService.value.communityId, (newCommunityId) => {
   }
 });
 
+<<<<<<< HEAD
 // Observar cambios en el campo "scheduleDate" para actualizar "updatedService.schedule"
+=======
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 watch(
   () => scheduleDate.value,
   (newScheduleDate) => {
     if (newScheduleDate) {
+<<<<<<< HEAD
       // Formatear la hora como string y asignarla a updatedService.schedule
+=======
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
       updatedService.value.schedule = moment(newScheduleDate).format('HH:mm:ss');
     }
   }
@@ -188,6 +205,13 @@ const updateService = async () => {
       delete payload.userId
     }
 
+<<<<<<< HEAD
+=======
+    if(userStore.userData?.roleId === "3"){
+      delete payload.userId
+    }
+
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
     await CleanersServices.updateService(entityId, payload);
     showToast(toast, { severity: 'success', detail: 'Service was updated' });
   } catch (error) {
@@ -249,7 +273,11 @@ onMounted(async () => {
       :options="unitSizeOptions" :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Número de unidad -->
+<<<<<<< HEAD
     <MyInputGroup v-model="updatedService.unitNumber" label="Unit number" inputType="numeric" inputId="unit-number"
+=======
+    <MyInputGroup v-model="updatedService.unitNumber" label="Unit number" inputType="input" inputId="unit-number"
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
       :is-form-submitted="isFormSubmitted" input-numeric-mode="decimal" />
 
     <!-- Campo: Comunidad -->
@@ -267,7 +295,11 @@ onMounted(async () => {
     <!-- Campo: Extras -->
     <fieldset>
       <label for="extras">Extras</label>
+<<<<<<< HEAD
       <MultiSelect v-model="updatedService.extraId" :options="extrasOptions" optionLabel="label" optionValue="value"
+=======
+      <MultiSelect v-model="updatedService.extraId" :options="extras.data.map((e) => ({ label: e.item, value: e.id }))" optionLabel="label" optionValue="value"
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
         placeholder="Select Extras" class="w-full md:w-80" />
     </fieldset>
 

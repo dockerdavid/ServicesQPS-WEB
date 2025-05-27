@@ -18,13 +18,21 @@ const breadcrumbRoutes = [
 const inputs: InputConfig[] = [
     { label: 'Name', inputId: 'name', inputType: 'input' },
     { label: 'Email', inputId: 'email', inputType: 'input' },
+<<<<<<< HEAD
     /* { label: 'Password', inputId: 'password', inputType: 'input' }, */
+=======
+
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
     { label: 'Role', inputId: 'roleId', inputType: 'select', options: [] },
     { label: 'Phone number', inputId: 'phoneNumber', inputType: 'numeric', inputNumericMode: 'decimal' },
 ];
 
 const keyValueMap = {
+<<<<<<< HEAD
     roleId: 'role.id', // Mapea roleId a role.id
+=======
+    roleId: 'role.id', 
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 };
 
 const loadData = async (id: string) => {

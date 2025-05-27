@@ -139,6 +139,13 @@ const createService = async (leave: boolean) => {
             delete payload.userId
         }
 
+<<<<<<< HEAD
+=======
+        if(payload.userId && payload.statusId === '1'){
+            payload.statusId = '2'
+        }
+
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
         await CleanersServices.createService(payload);
         showToast(toast, { severity: 'success', detail: 'Service was created' });
         leave ? router.back() : clearForm();
@@ -171,7 +178,10 @@ const clearForm = () => {
 
 }
 
+<<<<<<< HEAD
 // Cargar opciones al montar el componente
+=======
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 onMounted(async () => {
     await loadOptions();
 });
@@ -196,7 +206,11 @@ onMounted(async () => {
                 :options="unitSizeOptions" :is-form-submitted="isFormSubmitted" />
 
             <!-- Campo: Número de unidad -->
+<<<<<<< HEAD
             <MyInputGroup v-model="newService.unitNumber" label="Unit number" inputId="unitNumber" inputType="numeric"
+=======
+            <MyInputGroup v-model="newService.unitNumber" label="Unit number" inputId="unitNumber" inputType="input"
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
                 icon="address-book" :is-form-submitted="isFormSubmitted" input-numeric-mode="decimal" />
 
             <!-- Campo: Comunidad -->

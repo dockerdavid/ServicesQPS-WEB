@@ -19,7 +19,10 @@ export interface NewCommunity {
     communityName: string;
     userId: string;
     companyId: string;
+<<<<<<< HEAD
 /*     id:string */
+=======
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 }
 
 export interface Company {

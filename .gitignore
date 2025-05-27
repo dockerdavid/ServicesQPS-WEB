@@ -1,3 +1,19 @@
+<<<<<<< HEAD
+=======
+#
+.env
+
+# Ignora todo dentro de favicon e images, excepto .gitkeep
+/public/favicon/*
+!/public/favicon/.gitkeep
+
+/public/images/*
+!/public/images/.gitkeep
+
+/public/svgs/*
+!/public/svgs/.gitkeep
+
+>>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 # Logs
 logs
 *.log
