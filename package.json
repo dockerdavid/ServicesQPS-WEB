@@ -37,11 +37,7 @@
   "devDependencies": {
     "@iconify/vue": "^4.3.0",
     "@tsconfig/node22": "^22.0.0",
-<<<<<<< HEAD
-    "@types/node": "^22.13.4",
-=======
     "@types/node": "^22.15.0",
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/tsconfig": "^0.7.0",
     "npm-run-all2": "^7.0.2",

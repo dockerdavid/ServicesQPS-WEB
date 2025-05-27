@@ -37,10 +37,6 @@ export class TypesServices {
             const { data } = await apiServicesQps.get(`/types/by-community/${communityId}`)
             return data
         } catch (error) {
-<<<<<<< HEAD
-            console.log(error)
-=======
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
             return []
         } finally {
             this.store.setIsLoading(false)

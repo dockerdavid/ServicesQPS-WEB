@@ -2,11 +2,7 @@
     <div class="p-4 h-[100vh]">
         <router-link class="text-2xl" :to="roleRoutes[userRole][0]">Go back</router-link>
         <div class="h-[90%] flex place-content-center">
-<<<<<<< HEAD
-            <img class="w-100" src="../../../assets/not-found.svg" alt="">
-=======
             <img class="w-100" src="../../../../public/svgs/not-found.svg" alt="">
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
         </div>
 
     </div>

@@ -1,9 +1,5 @@
 <script setup lang="ts">
-<<<<<<< HEAD
-import { ref, computed } from "vue";
-=======
 import { ref } from "vue";
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 import { useToast } from 'primevue/usetoast';
 import { Column, DataTable, InputText, Button, Skeleton, Paginator } from "primevue";
 import MyDeleteToast from "./MyDeleteToast.vue";
@@ -101,11 +97,7 @@ const closeDeleteToast = () => {
             <a href="https://storyset.com/search"></a>
             <picture class="flex items-center flex-col">
                 <p class="text-2xl text-center py-4">There is no data. Please try a different search.</p>
-<<<<<<< HEAD
-                <img class="w-70 " src="../../../assets/empty.svg">
-=======
                 <img class="w-70 " src="../../../../public/svgs/empty.svg">
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
             </picture>
         </div>
 

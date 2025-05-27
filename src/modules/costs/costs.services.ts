@@ -22,10 +22,6 @@ export class CostsServices {
                 meta: data.meta
             }
         } catch (error) {
-<<<<<<< HEAD
-            console.log(error)
-=======
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
             return {
                 data: [],
                 meta: genericNullObject.meta
@@ -38,10 +34,6 @@ export class CostsServices {
     static async createCost(cost: NewCost) {
         try {
             const { data } = await apiServicesQps.post('/costs', cost)
-<<<<<<< HEAD
-            console.log(data)
-=======
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
         } catch (error: any) {
             throw new Error(error)
         } finally {

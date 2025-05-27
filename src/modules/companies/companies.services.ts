@@ -17,10 +17,6 @@ export class CompaniesServices {
             const { data } = await apiServicesQps.get(`/companies?page=${page}&take=${take}`)
             return data
         } catch (error) {
-<<<<<<< HEAD
-            console.log(error)
-=======
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
             return {
                 data: [],
                 meta: genericNullObject.meta
@@ -47,10 +43,6 @@ export class CompaniesServices {
     static async createCompany(companyName: string) {
         try {
             const { data } = await apiServicesQps.post('/companies', { companyName })
-<<<<<<< HEAD
-            console.log(data)
-=======
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
         } catch (error: any) {
             throw new Error(error)
         } finally {

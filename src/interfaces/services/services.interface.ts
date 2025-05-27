@@ -29,8 +29,6 @@ export interface Service {
     total: number;
 }
 
-<<<<<<< HEAD
-=======
 export interface ExternalService {
     id: string;
     date: string;
@@ -58,7 +56,6 @@ export interface ExternalService {
     extrasCommission: string;
 }
 
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 export interface Community {
     id: string;
     communityName: CommunityName;
@@ -177,54 +174,10 @@ export interface Extra {
     updatedAt: Date;
 }
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 export class ServiceAdapter {
 
     static internalToExternal(service: Service) {
 
-<<<<<<< HEAD
-        return {
-            id: service.id,
-            date: service.date,
-            schedule: service.schedule,
-            comment: service.comment,
-            userComment: service.userComment,
-            unitySize: service.unitySize,
-            unitNumber: service.unitNumber,
-            communityId: service.communityId,
-            typeId: service.typeId,
-            statusId: service.statusId,
-            userId: service.userId,
-            createdAt: service.createdAt,
-            updatedAt: service.updatedAt,
-            community: service.community,
-            extras: service.extrasByServices.map(extra => extra.extra.item).join('; '),
-            type: {
-                cleaningType: service.type.cleaningType,
-                price: `$ ${service.type.price.toFixed(2)}`,
-                commission: `$ ${service.type.commission}`,
-            },
-            status: service.status,
-            user: service.user,
-            extrasPrice: service.extrasByServices
-                .map(extraService => `$${extraService.extra.itemPrice.toFixed(2)}`)
-                .join('; '),
-
-            extrasCommission: service.extrasByServices
-                .map(extraService => `$${extraService.extra.commission.toFixed(2)}`)
-                .join('; '),
-            totalCleaner: `$ ${service.totalCleaner.toFixed(2)}`,
-            totalParner: `$ ${service.totalParner.toFixed(2)}`,
-            total: `$ ${service.total.toFixed(2)}`,
-        }
-
-    }
-
-=======
         const extrasByServices = service.extrasByServices || [];
 
         return {
@@ -258,7 +211,6 @@ export class ServiceAdapter {
                 .join('; '),
         };
     }
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 }
 
 
@@ -297,8 +249,6 @@ export class CleanerServiceAdapter {
         };
     }
 
-<<<<<<< HEAD
-=======
 }
 
 export class CleanerServiceAdapterExternal {
@@ -353,5 +303,4 @@ export class ManagerServiceAdapter {
                 .join('; '),
         };
     }
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 }

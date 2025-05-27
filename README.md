@@ -1,23 +1,3 @@
-<<<<<<< HEAD
-# qps-web
-
-This template should help get you started developing with Vue 3 in Vite.
-
-## Recommended IDE Setup
-
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-=======
 
 # qps-web
 
@@ -25,7 +5,6 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 
 Instalá las dependencias con:
 
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 ```sh
 npm install
 ```
@@ -41,8 +20,6 @@ npm run dev
 ```sh
 npm run build
 ```
-<<<<<<< HEAD
-=======
 
 ## Archivos Estáticos
 
@@ -87,4 +64,3 @@ Ejemplos:
 
 ---
 
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6

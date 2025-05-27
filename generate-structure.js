@@ -29,15 +29,9 @@ const capitalize = (str) => {
 const createFile = (filePath, content = '') => {
   if (!fs.existsSync(filePath)) {
     fs.writeFileSync(filePath, content);
-<<<<<<< HEAD
-    console.log(`Archivo creado: ${filePath}`);
-  } else {
-    console.log(`Archivo ya existe, ignorando: ${filePath}`);
-=======
     // console.log(`Archivo creado: ${filePath}`);
   } else {
     // console.log(`Archivo ya existe, ignorando: ${filePath}`);
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
   }
 };
 
@@ -49,15 +43,9 @@ const createModuleStructure = (moduleName) => {
   // Crear la carpeta del módulo (si no existe)
   if (!fs.existsSync(modulePath)) {
     fs.mkdirSync(modulePath, { recursive: true });
-<<<<<<< HEAD
-    console.log(`Carpeta creada: ${modulePath}`);
-  } else {
-    console.log(`Carpeta ya existe, ignorando: ${modulePath}`);
-=======
     // console.log(`Carpeta creada: ${modulePath}`);
   } else {
     // console.log(`Carpeta ya existe, ignorando: ${modulePath}`);
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
   }
 
   // Crear los archivos básicos del módulo (si no existen)

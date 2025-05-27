@@ -2,11 +2,7 @@
     <div class="card flex justify-center items-center h-[100vh]">
         <form @submit.prevent="onFormSubmit" class="flex flex-col gap-4 w-full sm:w-80 ">
 
-<<<<<<< HEAD
-            <img class="w-50 self-center" src="../../assets/img/logoqps.png" alt="">
-=======
             <img class="w-50 self-center" src="../../../public/images/logoqps.png" alt="">
->>>>>>> 2b926e5a844007937b043a854ffb7d83b30c19e6
 
             <div class="flex flex-col gap-1">
                 <InputText type="email" placeholder="Email" v-model="form.username" />
