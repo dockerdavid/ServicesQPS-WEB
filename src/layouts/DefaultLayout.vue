@@ -15,7 +15,7 @@ const store = useUserStore();
 
 const op = ref(false);
 
-const toggle = (event) => {
+const toggle = (event: any) => {
     op.value.toggle(event);
 };
 
