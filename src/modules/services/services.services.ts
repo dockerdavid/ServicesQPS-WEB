@@ -18,7 +18,7 @@ export class CleanersServices {
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get(`/services?page=${page}&take=${take}`)
+            const { data } = await apiServicesQps.get(`/services?page=${page}&take=${take}&order=DESC`)
             return {
                 data: data.data.map(ServiceAdapter.internalToExternal),
                 meta: data.meta
