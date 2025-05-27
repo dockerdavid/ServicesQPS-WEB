@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import router from '../router';
 import { Avatar, Button, Card, Popover } from 'primevue';
 
-
 import MySidebar from '../modules/shared/components/MySidebar.vue';
 
 import { useSidebarStore } from '../store/sidebar.store';
@@ -13,18 +12,18 @@ import { useUserStore } from '../store/user.store';
 const sidebarState = useSidebarStore();
 const store = useUserStore();
 
-const op = ref(false);
+// Referencia al componente Popover (no un booleano)
+const op = ref<InstanceType<typeof Popover> | null>(null);
 
 const toggle = (event: any) => {
-    op.value.toggle(event);
+    op.value?.toggle?.(event); // Llamada segura al método toggle
 };
 
 const signOut = () => {
     useAuthStore().removeToken();
     useUserStore().removeUserData();
-    router.push('/auth')
-}
-
+    router.push('/auth');
+};
 </script>
 
 <template>
@@ -33,15 +32,18 @@ const signOut = () => {
         <MySidebar />
 
         <main>
-
             <Card>
                 <template #content>
                     <div class="user-header py-1">
-
                         <Icon icon="ph:arrows-left-right" @click="sidebarState.toggleSidebar()" />
                         <div>
                             <Button class="cursor-pointer" unstyled @click="toggle">
-                                <Avatar :label="store.userData?.name.charAt(0).toUpperCase()" class="mr-2" size="normal" shape="circle" />
+                                <Avatar
+                                    :label="store.userData?.name?.charAt(0).toUpperCase() ?? '?'"
+                                    class="mr-2"
+                                    size="normal"
+                                    shape="circle"
+                                />
                             </Button>
                             <Popover ref="op">
                                 <div class="w-[10rem]">
@@ -54,11 +56,9 @@ const signOut = () => {
             </Card>
 
             <RouterView />
-
         </main>
     </div>
 </template>
-
 
 <style lang="scss" scoped>
 .default-layout {
@@ -79,9 +79,7 @@ const signOut = () => {
             .iconify {
                 cursor: pointer;
             }
-
         }
-
     }
 }
 </style>
