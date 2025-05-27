@@ -1,4 +1,4 @@
-<script setup>
+<script lang="ts" setup>
 import { ref } from 'vue';
 import router from '../router';
 import { Avatar, Button, Card, Popover } from 'primevue';
