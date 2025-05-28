@@ -9,13 +9,19 @@ export class UsersServices {
 
 
 
-    static async getUsers(page: number = 1, take: number = 10): Promise<Users> {
+    static async getUsers(page: number = 1, take: number = 10, filterCleaners: boolean = false): Promise<Users> {
         const store = useGlobalStateStore();
         store.setIsLoading(true)
 
         try {
             const { data } = await apiServicesQps.get(`/users?page=${page}&take=${take}`)
-            return data
+            const filteredData = filterCleaners ? data.data.filter((user: any) => user.role.id === '4') : data.data;
+            return {
+                data: filteredData,
+                meta: {
+                    ...data.meta,
+                }
+            }
         } catch (error) {
             return {
                 data: [],
