@@ -50,7 +50,7 @@ const fillInitialData = (service: Service) => {
     userId: service.userId || '',
   };
 
-  scheduleDate.value = moment(service.schedule, 'HH:mm:ss').toDate();
+ scheduleDate.value = moment(service.schedule || moment(), 'HH:mm:ss').toDate();
 };
 
 const updatedService = ref<EditService>({
@@ -241,7 +241,7 @@ onMounted(async () => {
     <!-- Campo: Horario -->
     <fieldset>
       <label for="schedule">Schedule</label>
-      <DatePicker v-model="scheduleDate" :time-only="true" hour-format="12" id="schedule" />
+      <DatePicker v-model="scheduleDate" time-only id="schedule" />
     </fieldset>
 
     <!-- Campo: Tamaño de la unidad -->
