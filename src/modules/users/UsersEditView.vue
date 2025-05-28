@@ -18,6 +18,7 @@ const breadcrumbRoutes = [
 const inputs: InputConfig[] = [
     { label: 'Name', inputId: 'name', inputType: 'input' },
     { label: 'Email', inputId: 'email', inputType: 'input' },
+    { label: 'Password', inputId: 'password', inputType: 'password', placeholder: '********', isNotNeccesary: true },
     { label: 'Role', inputId: 'roleId', inputType: 'select', options: [] },
     { label: 'Phone number', inputId: 'phoneNumber', inputType: 'numeric', inputNumericMode: 'decimal' },
 ];
@@ -42,10 +43,8 @@ const loadData = async (id: string) => {
 };
 
 const updateEntity = async (id: string, data: NewUser) => {
-
     data.phoneNumber = `+${data.phoneNumber.toString()}`;
     await UsersServices.updateUser(id, data);
-
 };
 </script>
 
@@ -54,6 +53,7 @@ const updateEntity = async (id: string, data: NewUser) => {
         :update-entity="updateEntity" :initial-data="{
             email: '',
             name: '',
+            password: '',
             phoneNumber: '',
             roleId: '',
         }" :key-value-map="keyValueMap" />

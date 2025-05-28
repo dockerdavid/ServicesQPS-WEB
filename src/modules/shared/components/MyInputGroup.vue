@@ -6,6 +6,10 @@
             <InputText :aria-required="true" :placeholder="props.placeholder" v-if="props.inputType === 'input'"
                 v-model="modelValue" :required="props.required" :id="props.inputId" />
 
+            <Password :placeholder="props.placeholder" v-if="props.inputType === 'password'"
+                v-model="modelValue" :required="props.required" :id="props.inputId" :feedback="false" toggleMask
+                class="w-full" />
+
             <DatePicker :placeholder="props.placeholder" v-if="props.inputType === 'datepicker'" v-model="dateValue"
                 :required="props.required" :aria-required="props.required" :inputId="props.inputId"
                 :hourFormat="props.hourFormat ? '12' : '24'" :timeOnly="props.timeOnly" />
@@ -31,7 +35,7 @@
 </template>
 
 <script lang="ts" setup>
-import { DatePicker, IconField, InputIcon, InputText, Select, InputNumber } from 'primevue';
+import { DatePicker, IconField, InputIcon, InputText, Select, InputNumber, Password } from 'primevue';
 import moment from 'moment';
 import { computed } from 'vue';
 import type { InputNumericMode, InputType } from '../../../interfaces/input-config.interface';
