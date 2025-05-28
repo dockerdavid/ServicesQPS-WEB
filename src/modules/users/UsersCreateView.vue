@@ -32,7 +32,7 @@ const loadOptions = async () => {
 
 const createEntity = async (newUser: NewUser) => {
 
-    newUser.phoneNumber = `+${newUser.phoneNumber.toString()}`
+    newUser.phoneNumber = `+1${newUser.phoneNumber.toString()}`
 
     await UsersServices.createUser(newUser)
 }

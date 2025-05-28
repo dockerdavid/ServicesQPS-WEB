@@ -71,7 +71,7 @@ const loadOptions = async () => {
         CommunitiesServices.getCommunities(undefined, 50),
         StatusesServices.getStatuses(undefined, 50),
         ExtrasServices.getExtras(undefined, 50),
-        UsersServices.getUsers(undefined, 50, true),
+        UsersServices.getUsers(undefined, 150, true),
     ]);
 
     communities.value = communityResults.data;
