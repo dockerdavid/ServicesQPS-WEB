@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { CommunitiesServices } from '../communities/communities.services';
 import { TypesServices } from '../types/types.services';
 import { StatusesServices } from '../statuses/statuses.services';
@@ -22,6 +22,7 @@ import { useUserStore } from '../../../src/store/user.store';
 
 const toast = useToast();
 const route = useRoute();
+const router = useRouter();
 const entityId = route.params.id as string;
 
 const userStore = useUserStore();
@@ -197,6 +198,16 @@ const updateService = async () => {
   }
 };
 
+const deleteService = async () => {
+  try {
+    await CleanersServices.deleteService(entityId);
+    showToast(toast, { severity: 'success', detail: 'Service was deleted successfully' });
+    router.push('/services');
+  } catch (error) {
+    showToast(toast, { severity: 'error', summary: "Service couldn't be deleted" });
+  }
+};
+
 onMounted(async () => {
   const [communityResults, statusResults, extrasResults, cleanerResults, initialData] = await Promise.all([
     CommunitiesServices.getCommunities(),
@@ -282,18 +293,25 @@ onMounted(async () => {
   </form>
 
   <!-- Botón de actualización -->
-  <LoadingButton label="Edit" @click="updateService" />
+  <div class="button-container">
+    <LoadingButton label="Edit" @click="updateService" />
+    <LoadingButton label="Delete" severity="danger" @click="deleteService" />
+  </div>
 </template>
 
 
 <style scoped lang="scss">
 .form-grid {
-
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
 
+.button-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
 
 @media (max-width: 768px) {
   .form-grid {
