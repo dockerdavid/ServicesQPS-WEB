@@ -74,7 +74,7 @@ const closeDeleteToast = () => {
 
 //** ACCEPT, REJECT OR CONFIRM TOAST */
 const showToastByAction = (item: ExternalService, newStatus: string) => {
-    console.log(item);
+
     itemToUpdateId.value = item.id
     const internalItem = CleanerServiceAdapterExternal.externalToInternal(item);
     itemToUpdate.value = internalItem;

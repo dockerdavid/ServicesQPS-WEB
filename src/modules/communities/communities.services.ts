@@ -95,9 +95,11 @@ export class CommunitiesServices {
         this.store.setIsLoading(true)
 
         try {
-            await apiServicesQps.patch(`/communities/${communityId}`, changedValue)
+            const response = await apiServicesQps.patch(`/communities/${communityId}`, changedValue)
+            return response.data;
         } catch (error: any) {
-            throw new Error(error)
+            console.log(error)
+            throw error;
         } finally {
             this.store.setIsLoading(false)
         }

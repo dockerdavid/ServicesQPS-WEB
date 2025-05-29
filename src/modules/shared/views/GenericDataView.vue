@@ -10,6 +10,7 @@ interface Header {
     field: string;
     name: string;
     style?: string;
+    format?: (value: any, row?: any) => string;
 }
 
 interface Props {

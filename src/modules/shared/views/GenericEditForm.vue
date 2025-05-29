@@ -56,7 +56,7 @@ const getNestedValue = (source: Record<string, any>, path: string) => {
 
 const fillInitialData = (source: Record<string, any>, target: Record<string, any>) => {
   props.inputs.forEach((input) => {
-    if (input.inputType === 'select') {
+    if (input.inputType === 'select' || input.inputType === 'multiselect') {
       const sourceKey = props.keyValueMap[input.inputId] || input.inputId;
       target[input.inputId] = getNestedValue(source, sourceKey);
     } else {
@@ -178,6 +178,8 @@ onMounted(async () => {
         :required="input.required" :label="input.label" :inputId="input.inputId" :input-type="input.inputType"
         :options="input.options" :input-numeric-mode="input.inputNumericMode" :time-only="input.timeOnly"
         :hour-format="input.hourFormat" :is-form-submitted="isFormSubmitted" />
+
+      <slot name="additional-fields"></slot>
 
       <div v-if="inputs.length % 2 !== 0"></div>
 

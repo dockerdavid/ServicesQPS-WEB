@@ -7,9 +7,16 @@ import { useGlobalStateStore } from "../../../store/auth.store";
 import { storeToRefs } from "pinia";
 import router from "../../../router";
 
+interface TableHeader {
+    field: string;
+    name: string;
+    style?: string;
+    format?: (value: any, row: any) => string;
+}
+
 interface TableI {
     data: any[];
-    headers: { field: string; name: string; style?: string }[];
+    headers: TableHeader[];
     onDelete: (item: any) => void;
     totalRecords: number;
     editRoute: string;
@@ -58,6 +65,13 @@ const handleDelete = () => {
 const closeDeleteToast = () => {
     toast.removeGroup('bc');
 };
+
+const getNestedValue = (obj: any, path: string) => {
+    return path.split('.').reduce((current, key) => 
+        current && current[key] !== undefined ? current[key] : '', 
+        obj
+    );
+};
 </script>
 
 <template>
@@ -68,14 +82,21 @@ const closeDeleteToast = () => {
         </div>
 
         <div v-else-if="data.length > 0">
-            <DataTable :value="data" tableStyle="min-width: 50rem">
-                <Column v-for="(header, index) in headers" :key="index" :field="header.field" :header="header.name"
+            <DataTable :value="data" :paginator="true" :rows="10" :totalRecords="totalRecords" @page="onPageChange"
+                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                :rowsPerPageOptions="[5, 10, 20, 50]" currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                responsiveLayout="scroll">
+                <Column v-for="header in headers" :key="header.field" :field="header.field" :header="header.name"
                     :style="header.style">
-                    <template #editor="{ data, field }">
-                        <InputText v-model="data[field]" />
+                    <template #body="{ data: rowData }">
+                        <template v-if="header.format">
+                            <span v-html="header.format(getNestedValue(rowData, header.field), rowData)"></span>
+                        </template>
+                        <template v-else>
+                            {{ getNestedValue(rowData, header.field) }}
+                        </template>
                     </template>
                 </Column>
-
                 <Column v-if="!props.lockEdit" field="actions" style="width: 25%">
                     <template #body="{ data }">
                         <div class="flex justify-around">
@@ -86,7 +107,6 @@ const closeDeleteToast = () => {
                         </div>
                     </template>
                 </Column>
-
             </DataTable>
 
             <Paginator :rows="rows" :totalRecords="totalRecords" :rowsPerPageOptions="[5, 10, 20]" :first="first"

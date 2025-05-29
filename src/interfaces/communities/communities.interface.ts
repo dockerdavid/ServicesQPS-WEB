@@ -11,14 +11,17 @@ export interface Community {
     communityName: string;
     createdAt: Date;
     updatedAt: Date;
-    user: User;
+    managerUser: User | null;
+    supervisorUser: User | null;
     company: Company;
 }
 
 export interface NewCommunity {
     communityName: string;
-    userId: string;
+    managerUserId: string | null;
+    supervisorUserId: string | null;
     companyId: string;
+    id: string;
 }
 
 export interface Company {

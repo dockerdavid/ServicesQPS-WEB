@@ -35,7 +35,7 @@
 </template>
 
 <script lang="ts" setup>
-import { DatePicker, IconField, InputIcon, InputText, Select, InputNumber, Password } from 'primevue';
+import { DatePicker, IconField, InputIcon, InputText, Select, InputNumber, Password, MultiSelect } from 'primevue';
 import moment from 'moment';
 import { computed } from 'vue';
 import type { InputNumericMode, InputType } from '../../../interfaces/input-config.interface';

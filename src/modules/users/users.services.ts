@@ -15,6 +15,7 @@ export class UsersServices {
 
         try {
             const { data } = await apiServicesQps.get(`/users?page=${page}&take=${take}`)
+
             const filteredData = filterCleaners ? data.data.filter((user: any) => user.role.id === '4') : data.data;
             return {
                 data: filteredData,

@@ -66,5 +66,3 @@ const createModuleStructure = (moduleName) => {
 modules.forEach((moduleName) => {
   createModuleStructure(moduleName);
 });
-
-console.log('Estructura generada con éxito.');
