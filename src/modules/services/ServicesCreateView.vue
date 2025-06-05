@@ -43,7 +43,7 @@ const unitSizeOptions = [
 
 const newService = ref<CreateService>({
     date: moment().format('YYYY-MM-DD'),
-    schedule: '',
+    schedule: '00:00:00',
     comment: '',
     communityId: '',
     extraId: [],
@@ -55,7 +55,7 @@ const newService = ref<CreateService>({
     userId: '',
 });
 
-const scheduleDate = ref<Date>(moment().toDate());
+const scheduleDate = ref<Date>(moment().set({ hour: 0, minute: 0, second: 0 }).toDate());
 
 const isFormSubmitted = ref(false);
 
@@ -72,12 +72,15 @@ const loadOptions = async () => {
         StatusesServices.getStatuses(undefined, 50),
         ExtrasServices.getExtras(undefined, 50),
         UsersServices.getUsers(undefined, 150, true),
-    ]);
-
-    communities.value = communityResults.data;
+    ])
+    
+    communities.value = communityResults.data.sort((a, b) => a.communityName.localeCompare(b.communityName));
     statuses.value = statusResults;
     extras.value = extrasResults;
-    cleaners.value = cleanerResults;
+    cleaners.value = {
+        ...cleanerResults,
+        data: cleanerResults.data.sort((a, b) => a.name.localeCompare(b.name))
+    };
 };
 
 
@@ -157,7 +160,7 @@ const clearForm = () => {
 
     newService.value = {
         date: moment().format('YYYY-MM-DD'),
-        schedule: '',
+        schedule: '00:00:00',
         comment: '',
         communityId: '',
         extraId: [],
@@ -169,7 +172,7 @@ const clearForm = () => {
         userId: '',
     };
 
-    scheduleDate.value = moment().toDate();
+    scheduleDate.value = moment().set({ hour: 0, minute: 0, second: 0 }).toDate();
 
 
 
@@ -191,7 +194,7 @@ onMounted(async () => {
 
             <fieldset>
                 <label for="schedule">Schedule</label>
-                <DatePicker v-model="scheduleDate" :time-only="true" hour-format="12" id="schedule" />
+                <DatePicker v-model="scheduleDate" :time-only="true" hour-format="24" id="schedule" />
             </fieldset>
 
             <!-- Campo: Tamaño de la unidad -->
@@ -228,7 +231,7 @@ onMounted(async () => {
             <!-- Campo: Limpiador -->
             <MyInputGroup v-if="userStore.userData?.roleId === '1'" :required="false" v-model="newService.userId" label="Cleaner" inputId="userId"
                 inputType="select" :options="cleaners.data.map((c) => ({ label: c.name, value: c.id }))"
-                :is-form-submitted="isFormSubmitted" />
+                :is-form-submitted="isFormSubmitted" :filter="true" />
 
             <!-- Campo: Comentario -->
             <MyInputGroup :required="false" v-model="newService.comment" label="Comment" inputId="comment"

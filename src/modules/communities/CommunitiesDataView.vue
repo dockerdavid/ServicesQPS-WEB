@@ -42,7 +42,8 @@ const headers = [
         :headers="headers" 
         :fetch-data="fetchCommunities" 
         :delete-data="deleteCommunity"
-        :search-data="searchCommunity" 
+        :search-data="searchCommunity"
+        :show-export-button="true"
     />
 </template>
 

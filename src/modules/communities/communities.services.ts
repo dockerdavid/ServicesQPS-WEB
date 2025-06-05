@@ -105,4 +105,31 @@ export class CommunitiesServices {
         }
     }
 
+    static async exportCommunityReport(communityId: string) {
+        this.store.setIsLoading(true);
+        try {
+            console.log('1')
+            const { data } = await apiServicesQps.get(`/reports/community/${communityId}`, {
+                responseType: 'blob'
+            });
+
+            console.log('data desde comunidad',data)
+
+            // const url = window.URL.createObjectURL(new Blob([data]));
+            // const link = document.createElement('a');
+            // link.href = url;
+            // link.setAttribute('download', `community-report-${communityId}.xlsx`);
+            // document.body.appendChild(link);
+            // link.click();
+
+            // document.body.removeChild(link);
+            // window.URL.revokeObjectURL(url);
+        } catch (error: any) {
+            console.error("Error exporting community report:", error);
+            throw new Error(error);
+        } finally {
+            this.store.setIsLoading(false);
+        }
+    }
+
 }

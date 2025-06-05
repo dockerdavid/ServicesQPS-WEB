@@ -14,9 +14,9 @@
                 :required="props.required" :aria-required="props.required" :inputId="props.inputId"
                 :hourFormat="props.hourFormat ? '12' : '24'" :timeOnly="props.timeOnly" />
 
-            <Select :placeholder="props.placeholder" v-if="props.inputType === 'select'" v-model="modelValue"
-                :required="props.required" :aria-required="props.required" :labelId="props.inputId"
-                :options="props.options" option-label="label" option-value="value" />
+            <Dropdown v-if="props.inputType === 'select'" v-model="modelValue" :options="props.options"
+                optionLabel="label" optionValue="value" :placeholder="`Select ${props.label}`" class="w-full md:w-80"
+                :class="{ 'p-invalid': props.isFormSubmitted && !modelValue }" :filter="props.filter" />
 
             <InputNumber :required="props.required" :aria-required="props.required" :useGrouping="false"
                 :placeholder="props.placeholder" :mode="props.inputNumericMode" currency="USD"
@@ -35,7 +35,7 @@
 </template>
 
 <script lang="ts" setup>
-import { DatePicker, IconField, InputIcon, InputText, Select, InputNumber, Password, MultiSelect } from 'primevue';
+import { DatePicker, IconField, InputIcon, InputText, Select, InputNumber, Password, MultiSelect, Dropdown } from 'primevue';
 import moment from 'moment';
 import { computed } from 'vue';
 import type { InputNumericMode, InputType } from '../../../interfaces/input-config.interface';
@@ -53,13 +53,14 @@ interface InputGroupProps {
     inputNumericMode?: InputNumericMode;
     required?: boolean;
     isFormSubmitted: boolean;
-
+    filter?: boolean;
 }
 
 
 const props = withDefaults(defineProps<InputGroupProps>(), {
     inputNumericMode: 'currency',
     required: true,
+    filter: false,
 });
 
 

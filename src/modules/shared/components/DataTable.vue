@@ -6,6 +6,7 @@ import MyDeleteToast from "./MyDeleteToast.vue";
 import { useGlobalStateStore } from "../../../store/auth.store";
 import { storeToRefs } from "pinia";
 import router from "../../../router";
+import { CommunitiesServices } from "../../../modules/communities/communities.services";
 
 interface TableHeader {
     field: string;
@@ -21,6 +22,7 @@ interface TableI {
     totalRecords: number;
     editRoute: string;
     lockEdit?: boolean;
+    showExportButton?: boolean;
 }
 
 const { isLoading } = storeToRefs(useGlobalStateStore());
@@ -28,7 +30,6 @@ const { isLoading } = storeToRefs(useGlobalStateStore());
 const props = defineProps<TableI>();
 const emit = defineEmits(['update', 'page-change']);
 const toast = useToast();
-
 
 const rows = ref(10);
 const first = ref(0);
@@ -72,6 +73,25 @@ const getNestedValue = (obj: any, path: string) => {
         obj
     );
 };
+
+const handleExport = async (id: string) => {
+    try {
+        await CommunitiesServices.exportCommunityReport(id);
+        toast.add({
+            severity: 'success',
+            summary: 'Export successful',
+            detail: 'The community report has been exported successfully',
+            life: 3000
+        });
+    } catch (error) {
+        toast.add({
+            severity: 'error',
+            summary: 'Export failed',
+            detail: 'There was an error exporting the community report',
+            life: 3000
+        });
+    }
+};
 </script>
 
 <template>
@@ -102,6 +122,8 @@ const getNestedValue = (obj: any, path: string) => {
                         <div class="flex justify-around">
                             <Button variant="text" icon="pi pi-pencil" severity="warn" label="Edit"
                                 @click="redirectToEdit(data.id)" />
+                            <Button v-if="props.showExportButton" variant="text" icon="pi pi-file-export" severity="info" label="Export"
+                                @click="handleExport(data.id)" />
                             <Button variant="text" icon="pi pi-trash" severity="danger" label="Delete"
                                 @click="showDeleteToast(data)" />
                         </div>

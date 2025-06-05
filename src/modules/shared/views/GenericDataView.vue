@@ -23,6 +23,7 @@ interface Props {
     lockCreateNew?: boolean;
     dontShowBreadCrumb?: boolean;
     useServicesTable?: boolean;
+    showExportButton?: boolean;
 }
 
 const props = defineProps<Props>();
@@ -153,7 +154,7 @@ onMounted(async () => {
 
             <DataTable v-if="!props.useServicesTable" :data="dataList.data" :headers="headers" :onDelete="onDelete"
                 :lockEdit="lockEdit" @page-change="handlePageChange" :total-records="dataList.meta.totalCount"
-                :edit-route="editRoute" />
+                :edit-route="editRoute" :show-export-button="props.showExportButton" />
 
             <DataTableServices v-if="props.useServicesTable" :data="dataList.data" :headers="headers"
                 :onDelete="onDelete" :lockEdit="lockEdit" @page-change="handlePageChange"
