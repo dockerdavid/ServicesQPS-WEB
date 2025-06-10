@@ -80,16 +80,34 @@ export class CommunitiesServices {
             const { data } = await apiServicesQps.get(`/reports/community/${communityId}`, {
                 responseType: 'blob'
             });
+            
+            console.log('Received blob data:', data);
+            
+            if (!data || data.size === 0) {
+                throw new Error('No data received from the server');
+            }
 
-            const url = window.URL.createObjectURL(new Blob([data]));
+            const blob = new Blob([data], { type: 'application/pdf' });
+            console.log('Created blob:', blob);
+            
+            const url = window.URL.createObjectURL(blob);
+            console.log('Created URL:', url);
+            
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute('download', `reporte-comunidad-${communityId}.pdf`);
+            link.style.display = 'none';
             document.body.appendChild(link);
+            
+            console.log('Triggering download...');
             link.click();
 
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+                console.log('Cleanup completed');
+            }, 100);
         } catch (error: any) {
             console.error("Error exporting community report:", error);
             throw new Error(error);
