@@ -80,7 +80,16 @@ export class CommunitiesServices {
             const { data } = await apiServicesQps.get(`/reports/community/${communityId}`, {
                 responseType: 'blob'
             });
-            return data;
+
+            const url = window.URL.createObjectURL(new Blob([data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `reporte-comunidad-${communityId}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
         } catch (error: any) {
             console.error("Error exporting community report:", error);
             throw new Error(error);
