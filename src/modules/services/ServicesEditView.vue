@@ -20,6 +20,8 @@ import type { Users } from '../../interfaces/users/users.interface';
 import genericNullObject from '../../utils/null-data-meta';
 import { useUserStore } from '../../../src/store/user.store';
 import { useGlobalStateStore } from '../../store/auth.store';
+import { apiServicesQps } from '../../api/api';
+import type { MetaPagination } from '../../interfaces/meta-pagination.interface';
 
 const toast = useToast();
 const route = useRoute();
@@ -157,20 +159,17 @@ watch(
   }
 );
 
+interface ApiResponse<T> {
+  data: T;
+}
+
 interface PaginatedResponse<T> {
   data: T[];
-  meta: {
-    page: number;
-    take: number;
-    totalCount: number;
-    pageCount: number;
-    hasPreviousPage: boolean;
-    hasNextPage: boolean;
-  };
+  meta: MetaPagination;
 }
 
 const fetchAllPaginatedData = async <T>(
-  fetchFunction: (page: number, take: number) => Promise<PaginatedResponse<T>>,
+  fetchFunction: (page: number, take: number) => Promise<ApiResponse<PaginatedResponse<T>>>,
   pageSize: number = 50
 ): Promise<PaginatedResponse<T>> => {
   let allData: T[] = [];
@@ -180,9 +179,9 @@ const fetchAllPaginatedData = async <T>(
 
   while (hasNextPage) {
     const response = await fetchFunction(currentPage, pageSize);
-    allData = [...allData, ...response.data];
-    hasNextPage = response.meta.hasNextPage;
-    lastMeta = response.meta;
+    allData = [...allData, ...response.data.data];
+    hasNextPage = response.data.meta.hasNextPage;
+    lastMeta = response.data.meta;
     currentPage++;
   }
 
@@ -198,6 +197,46 @@ const fetchAllPaginatedData = async <T>(
       hasNextPage: false
     }
   };
+};
+
+const loadData = async () => {
+  try {
+    globalStore.setIsLoading(true);
+    
+    const [communityResults, statusResults, extrasResults, initialData] = await Promise.all([
+      fetchAllPaginatedData<Communities['data'][0]>((page, take) => apiServicesQps.get(`/communities?page=${page}&take=${take}`)),
+      fetchAllPaginatedData<Statuses['data'][0]>((page, take) => apiServicesQps.get(`/statuses?page=${page}&take=${take}`)),
+      fetchAllPaginatedData<Extras['data'][0]>((page, take) => apiServicesQps.get(`/extras?page=${page}&take=${take}`)),
+      CleanersServices.getServiceById(entityId)
+    ]);
+
+    // Fetch all users separately since it requires pagination
+    const cleanerResults = await fetchAllPaginatedData<Users['data'][0]>((page, take) => 
+      apiServicesQps.get(`/users?page=${page}&take=${take}`)
+    );
+
+    communities.value = communityResults as unknown as Communities;
+    statuses.value = statusResults as unknown as Statuses;
+    extras.value = extrasResults as unknown as Extras;
+    cleaners.value = cleanerResults as unknown as Users;
+    fillInitialData(initialData);
+
+    // Log counts for debugging
+    console.log('Total communities:', communities.value.data.length);
+    console.log('Total statuses:', statuses.value.data.length);
+    console.log('Total extras:', extras.value.data.length);
+    console.log('Total users:', cleaners.value.data.length);
+    console.log('Total cleaners:', cleaners.value.data.filter(u => u.roleId === "4").length);
+  } catch (error) {
+    console.error('Error loading data:', error);
+    showToast(toast, { 
+      severity: 'error', 
+      summary: 'Error loading data',
+      detail: 'There was an error loading the service data. Please try again.'
+    });
+  } finally {
+    globalStore.setIsLoading(false);
+  }
 };
 
 const updateService = async () => {
@@ -258,42 +297,8 @@ const deleteService = async () => {
   }
 };
 
-onMounted(async () => {
-  try {
-    globalStore.setIsLoading(true);
-    
-    const [communityResults, statusResults, extrasResults, initialData] = await Promise.all([
-      fetchAllPaginatedData(CommunitiesServices.getCommunities),
-      fetchAllPaginatedData(StatusesServices.getStatuses),
-      fetchAllPaginatedData(ExtrasServices.getExtras),
-      CleanersServices.getServiceById(entityId)
-    ]);
-
-    // Fetch all users separately since it requires pagination
-    const cleanerResults = await fetchAllPaginatedData(UsersServices.getUsers);
-
-    communities.value = communityResults;
-    statuses.value = statusResults;
-    extras.value = extrasResults;
-    cleaners.value = cleanerResults;
-    fillInitialData(initialData);
-
-    // Log counts for debugging
-    console.log('Total communities:', communities.value.data.length);
-    console.log('Total statuses:', statuses.value.data.length);
-    console.log('Total extras:', extras.value.data.length);
-    console.log('Total users:', cleaners.value.data.length);
-    console.log('Total cleaners:', cleaners.value.data.filter(u => u.roleId === "4").length);
-  } catch (error) {
-    console.error('Error loading data:', error);
-    showToast(toast, { 
-      severity: 'error', 
-      summary: 'Error loading data',
-      detail: 'There was an error loading the service data. Please try again.'
-    });
-  } finally {
-    globalStore.setIsLoading(false);
-  }
+onMounted(() => {
+  loadData();
 });
 </script>
 
