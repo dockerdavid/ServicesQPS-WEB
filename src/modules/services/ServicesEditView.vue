@@ -19,6 +19,7 @@ import type { Extras } from '../../interfaces/extras/extras.interface';
 import type { Users } from '../../interfaces/users/users.interface';
 import genericNullObject from '../../utils/null-data-meta';
 import { useUserStore } from '../../../src/store/user.store';
+import { useGlobalStateStore } from '../../store/auth.store';
 
 const toast = useToast();
 const route = useRoute();
@@ -26,6 +27,7 @@ const router = useRouter();
 const entityId = route.params.id as string;
 
 const userStore = useUserStore();
+const globalStore = useGlobalStateStore();
 
 const breadcrumbRoutes = [
   { label: 'Services', to: { name: 'services-default' } },
@@ -258,6 +260,8 @@ const deleteService = async () => {
 
 onMounted(async () => {
   try {
+    globalStore.setIsLoading(true);
+    
     const [communityResults, statusResults, extrasResults, initialData] = await Promise.all([
       fetchAllPaginatedData(CommunitiesServices.getCommunities),
       fetchAllPaginatedData(StatusesServices.getStatuses),
@@ -287,6 +291,8 @@ onMounted(async () => {
       summary: 'Error loading data',
       detail: 'There was an error loading the service data. Please try again.'
     });
+  } finally {
+    globalStore.setIsLoading(false);
   }
 });
 </script>
