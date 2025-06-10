@@ -155,25 +155,42 @@ watch(
   }
 );
 
-const fetchAllUsers = async (): Promise<Users> => {
-  let allUsers: Users['data'] = [];
+interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    page: number;
+    take: number;
+    totalCount: number;
+    pageCount: number;
+    hasPreviousPage: boolean;
+    hasNextPage: boolean;
+  };
+}
+
+const fetchAllPaginatedData = async <T>(
+  fetchFunction: (page: number, take: number) => Promise<PaginatedResponse<T>>,
+  pageSize: number = 50
+): Promise<PaginatedResponse<T>> => {
+  let allData: T[] = [];
   let currentPage = 1;
   let hasNextPage = true;
-  const pageSize = 50; // Increased page size to reduce number of requests
+  let lastMeta: PaginatedResponse<T>['meta'];
 
   while (hasNextPage) {
-    const response = await UsersServices.getUsers(currentPage, pageSize);
-    allUsers = [...allUsers, ...response.data];
+    const response = await fetchFunction(currentPage, pageSize);
+    allData = [...allData, ...response.data];
     hasNextPage = response.meta.hasNextPage;
+    lastMeta = response.meta;
     currentPage++;
   }
 
   return {
-    data: allUsers,
+    data: allData,
     meta: {
+      ...lastMeta!,
       page: currentPage - 1,
       take: pageSize,
-      totalCount: allUsers.length,
+      totalCount: allData.length,
       pageCount: currentPage - 1,
       hasPreviousPage: currentPage > 1,
       hasNextPage: false
@@ -242,20 +259,27 @@ const deleteService = async () => {
 onMounted(async () => {
   try {
     const [communityResults, statusResults, extrasResults, initialData] = await Promise.all([
-      CommunitiesServices.getCommunities(1, 50),
-      StatusesServices.getStatuses(),
-      ExtrasServices.getExtras(),
+      fetchAllPaginatedData(CommunitiesServices.getCommunities),
+      fetchAllPaginatedData(StatusesServices.getStatuses),
+      fetchAllPaginatedData(ExtrasServices.getExtras),
       CleanersServices.getServiceById(entityId)
     ]);
 
     // Fetch all users separately since it requires pagination
-    const cleanerResults = await fetchAllUsers();
+    const cleanerResults = await fetchAllPaginatedData(UsersServices.getUsers);
 
     communities.value = communityResults;
     statuses.value = statusResults;
     extras.value = extrasResults;
     cleaners.value = cleanerResults;
     fillInitialData(initialData);
+
+    // Log counts for debugging
+    console.log('Total communities:', communities.value.data.length);
+    console.log('Total statuses:', statuses.value.data.length);
+    console.log('Total extras:', extras.value.data.length);
+    console.log('Total users:', cleaners.value.data.length);
+    console.log('Total cleaners:', cleaners.value.data.filter(u => u.roleId === "4").length);
   } catch (error) {
     console.error('Error loading data:', error);
     showToast(toast, { 
