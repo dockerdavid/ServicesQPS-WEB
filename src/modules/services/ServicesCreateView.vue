@@ -21,6 +21,8 @@ import type { Users } from '../../../src/interfaces/users/users.interface';
 import genericNullObject from '../../../src/utils/null-data-meta';
 import router from '../../../src/router';
 import { useUserStore } from '../../../src/store/user.store';
+import { apiServicesQps } from '../../api/api';
+import type { MetaPagination } from '../../interfaces/meta-pagination.interface';
 
 const toast = useToast();
 
@@ -65,22 +67,79 @@ const statuses = ref<Statuses>({ data: [], meta: genericNullObject.meta });
 const extras = ref<Extras>({ data: [], meta: genericNullObject.meta });
 const cleaners = ref<Users>({ data: [], meta: genericNullObject.meta });
 
+interface ApiResponse<T> {
+  data: T;
+}
+
+interface PaginatedResponse<T> {
+  data: T[];
+  meta: MetaPagination;
+}
+
+const fetchAllPaginatedData = async <T>(
+  fetchFunction: (page: number, take: number) => Promise<ApiResponse<PaginatedResponse<T>>>,
+  pageSize: number = 50
+): Promise<PaginatedResponse<T>> => {
+  let allData: T[] = [];
+  let currentPage = 1;
+  let hasNextPage = true;
+  let lastMeta: PaginatedResponse<T>['meta'];
+
+  while (hasNextPage) {
+    const response = await fetchFunction(currentPage, pageSize);
+    allData = [...allData, ...response.data.data];
+    hasNextPage = response.data.meta.hasNextPage;
+    lastMeta = response.data.meta;
+    currentPage++;
+  }
+
+  return {
+    data: allData,
+    meta: {
+      ...lastMeta!,
+      page: currentPage - 1,
+      take: pageSize,
+      totalCount: allData.length,
+      pageCount: currentPage - 1,
+      hasPreviousPage: currentPage > 1,
+      hasNextPage: false
+    }
+  };
+};
 
 const loadOptions = async () => {
+  try {
     const [communityResults, statusResults, extrasResults, cleanerResults] = await Promise.all([
-        CommunitiesServices.getCommunities(undefined, 50),
-        StatusesServices.getStatuses(undefined, 50),
-        ExtrasServices.getExtras(undefined, 50),
-        UsersServices.getUsers(undefined, 150, true),
-    ])
-    
+      fetchAllPaginatedData<Community>((page, take) => apiServicesQps.get(`/communities?page=${page}&take=${take}`)),
+      fetchAllPaginatedData<Statuses['data'][0]>((page, take) => apiServicesQps.get(`/statuses?page=${page}&take=${take}`)),
+      fetchAllPaginatedData<Extras['data'][0]>((page, take) => apiServicesQps.get(`/extras?page=${page}&take=${take}`)),
+      fetchAllPaginatedData<Users['data'][0]>((page, take) => apiServicesQps.get(`/users?page=${page}&take=${take}`))
+    ]);
+
     communities.value = communityResults.data.sort((a, b) => a.communityName.localeCompare(b.communityName));
-    statuses.value = statusResults;
-    extras.value = extrasResults;
+    statuses.value = statusResults as unknown as Statuses;
+    extras.value = extrasResults as unknown as Extras;
     cleaners.value = {
-        ...cleanerResults,
-        data: cleanerResults.data.sort((a, b) => a.name.localeCompare(b.name))
+      ...cleanerResults as unknown as Users,
+      data: cleanerResults.data
+        .filter(user => user.roleId === "4")
+        .sort((a, b) => a.name.localeCompare(b.name))
     };
+
+    // Log counts for debugging
+    console.log('Total communities:', communities.value.length);
+    console.log('Total statuses:', statuses.value.data.length);
+    console.log('Total extras:', extras.value.data.length);
+    console.log('Total users:', cleanerResults.data.length);
+    console.log('Total cleaners:', cleaners.value.data.length);
+  } catch (error) {
+    console.error('Error loading data:', error);
+    showToast(toast, { 
+      severity: 'error', 
+      summary: 'Error loading data',
+      detail: 'There was an error loading the form data. Please try again.'
+    });
+  }
 };
 
 
