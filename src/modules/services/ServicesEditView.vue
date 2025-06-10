@@ -112,14 +112,16 @@ const extrasOptions = computed(() => {
 });
 
 const cleanerOptions = computed(() => {
-  return cleaners.value.data
-    .filter(cleaner => cleaner.roleId === "4")
-    .map((cleaner) => {
-      return {
-        label: cleaner.name,
-        value: cleaner.id,
-      };
-    });
+  const filteredCleaners = cleaners.value.data.filter(cleaner => cleaner.roleId === "4");
+  console.log('Total cleaners:', filteredCleaners.length);
+  console.log('Cleaners list:', filteredCleaners.map(c => c.name));
+  
+  return filteredCleaners.map((cleaner) => {
+    return {
+      label: cleaner.name,
+      value: cleaner.id,
+    };
+  });
 });
 
 const unitSizeOptions = [
