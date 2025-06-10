@@ -75,6 +75,7 @@ const extras = ref<Extras>(genericNullObject);
 const cleaners = ref<Users>(genericNullObject);
 
 const communityOptions = computed(() => {
+  console.log('Communities data:', communities.value.data);
   return communities.value.data.map((community) => {
     return {
       label: community.communityName,
@@ -209,19 +210,28 @@ const deleteService = async () => {
 };
 
 onMounted(async () => {
-  const [communityResults, statusResults, extrasResults, cleanerResults, initialData] = await Promise.all([
-    CommunitiesServices.getCommunities(),
-    StatusesServices.getStatuses(),
-    ExtrasServices.getExtras(),
-    UsersServices.getUsers(),
-    CleanersServices.getServiceById(entityId)
-  ]);
+  try {
+    const [communityResults, statusResults, extrasResults, cleanerResults, initialData] = await Promise.all([
+      CommunitiesServices.getCommunities(1, 50),
+      StatusesServices.getStatuses(),
+      ExtrasServices.getExtras(),
+      UsersServices.getUsers(),
+      CleanersServices.getServiceById(entityId)
+    ]);
 
-  communities.value = communityResults;
-  statuses.value = statusResults;
-  extras.value = extrasResults;
-  cleaners.value = cleanerResults;
-  fillInitialData(initialData);
+    communities.value = communityResults;
+    statuses.value = statusResults;
+    extras.value = extrasResults;
+    cleaners.value = cleanerResults;
+    fillInitialData(initialData);
+  } catch (error) {
+    console.error('Error loading data:', error);
+    showToast(toast, { 
+      severity: 'error', 
+      summary: 'Error loading data',
+      detail: 'There was an error loading the service data. Please try again.'
+    });
+  }
 });
 </script>
 
