@@ -151,6 +151,32 @@ watch(
   }
 );
 
+const fetchAllUsers = async (): Promise<Users> => {
+  let allUsers: Users['data'] = [];
+  let currentPage = 1;
+  let hasNextPage = true;
+  const pageSize = 50; // Increased page size to reduce number of requests
+
+  while (hasNextPage) {
+    const response = await UsersServices.getUsers(currentPage, pageSize);
+    allUsers = [...allUsers, ...response.data];
+    hasNextPage = response.meta.hasNextPage;
+    currentPage++;
+  }
+
+  return {
+    data: allUsers,
+    meta: {
+      page: currentPage - 1,
+      take: pageSize,
+      totalCount: allUsers.length,
+      pageCount: currentPage - 1,
+      hasPreviousPage: currentPage > 1,
+      hasNextPage: false
+    }
+  };
+};
+
 const updateService = async () => {
 
   isFormSubmitted.value = true;
@@ -211,13 +237,15 @@ const deleteService = async () => {
 
 onMounted(async () => {
   try {
-    const [communityResults, statusResults, extrasResults, cleanerResults, initialData] = await Promise.all([
+    const [communityResults, statusResults, extrasResults, initialData] = await Promise.all([
       CommunitiesServices.getCommunities(1, 50),
       StatusesServices.getStatuses(),
       ExtrasServices.getExtras(),
-      UsersServices.getUsers(),
       CleanersServices.getServiceById(entityId)
     ]);
+
+    // Fetch all users separately since it requires pagination
+    const cleanerResults = await fetchAllUsers();
 
     communities.value = communityResults;
     statuses.value = statusResults;
