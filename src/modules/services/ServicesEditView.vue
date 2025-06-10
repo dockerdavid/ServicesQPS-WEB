@@ -112,12 +112,14 @@ const extrasOptions = computed(() => {
 });
 
 const cleanerOptions = computed(() => {
-  return cleaners.value.data.map((cleaner) => {
-    return {
-      label: cleaner.name,
-      value: cleaner.id,
-    };
-  });
+  return cleaners.value.data
+    .filter(cleaner => cleaner.roleId === "4")
+    .map((cleaner) => {
+      return {
+        label: cleaner.name,
+        value: cleaner.id,
+      };
+    });
 });
 
 const unitSizeOptions = [
