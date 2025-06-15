@@ -21,11 +21,14 @@ const inputs:InputConfig[] = [
 const loadOptions = async () => {
   const [companies, users] = await Promise.all([
     CompaniesServices.getCompanies(),
-    UsersServices.getUsers(undefined, 50),
+    UsersServices.getUsers(undefined, 150),
   ]);
 
+  
   return {
-    userId: users.data.map((user) => ({ label: user.name, value: user.id })),
+    userId: users.data
+      .filter(user => user.roleId === '3' || user.roleId === '6')
+      .map((user) => ({ label: user.name, value: user.id })),
     companyId: companies.data.map((company) => ({ label: company.companyName, value: company.id })),
   };
 };

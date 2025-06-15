@@ -91,7 +91,7 @@ export class CommunitiesServices {
             console.log('Created blob:', blob);
             
             const url = window.URL.createObjectURL(blob);
-            console.log('Created URL:', url);
+
             
             const link = document.createElement('a');
             link.href = url;
