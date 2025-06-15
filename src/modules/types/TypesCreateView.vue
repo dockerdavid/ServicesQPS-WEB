@@ -21,10 +21,24 @@ const inputs: InputConfig[] = [
 ]
 
 const loadOptions = async () => {
+    let allCommunities = [];
+    let currentPage = 1;
+    let hasNextPage = true;
 
-    const { data } = await CommunitiesServices.getCommunities();
+    while (hasNextPage) {
+        const { data, meta } = await CommunitiesServices.getCommunities(currentPage, 50);
+        allCommunities = [...allCommunities, ...data];
+        hasNextPage = meta.hasNextPage;
+        currentPage++;
+    }
+
     return {
-        communityId: data.map((community) => { return { label: community.communityName, value: community.id } })
+        communityId: allCommunities.map((community) => { 
+            return { 
+                label: community.communityName, 
+                value: community.id 
+            } 
+        })
     }
 };
 
