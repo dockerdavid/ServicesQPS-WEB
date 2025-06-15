@@ -14,7 +14,7 @@ const breadcrumbRoutes = [
 
 const inputs:InputConfig[] = [
   { inputId: 'communityName', label: 'Nombre de la comunidad', inputType: 'input',  },
-  { inputId: 'userId', label: 'Manager', inputType: 'select',  },
+  { inputId: 'managerUserId', label: 'Manager', inputType: 'select',  },
   { inputId: 'companyId', label: 'Compañía', inputType: 'select', },
 ];
 
@@ -24,9 +24,8 @@ const loadOptions = async () => {
     UsersServices.getUsers(undefined, 150),
   ]);
 
-  
   return {
-    userId: users.data
+    managerUserId: users.data
       .filter(user => user.roleId === '3' || user.roleId === '6')
       .map((user) => ({ label: user.name, value: user.id })),
     companyId: companies.data.map((company) => ({ label: company.companyName, value: company.id })),
