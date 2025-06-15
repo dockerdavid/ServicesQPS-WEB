@@ -4,6 +4,7 @@ import GenericCreateForm from '../shared/views/GenericCreateForm.vue';
 import { TypesServices } from './types.services';
 import type { NewType } from 'src/interfaces/types/types.interface';
 import { CommunitiesServices } from '../communities/communities.services';
+import type { Community } from 'src/interfaces/communities/communities.interface';
 
 
 
@@ -21,7 +22,7 @@ const inputs: InputConfig[] = [
 ]
 
 const loadOptions = async () => {
-    let allCommunities = [];
+    let allCommunities: Community[] = [];
     let currentPage = 1;
     let hasNextPage = true;
 
