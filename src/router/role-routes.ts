@@ -28,6 +28,10 @@ const roleRoutes = {
     'users-edit',
     'notFound'
   ],
+  qa: [
+    'calendar',
+    'notFound'
+  ],
   manager: [
     'services',
     'services-default',
