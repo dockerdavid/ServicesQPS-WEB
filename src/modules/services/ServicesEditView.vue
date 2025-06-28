@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { CommunitiesServices } from '../communities/communities.services';
 import { TypesServices } from '../types/types.services';
 import { StatusesServices } from '../statuses/statuses.services';
@@ -19,17 +19,12 @@ import type { Extras } from '../../interfaces/extras/extras.interface';
 import type { Users } from '../../interfaces/users/users.interface';
 import genericNullObject from '../../utils/null-data-meta';
 import { useUserStore } from '../../../src/store/user.store';
-import { useGlobalStateStore } from '../../store/auth.store';
-import { apiServicesQps } from '../../api/api';
-import type { MetaPagination } from '../../interfaces/meta-pagination.interface';
 
 const toast = useToast();
 const route = useRoute();
-const router = useRouter();
 const entityId = route.params.id as string;
 
 const userStore = useUserStore();
-const globalStore = useGlobalStateStore();
 
 const breadcrumbRoutes = [
   { label: 'Services', to: { name: 'services-default' } },
@@ -37,6 +32,7 @@ const breadcrumbRoutes = [
 ];
 
 const isFormSubmitted = ref(false);
+
 
 const scheduleDate = ref<Date>(moment().toDate());
 
@@ -55,7 +51,7 @@ const fillInitialData = (service: Service) => {
     userId: service.userId || '',
   };
 
- scheduleDate.value = moment(service.schedule || moment(), 'HH:mm:ss').toDate();
+  scheduleDate.value = moment(service.schedule, 'HH:mm:ss').toDate();
 };
 
 const updatedService = ref<EditService>({
@@ -79,7 +75,6 @@ const extras = ref<Extras>(genericNullObject);
 const cleaners = ref<Users>(genericNullObject);
 
 const communityOptions = computed(() => {
-  console.log('Communities data:', communities.value.data);
   return communities.value.data.map((community) => {
     return {
       label: community.communityName,
@@ -116,11 +111,7 @@ const extrasOptions = computed(() => {
 });
 
 const cleanerOptions = computed(() => {
-  const filteredCleaners = cleaners.value.data.filter(cleaner => cleaner.roleId === "4");
-  console.log('Total cleaners:', filteredCleaners.length);
-  console.log('Cleaners list:', filteredCleaners.map(c => c.name));
-  
-  return filteredCleaners.map((cleaner) => {
+  return cleaners.value.data.map((cleaner) => {
     return {
       label: cleaner.name,
       value: cleaner.id,
@@ -158,86 +149,6 @@ watch(
     }
   }
 );
-
-interface ApiResponse<T> {
-  data: T;
-}
-
-interface PaginatedResponse<T> {
-  data: T[];
-  meta: MetaPagination;
-}
-
-const fetchAllPaginatedData = async <T>(
-  fetchFunction: (page: number, take: number) => Promise<ApiResponse<PaginatedResponse<T>>>,
-  pageSize: number = 50
-): Promise<PaginatedResponse<T>> => {
-  let allData: T[] = [];
-  let currentPage = 1;
-  let hasNextPage = true;
-  let lastMeta: PaginatedResponse<T>['meta'];
-
-  while (hasNextPage) {
-    const response = await fetchFunction(currentPage, pageSize);
-    allData = [...allData, ...response.data.data];
-    hasNextPage = response.data.meta.hasNextPage;
-    lastMeta = response.data.meta;
-    currentPage++;
-  }
-
-  return {
-    data: allData,
-    meta: {
-      ...lastMeta!,
-      page: currentPage - 1,
-      take: pageSize,
-      totalCount: allData.length,
-      pageCount: currentPage - 1,
-      hasPreviousPage: currentPage > 1,
-      hasNextPage: false
-    }
-  };
-};
-
-const loadData = async () => {
-  try {
-    globalStore.setIsLoading(true);
-    
-    const [communityResults, statusResults, extrasResults, initialData] = await Promise.all([
-      fetchAllPaginatedData<Communities['data'][0]>((page, take) => apiServicesQps.get(`/communities?page=${page}&take=${take}`)),
-      fetchAllPaginatedData<Statuses['data'][0]>((page, take) => apiServicesQps.get(`/statuses?page=${page}&take=${take}`)),
-      fetchAllPaginatedData<Extras['data'][0]>((page, take) => apiServicesQps.get(`/extras?page=${page}&take=${take}`)),
-      CleanersServices.getServiceById(entityId)
-    ]);
-
-    // Fetch all users separately since it requires pagination
-    const cleanerResults = await fetchAllPaginatedData<Users['data'][0]>((page, take) => 
-      apiServicesQps.get(`/users?page=${page}&take=${take}`)
-    );
-
-    communities.value = communityResults as unknown as Communities;
-    statuses.value = statusResults as unknown as Statuses;
-    extras.value = extrasResults as unknown as Extras;
-    cleaners.value = cleanerResults as unknown as Users;
-    fillInitialData(initialData);
-
-    // Log counts for debugging
-    console.log('Total communities:', communities.value.data.length);
-    console.log('Total statuses:', statuses.value.data.length);
-    console.log('Total extras:', extras.value.data.length);
-    console.log('Total users:', cleaners.value.data.length);
-    console.log('Total cleaners:', cleaners.value.data.filter(u => u.roleId === "4").length);
-  } catch (error) {
-    console.error('Error loading data:', error);
-    showToast(toast, { 
-      severity: 'error', 
-      summary: 'Error loading data',
-      detail: 'There was an error loading the service data. Please try again.'
-    });
-  } finally {
-    globalStore.setIsLoading(false);
-  }
-};
 
 const updateService = async () => {
 
@@ -287,18 +198,20 @@ const updateService = async () => {
   }
 };
 
-const deleteService = async () => {
-  try {
-    await CleanersServices.deleteService(entityId);
-    showToast(toast, { severity: 'success', detail: 'Service was deleted successfully' });
-    router.push('/services');
-  } catch (error) {
-    showToast(toast, { severity: 'error', summary: "Service couldn't be deleted" });
-  }
-};
+onMounted(async () => {
+  const [communityResults, statusResults, extrasResults, cleanerResults, initialData] = await Promise.all([
+    CommunitiesServices.getCommunities(),
+    StatusesServices.getStatuses(),
+    ExtrasServices.getExtras(),
+    UsersServices.getUsers(),
+    CleanersServices.getServiceById(entityId)
+  ]);
 
-onMounted(() => {
-  loadData();
+  communities.value = communityResults;
+  statuses.value = statusResults;
+  extras.value = extrasResults;
+  cleaners.value = cleanerResults;
+  fillInitialData(initialData);
 });
 </script>
 
@@ -329,7 +242,7 @@ onMounted(() => {
     <!-- Campo: Horario -->
     <fieldset>
       <label for="schedule">Schedule</label>
-      <DatePicker v-model="scheduleDate" time-only id="schedule" />
+      <DatePicker v-model="scheduleDate" :time-only="true" hour-format="12" id="schedule" />
     </fieldset>
 
     <!-- Campo: Tamaño de la unidad -->
@@ -365,30 +278,23 @@ onMounted(() => {
       :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Comentario -->
-    <MyInputGroup :required="false" v-model="updatedService.comment" label="Comment" inputType="input" inputId="comment"
-      :is-form-submitted="isFormSubmitted" />
+    <MyInputGroup :required="false" v-model="updatedService.comment" label="Comment" inputType="textarea" inputId="comment"
+      :is-form-submitted="isFormSubmitted" :max-height="'150px'" :auto-resize="false" />
   </form>
 
   <!-- Botón de actualización -->
-  <div class="button-container">
-    <LoadingButton label="Edit" @click="updateService" />
-    <LoadingButton label="Delete" severity="danger" @click="deleteService" />
-  </div>
+  <LoadingButton label="Edit" @click="updateService" />
 </template>
 
 
 <style scoped lang="scss">
 .form-grid {
+
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
 
-.button-container {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-}
 
 @media (max-width: 768px) {
   .form-grid {
