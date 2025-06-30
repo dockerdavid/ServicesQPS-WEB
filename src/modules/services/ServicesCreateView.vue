@@ -43,7 +43,7 @@ const unitSizeOptions = [
 
 const newService = ref<CreateService>({
     date: moment().format('YYYY-MM-DD'),
-    schedule: '',
+    schedule: '00:00',
     comment: '',
     communityId: '',
     extraId: [],
@@ -55,7 +55,7 @@ const newService = ref<CreateService>({
     userId: '',
 });
 
-const scheduleDate = ref<Date>(moment().toDate());
+const scheduleDate = ref<Date>(moment().startOf('day').toDate());
 
 const isFormSubmitted = ref(false);
 
@@ -67,20 +67,123 @@ const cleaners = ref<Users>({ data: [], meta: genericNullObject.meta });
 
 
 const loadOptions = async () => {
-    const [communityResults, statusResults, extrasResults, cleanerResults] = await Promise.all([
-        CommunitiesServices.getCommunities(undefined, 50),
-        StatusesServices.getStatuses(undefined, 50),
-        ExtrasServices.getExtras(undefined, 50),
-        UsersServices.getUsers(undefined, 50),
+    // Fetch all data with pagination handling
+    const [allCommunities, allStatuses, allExtras, allUsers] = await Promise.all([
+        getAllCommunities(),
+        getAllStatuses(),
+        getAllExtras(),
+        getAllUsers(),
     ]);
-
-    console.log('cleaners', cleanerResults);
-    communities.value = communityResults.data;
-    statuses.value = statusResults;
-    extras.value = extrasResults;
-    cleaners.value = cleanerResults;
+    
+    console.log('cleaners', allUsers);
+    communities.value = allCommunities.data.sort((a, b) => a.communityName.localeCompare(b.communityName));
+    statuses.value = allStatuses;
+    extras.value = allExtras;
+    cleaners.value = allUsers;
 };
 
+const getAllCommunities = async () => {
+    let allCommunities: any[] = [];
+    let currentPage = 1;
+    let hasNextPage = true;
+    
+    while (hasNextPage) {
+        const response = await CommunitiesServices.getCommunities(currentPage, 50);
+        allCommunities = [...allCommunities, ...response.data];
+        hasNextPage = response.meta.hasNextPage;
+        currentPage++;
+    }
+    
+    return {
+        data: allCommunities,
+        meta: {
+            page: 1,
+            take: allCommunities.length,
+            totalCount: allCommunities.length,
+            pageCount: 1,
+            hasPreviousPage: false,
+            hasNextPage: false
+        }
+    };
+};
+
+const getAllStatuses = async () => {
+    let allStatuses: any[] = [];
+    let currentPage = 1;
+    let hasNextPage = true;
+    
+    while (hasNextPage) {
+        const response = await StatusesServices.getStatuses(currentPage, 50);
+        allStatuses = [...allStatuses, ...response.data];
+        hasNextPage = response.meta.hasNextPage;
+        currentPage++;
+    }
+    
+    return {
+        data: allStatuses,
+        meta: {
+            page: 1,
+            take: allStatuses.length,
+            totalCount: allStatuses.length,
+            pageCount: 1,
+            hasPreviousPage: false,
+            hasNextPage: false
+        }
+    };
+};
+
+const getAllExtras = async () => {
+    let allExtras: any[] = [];
+    let currentPage = 1;
+    let hasNextPage = true;
+    
+    while (hasNextPage) {
+        const response = await ExtrasServices.getExtras(currentPage, 50);
+        allExtras = [...allExtras, ...response.data];
+        hasNextPage = response.meta.hasNextPage;
+        currentPage++;
+    }
+    
+    return {
+        data: allExtras,
+        meta: {
+            page: 1,
+            take: allExtras.length,
+            totalCount: allExtras.length,
+            pageCount: 1,
+            hasPreviousPage: false,
+            hasNextPage: false
+        }
+    };
+};
+
+const getAllUsers = async () => {
+    let allUsers: any[] = [];
+    let currentPage = 1;
+    let hasNextPage = true;
+    
+    while (hasNextPage) {
+        const response = await UsersServices.getUsers(currentPage, 50);
+        allUsers = [...allUsers, ...response.data];
+        hasNextPage = response.meta.hasNextPage;
+        currentPage++;
+    }
+    
+    // Filter only users with roleId "4" (Cleaners)
+    const cleanersOnly = allUsers.filter(user => user.roleId === "4");
+    
+    return {
+        data: cleanersOnly,
+        meta: {
+            page: 1,
+            take: cleanersOnly.length,
+            totalCount: cleanersOnly.length,
+            pageCount: 1,
+            hasPreviousPage: false,
+            hasNextPage: false
+        }
+    };
+};
 
 const getTypesByCommunity = async (communityId: string) => {
     if (communityId) {
@@ -158,7 +261,7 @@ const clearForm = () => {
 
     newService.value = {
         date: moment().format('YYYY-MM-DD'),
-        schedule: '',
+        schedule: '00:00',
         comment: '',
         communityId: '',
         extraId: [],
@@ -170,7 +273,7 @@ const clearForm = () => {
         userId: '',
     };
 
-    scheduleDate.value = moment().toDate();
+    scheduleDate.value = moment().startOf('day').toDate();
 
 
 
@@ -192,7 +295,7 @@ onMounted(async () => {
 
             <fieldset>
                 <label for="schedule">Schedule</label>
-                <DatePicker v-model="scheduleDate" :time-only="true" hour-format="12" id="schedule" />
+                <DatePicker v-model="scheduleDate" :time-only="true" hour-format="24" id="schedule" />
             </fieldset>
 
             <!-- Campo: Tamaño de la unidad -->
