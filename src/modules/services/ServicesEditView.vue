@@ -198,20 +198,127 @@ const updateService = async () => {
   }
 };
 
-onMounted(async () => {
-  const [communityResults, statusResults, extrasResults, cleanerResults, initialData] = await Promise.all([
-    CommunitiesServices.getCommunities(),
-    StatusesServices.getStatuses(),
-    ExtrasServices.getExtras(),
-    UsersServices.getUsers(),
+const loadInitialData = async () => {
+  const [allCommunities, allStatuses, allExtras, allUsers, initialData] = await Promise.all([
+    getAllCommunities(),
+    getAllStatuses(),
+    getAllExtras(),
+    getAllUsers(),
     CleanersServices.getServiceById(entityId)
   ]);
 
-  communities.value = communityResults;
-  statuses.value = statusResults;
-  extras.value = extrasResults;
-  cleaners.value = cleanerResults;
+  communities.value = allCommunities;
+  statuses.value = allStatuses;
+  extras.value = allExtras;
+  cleaners.value = allUsers;
   fillInitialData(initialData);
+};
+
+const getAllCommunities = async () => {
+  let allCommunities: any[] = [];
+  let currentPage = 1;
+  let hasNextPage = true;
+  
+  while (hasNextPage) {
+    const response = await CommunitiesServices.getCommunities(currentPage, 50);
+    allCommunities = [...allCommunities, ...response.data];
+    hasNextPage = response.meta.hasNextPage;
+    currentPage++;
+  }
+  
+  return {
+    data: allCommunities.sort((a, b) => a.communityName.localeCompare(b.communityName)),
+    meta: {
+      page: 1,
+      take: allCommunities.length,
+      totalCount: allCommunities.length,
+      pageCount: 1,
+      hasPreviousPage: false,
+      hasNextPage: false
+    }
+  };
+};
+
+const getAllStatuses = async () => {
+  let allStatuses: any[] = [];
+  let currentPage = 1;
+  let hasNextPage = true;
+  
+  while (hasNextPage) {
+    const response = await StatusesServices.getStatuses(currentPage, 50);
+    allStatuses = [...allStatuses, ...response.data];
+    hasNextPage = response.meta.hasNextPage;
+    currentPage++;
+  }
+  
+  return {
+    data: allStatuses,
+    meta: {
+      page: 1,
+      take: allStatuses.length,
+      totalCount: allStatuses.length,
+      pageCount: 1,
+      hasPreviousPage: false,
+      hasNextPage: false
+    }
+  };
+};
+
+const getAllExtras = async () => {
+  let allExtras: any[] = [];
+  let currentPage = 1;
+  let hasNextPage = true;
+  
+  while (hasNextPage) {
+    const response = await ExtrasServices.getExtras(currentPage, 50);
+    allExtras = [...allExtras, ...response.data];
+    hasNextPage = response.meta.hasNextPage;
+    currentPage++;
+  }
+  
+  return {
+    data: allExtras,
+    meta: {
+      page: 1,
+      take: allExtras.length,
+      totalCount: allExtras.length,
+      pageCount: 1,
+      hasPreviousPage: false,
+      hasNextPage: false
+    }
+  };
+};
+
+const getAllUsers = async () => {
+  let allUsers: any[] = [];
+  let currentPage = 1;
+  let hasNextPage = true;
+  
+  while (hasNextPage) {
+    const response = await UsersServices.getUsers(currentPage, 50);
+    allUsers = [...allUsers, ...response.data];
+    hasNextPage = response.meta.hasNextPage;
+    currentPage++;
+  }
+  
+  // Filter only users with roleId "4" (Cleaners)
+  const cleanersOnly = allUsers.filter(user => user.roleId === "4");
+  
+  return {
+    data: cleanersOnly,
+    meta: {
+      page: 1,
+      take: cleanersOnly.length,
+      totalCount: cleanersOnly.length,
+      pageCount: 1,
+      hasPreviousPage: false,
+      hasNextPage: false
+    }
+  };
+};
+
+onMounted(async () => {
+  await loadInitialData();
 });
 </script>
 
