@@ -419,7 +419,7 @@ function getEventColor(status: string): string {
 
 function formatDate(date: string | Date): string {
   const d = new Date(date);
-  return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
 }
 
 onMounted(async () => {
