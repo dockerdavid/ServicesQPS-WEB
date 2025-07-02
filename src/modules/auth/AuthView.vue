@@ -118,18 +118,16 @@ const onFormSubmit = async (): Promise<void> => {
 const getUserData = async (userId: string) => {
     try {
         const data = await UsersServices.getUserById(userId)
-        console.log('User data received:', data)
+        
         userstore.setUserData(data)
         
         // Wait a bit to ensure the store is updated
         await new Promise(resolve => setTimeout(resolve, 100))
         
         const userRole = data.role.name.toLowerCase() as keyof typeof roleRoutes;
-        console.log('User role:', userRole, 'Available routes:', roleRoutes[userRole])
         
         if (roleRoutes[userRole] && roleRoutes[userRole].length > 0) {
             const firstRoute = roleRoutes[userRole][0];
-            console.log('Redirecting to:', firstRoute)
             router.push({ name: firstRoute })
         } else {
             console.error('No routes found for role:', userRole)

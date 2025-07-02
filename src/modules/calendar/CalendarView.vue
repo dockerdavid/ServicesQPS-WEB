@@ -19,6 +19,7 @@ const statusColors = [
   { color: '00e01f', value: 'Assigned' },
   { color: '9500c1', value: 'Rejected' },
   { color: '000000', value: 'Completed' },
+  { color: '00a7b2', value: 'Finished' },
 ]
 import { ColorPicker } from 'primevue';
 import { ref, onMounted, onBeforeUnmount } from 'vue';

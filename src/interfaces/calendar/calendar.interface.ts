@@ -1,3 +1,11 @@
+export interface CalendarReviewItem {
+    value: number;
+    reviewItemId: string;
+    reviewItemName: string;
+    reviewClassId: string;
+    reviewClassName: string;
+}
+
 export interface CalendarInterface {
     id:          string;
     date:        Date;
@@ -16,6 +24,7 @@ export interface CalendarInterface {
     type:        Type;
     status:      Status;
     user:        User;
+    reviews?:    CalendarReviewItem[];
 }
 
 export interface Community {

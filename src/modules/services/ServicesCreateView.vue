@@ -75,7 +75,6 @@ const loadOptions = async () => {
         getAllUsers(),
     ]);
     
-    console.log('cleaners', allUsers);
     communities.value = allCommunities.data.sort((a, b) => a.communityName.localeCompare(b.communityName));
     statuses.value = allStatuses;
     extras.value = allExtras;

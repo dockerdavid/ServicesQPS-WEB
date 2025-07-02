@@ -13,7 +13,7 @@ export class CalendarServices {
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get<CalendarInterface[]>(`/calendar?type=month`)
+            const { data } = await apiServicesQps.get<CalendarInterface[]>(`/calendar?type=year`)
             return data
         } catch (error: any) {
             return []
@@ -21,5 +21,44 @@ export class CalendarServices {
             this.store.setIsLoading(false)
         }
     }
+
+
+    static async getReviewItemsWithClasses(): Promise<any> {
+        this.store.setIsLoading(true)
+        try {
+            const { data } = await apiServicesQps.get(`/reviews/items-with-classes`)
+            console.log('data',data)
+            return data
+        } catch (error) {
+            return []
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
+
+    static async postServiceReview(payload: {
+        serviceId: string,
+        message: string,
+        reviewItems: { reviewItemId: string, value: boolean }[]
+    }): Promise<any> {
+        this.store.setIsLoading(true)
+        try {
+            const { data } = await apiServicesQps.post(`/reviews/service-review`, payload)
+            return data
+        } catch (error) {
+            return null
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
+
+
+
+    
+
+
+
+
+
 
 }

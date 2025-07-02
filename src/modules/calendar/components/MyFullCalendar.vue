@@ -47,7 +47,7 @@
       header="Información del Servicio" 
       :style="{ width: '50vw' }"
       :closable="true"
-      @hide="closeServiceModal"
+      @hide="closeOnlyServiceModal"
     >
       <div v-if="selectedServiceInfo" class="service-info">
         <div class="grid grid-cols-2 gap-4">
@@ -102,95 +102,15 @@
         <!-- Sección Review -->
         <div class="info-group mt-4">
           <h3 class="font-bold text-lg mb-4">Review</h3>
-          
-          <!-- Entry -->
-          <div class="review-section mb-4">
-            <h4 class="font-semibold text-md mb-2 text-blue-600">Entry:</h4>
+          <div v-for="reviewClass in reviewData" :key="reviewClass.reviewClassId" class="review-section mb-4">
+            <h4 class="font-semibold text-md mb-2 text-blue-600">{{ reviewClass.reviewClassName }}:</h4>
             <div class="grid grid-cols-1 gap-2">
-              <div v-for="(value, item) in reviewItems.entry" :key="item" class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span class="text-sm">{{ item }}</span>
-                <InputSwitch v-model="reviewItems.entry[item]" />
+              <div v-for="item in reviewClass.reviewItems" :key="item.id" class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                <span class="text-sm">{{ item.name }}</span>
+                <InputSwitch v-model="item.checked" />
               </div>
             </div>
           </div>
-          
-          <!-- All Room Items -->
-          <div class="review-section mb-4">
-            <h4 class="font-semibold text-md mb-2 text-blue-600">All Room Items:</h4>
-            <div class="grid grid-cols-1 gap-2">
-              <div v-for="(value, item) in reviewItems.allRoomItems" :key="item" class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span class="text-sm">{{ item }}</span>
-                <InputSwitch v-model="reviewItems.allRoomItems[item]" />
-              </div>
-            </div>
-          </div>
-          
-          <!-- Patio/Balcony -->
-          <div class="review-section mb-4">
-            <h4 class="font-semibold text-md mb-2 text-blue-600">Patio/Balcony:</h4>
-            <div class="grid grid-cols-1 gap-2">
-              <div v-for="(value, item) in reviewItems.patioBalcony" :key="item" class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span class="text-sm">{{ item }}</span>
-                <InputSwitch v-model="reviewItems.patioBalcony[item]" />
-              </div>
-            </div>
-          </div>
-          
-          <!-- Laundry -->
-          <div class="review-section mb-4">
-            <h4 class="font-semibold text-md mb-2 text-blue-600">Laundry:</h4>
-            <div class="grid grid-cols-1 gap-2">
-              <div v-for="(value, item) in reviewItems.laundry" :key="item" class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span class="text-sm">{{ item }}</span>
-                <InputSwitch v-model="reviewItems.laundry[item]" />
-              </div>
-            </div>
-          </div>
-          
-          <!-- Dining Room -->
-          <div class="review-section mb-4">
-            <h4 class="font-semibold text-md mb-2 text-blue-600">Dining Room:</h4>
-            <div class="grid grid-cols-1 gap-2">
-              <div v-for="(value, item) in reviewItems.diningRoom" :key="item" class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span class="text-sm">{{ item }}</span>
-                <InputSwitch v-model="reviewItems.diningRoom[item]" />
-              </div>
-            </div>
-          </div>
-          
-          <!-- A/C Cabinet -->
-          <div class="review-section mb-4">
-            <h4 class="font-semibold text-md mb-2 text-blue-600">A/C Cabinet:</h4>
-            <div class="grid grid-cols-1 gap-2">
-              <div v-for="(value, item) in reviewItems.acCabinet" :key="item" class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span class="text-sm">{{ item }}</span>
-                <InputSwitch v-model="reviewItems.acCabinet[item]" />
-              </div>
-            </div>
-          </div>
-          
-          <!-- Kitchen -->
-          <div class="review-section mb-4">
-            <h4 class="font-semibold text-md mb-2 text-blue-600">Kitchen:</h4>
-            <div class="grid grid-cols-1 gap-2">
-              <div v-for="(value, item) in reviewItems.kitchen" :key="item" class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span class="text-sm">{{ item }}</span>
-                <InputSwitch v-model="reviewItems.kitchen[item]" />
-              </div>
-            </div>
-          </div>
-          
-          <!-- Bathrooms -->
-          <div class="review-section mb-4">
-            <h4 class="font-semibold text-md mb-2 text-blue-600">Bathrooms:</h4>
-            <div class="grid grid-cols-1 gap-2">
-              <div v-for="(value, item) in reviewItems.bathrooms" :key="item" class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span class="text-sm">{{ item }}</span>
-                <InputSwitch v-model="reviewItems.bathrooms[item]" />
-              </div>
-            </div>
-          </div>
-          
           <!-- Comentario del Review -->
           <div class="review-section mb-4">
             <h4 class="font-semibold text-md mb-2 text-blue-600">Comentario:</h4>
@@ -209,7 +129,7 @@
       </div>
       
       <template #footer>
-        <Button label="Cerrar" @click="closeServiceModal" class="p-button-secondary" />
+        <Button label="Guardar" @click="closeServiceModal" :disabled="isSavingReview" class="p-button-secondary" />
       </template>
     </Dialog>
   </div>
@@ -243,94 +163,13 @@ const calendarEvents = ref<EventInput[]>([]);
 const showServiceModal = ref(false);
 const selectedServiceInfo = ref<CalendarInterface | null>(null);
 
-// Estado para los switches de review
-const reviewItems = ref<Record<string, Record<string, boolean>>>({
-  entry: {
-    'Back Door': false,
-    'Light Switches': false
-  },
-  allRoomItems: {
-    'Outlets': false,
-    'Light Switches': false,
-    'Windows': false,
-    'Blinds': false,
-    'Baseboard': false,
-    'Ceiling Fans': false,
-    'Door': false,
-    'Vents': false
-  },
-  patioBalcony: {
-    'Door': false,
-    'Light Fixture': false,
-    'Exterior': false,
-    'Outlets': false,
-    'Railings secure': false
-  },
-  laundry: {
-    'Washing Machine': false,
-    'Dryer': false,
-    'Dryer Vent Clean': false,
-    'Shelving': false,
-    'Floor': false,
-    'Baseboard': false,
-    'Vents': false
-  },
-  diningRoom: {
-    'Ceiling Fans': false,
-    'Baseboard': false,
-    'Windows': false,
-    'Blinds': false,
-    'Light Switches': false,
-    'Outlets': false,
-    'Floor': false
-  },
-  acCabinet: {
-    'Door': false,
-    'Vent': false
-  },
-  kitchen: {
-    'Refrigerator-door gasket sealed': false,
-    'Refrigerator- Grills': false,
-    'Polish Refrigerator': false,
-    'Dishwasher': false,
-    'Microwave': false,
-    'Counter Tops': false,
-    'Cabinets': false,
-    'Faucets': false,
-    'Backsplash/Tile': false,
-    'Kitchen Sink': false,
-    'Basket strainers': false,
-    'Range Top': false,
-    'Oven': false,
-    'Refrigerator Back': false,
-    'Range Back': false,
-    'Lamps and Light Bulbs': false,
-    'Vents': false
-  },
-  bathrooms: {
-    'Sinks': false,
-    'Sinks Faucets': false,
-    'Sink Pop-Ups': false,
-    'Handles and Index Buttons': false,
-    'Bath/ Shower': false,
-    'Shower Door': false,
-    'Bath Shower Faucets': false,
-    'Shower Heads': false,
-    'Tile': false,
-    'Tub Drains': false,
-    'Toilets': false,
-    'Mirrors': false,
-    'Countertops': false,
-    'Cabinets': false,
-    'Shelving': false,
-    'Bath Hardware': false,
-    'Exhaust Fan': false,
-    'Floors': false
-  }
-});
+// Estado para los datos de review
+const reviewData = ref<any[]>([]);
 
 // Estado para el comentario del review
 const reviewComment = ref('');
+
+const isSavingReview = ref(false);
 
 const filterOptions = [
   { label: 'Nombre Cleaner', value: 'cleaner' },
@@ -372,24 +211,84 @@ const clearFilter = () => {
   applyFilter();
 };
 
-const openServiceModal = (serviceInfo: CalendarInterface) => {
+const reloadCalendarEvents = async () => {
+  let events = await CalendarServices.getCalendarData();
+  if (userStore.userData?.roleId === '7') {
+    events = events.filter(ev => ['3', '5', '6'].includes(ev.statusId));
+  }
+  allEvents.value = events;
+  calendarEvents.value = events.map(eventToCalendarEvent);
+  calendarOptions.value.events = calendarEvents.value;
+};
+
+const openServiceModal = async (serviceInfo: CalendarInterface) => {
   selectedServiceInfo.value = serviceInfo;
+  // Obtener los items de review dinámicamente
+  const data = await CalendarServices.getReviewItemsWithClasses();
+  const serviceReviews = serviceInfo.reviews || [];
+  if (Array.isArray(data)) {
+    // Asegurarse que todos los items tengan un campo 'checked' según la review del servicio
+    reviewData.value = data.map((cls: any) => ({
+      ...cls,
+      reviewItems: cls.reviewItems.map((item: any) => {
+        const found = serviceReviews.find((r: any) => r.reviewItemId === item.id);
+        return {
+          ...item,
+          checked: found ? found.value === 1 : false
+        };
+      })
+    }));
+  } else {
+    reviewData.value = [];
+  }
   showServiceModal.value = true;
 };
 
-const closeServiceModal = () => {
+const closeOnlyServiceModal = () => {
   showServiceModal.value = false;
   selectedServiceInfo.value = null;
-  
-  // Resetear todos los switches
-  Object.keys(reviewItems.value).forEach(category => {
-    Object.keys(reviewItems.value[category]).forEach(item => {
-      reviewItems.value[category][item] = false;
-    });
-  });
-  
   // Resetear el comentario
   reviewComment.value = '';
+  // Resetear los checks
+  reviewData.value = reviewData.value.map((cls: any) => ({
+    ...cls,
+    reviewItems: cls.reviewItems.map((item: any) => ({ ...item, checked: false }))
+  }));
+};
+
+const closeServiceModal = async () => {
+  isSavingReview.value = true;
+  // Preparar payload para el endpoint
+  const serviceId = selectedServiceInfo.value?.id || '';
+  const message = reviewComment.value;
+  const reviewItemsPayload: { reviewItemId: string, value: boolean }[] = [];
+  reviewData.value.forEach((cls: any) => {
+    cls.reviewItems.forEach((item: any) => {
+      reviewItemsPayload.push({
+        reviewItemId: item.id,
+        value: !!item.checked
+      });
+    });
+  });
+  if (serviceId) {
+    await CalendarServices.postServiceReview({
+      serviceId,
+      message,
+      reviewItems: reviewItemsPayload
+    });
+  }
+  showServiceModal.value = false;
+  selectedServiceInfo.value = null;
+  // Resetear el comentario
+  reviewComment.value = '';
+  // Resetear los checks
+  reviewData.value = reviewData.value.map((cls: any) => ({
+    ...cls,
+    reviewItems: cls.reviewItems.map((item: any) => ({ ...item, checked: false }))
+  }));
+  isSavingReview.value = false;
+  // Recargar los servicios y el calendario
+  await reloadCalendarEvents();
 };
 
 const eventToCalendarEvent = (event: CalendarInterface): EventInput => ({
@@ -505,6 +404,7 @@ function getEventColor(status: string): string {
     case "approved": return '#00e01f';
     case "rejected": return '#9500c1';
     case "completed": return '#000000';
+    case "finished": return '#00a7b2';
     default: return '#00a7b2';
   }
 }
@@ -515,7 +415,11 @@ function formatDate(date: string | Date): string {
 }
 
 onMounted(async () => {
-  const events = await CalendarServices.getCalendarData();
+  let events = await CalendarServices.getCalendarData();
+  // Si el usuario es roleId 7, filtrar por statusId 3, 5, 6
+  if (userStore.userData?.roleId === '7') {
+    events = events.filter(ev => ['3', '5', '6'].includes(ev.statusId));
+  }
   allEvents.value = events;
   calendarEvents.value = events.map(eventToCalendarEvent);
   calendarOptions.value.events = calendarEvents.value;
