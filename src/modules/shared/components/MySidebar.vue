@@ -32,6 +32,12 @@ const cheoRoutes: RouteLink[] = [
   { route: 'costs-default', icon: 'ph:calculator-duotone', label: 'cost' },
 ]
 
+const qaRoutes: RouteLink[] = [
+  { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
+]
+
+
+
 const store = useSidebarStore();
 const userStore = useUserStore();
 const windowWidth = ref(window.innerWidth);
@@ -48,6 +54,8 @@ const routes = computed(() => {
       return cleanerRoutes;
     case "5":
       return cheoRoutes;
+    case "7":
+      return qaRoutes;
     default:
       return [
         { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
