@@ -299,9 +299,18 @@ const closeServiceModal = async () => {
   await reloadCalendarEvents();
 };
 
+function toYYYYMMDD(date:any) {
+  if (typeof date === 'string' && date.length === 10) return date;
+  const d = new Date(date);
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${month}-${day}`;
+}
+
 const eventToCalendarEvent = (event: CalendarInterface): EventInput => ({
   id: event.id,
-  date: event.date,
+  start: toYYYYMMDD(event.date),
+  allDay: true,
   color: getEventColor(event.status?.statusName),
   extendedProps: {
     userName: event.user?.name || 'N/A',
@@ -309,7 +318,7 @@ const eventToCalendarEvent = (event: CalendarInterface): EventInput => ({
     status: event.status?.statusName || 'N/A',
     type: event.type?.cleaningType || 'N/A',
     unitNumber: event.unitNumber || 'N/A',
-    date: event.date,
+    date: toYYYYMMDD(event.date),
   },
 });
 
@@ -319,6 +328,7 @@ const calendarOptions = ref({
   events: calendarEvents.value,
   editable: false,
   selectable: false,
+  timeZone: 'local',
   eventClick: (info: any) => {
     // Verificar si el usuario tiene rol '7' - si es así, no permitir acceso
     if (userStore.userData?.roleId === '7') {
@@ -418,8 +428,16 @@ function getEventColor(status: string): string {
 }
 
 function formatDate(date: string | Date): string {
+  // Si el string es YYYY-MM-DD, parsea manualmente
+  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const [year, month, day] = date.split('-');
+    return `${month}/${day}/${year}`;
+  }
+  // Si es un objeto Date o un string diferente, usa el objeto Date como fallback
   const d = new Date(date);
-  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${mm}/${dd}/${d.getFullYear()}`;
 }
 
 onMounted(async () => {

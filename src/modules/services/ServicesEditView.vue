@@ -34,12 +34,12 @@ const breadcrumbRoutes = [
 const isFormSubmitted = ref(false);
 
 
-const scheduleDate = ref<Date>(moment().toDate());
+const scheduleDate = ref<Date>(moment('00:00:00', 'HH:mm:ss').toDate());
 
 const fillInitialData = (service: Service) => {
   updatedService.value = {
     date: service.date,
-    schedule: service.schedule,
+    schedule: service.schedule || '00:00:00',
     comment: service.comment || '',
     communityId: service.communityId,
     extraId: service.extrasByServices.map(extra => extra.extraId),
@@ -51,12 +51,12 @@ const fillInitialData = (service: Service) => {
     userId: service.userId || '',
   };
 
-  scheduleDate.value = moment(service.schedule, 'HH:mm:ss').toDate();
+  scheduleDate.value = moment(service.schedule || '00:00:00', 'HH:mm:ss').toDate();
 };
 
 const updatedService = ref<EditService>({
   date: moment().format('YYYY-MM-DD'),
-  schedule: moment().format('HH:mm:ss'), 
+  schedule: '00:00:00',
   comment: '',
   communityId: '',
   extraId: [],
@@ -349,7 +349,7 @@ onMounted(async () => {
     <!-- Campo: Horario -->
     <fieldset>
       <label for="schedule">Schedule</label>
-      <DatePicker v-model="scheduleDate" :time-only="true" hour-format="12" id="schedule" />
+      <DatePicker v-model="scheduleDate" :time-only="true" hour-format="24" id="schedule" />
     </fieldset>
 
     <!-- Campo: Tamaño de la unidad -->
