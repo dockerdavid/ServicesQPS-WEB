@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { CommunitiesServices } from '../communities/communities.services';
 import { TypesServices } from '../types/types.services';
 import { StatusesServices } from '../statuses/statuses.services';
@@ -22,6 +22,7 @@ import { useUserStore } from '../../../src/store/user.store';
 
 const toast = useToast();
 const route = useRoute();
+const router = useRouter();
 const entityId = route.params.id as string;
 
 const userStore = useUserStore();
@@ -317,6 +318,16 @@ const getAllUsers = async () => {
   };
 };
 
+const deleteCurrentService = async () => {
+  try {
+    await CleanersServices.deleteService(entityId);
+    showToast(toast, { severity: 'success', detail: 'Service was deleted' });
+    router.push({ name: 'services-default' });
+  } catch (error) {
+    showToast(toast, { severity: 'error', summary: "Service wasn't deleted" });
+  }
+};
+
 onMounted(async () => {
   await loadInitialData();
 });
@@ -389,19 +400,30 @@ onMounted(async () => {
       :is-form-submitted="isFormSubmitted" :max-height="'150px'" :auto-resize="false" />
   </form>
 
-  <!-- Botón de actualización -->
-  <LoadingButton label="Edit" @click="updateService" />
+  <!-- Botón de actualización y eliminación -->
+  <div style="display: flex; gap: 1rem; align-items: flex-start; flex-direction: row; max-width: 300px;">
+    <LoadingButton label="Edit" @click="updateService" class="edit-btn" />
+    <LoadingButton label="Delete" @click="deleteCurrentService" class="delete-btn" />
+  </div>
 </template>
 
 
 <style scoped lang="scss">
 .form-grid {
-
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
 
+.delete-btn {
+  background: #e53935 !important;
+  color: #fff !important;
+  border: none !important;
+  font-weight: 600;
+}
+.delete-btn:hover {
+  background: #b71c1c !important;
+}
 
 @media (max-width: 768px) {
   .form-grid {
