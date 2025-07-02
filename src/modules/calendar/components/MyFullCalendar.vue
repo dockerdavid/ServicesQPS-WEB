@@ -45,12 +45,12 @@
       v-model:visible="showServiceModal" 
       modal 
       header="Información del Servicio" 
-      :style="{ width: '50vw' }"
+      :style="{ width: '80vw', maxWidth: '98vw' }"
       :closable="true"
       @hide="closeOnlyServiceModal"
     >
       <div v-if="selectedServiceInfo" class="service-info">
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="info-group">
             <h3 class="font-bold text-lg mb-2">Información General</h3>
             <p><strong>ID:</strong> {{ selectedServiceInfo.id }}</p>
@@ -104,10 +104,18 @@
           <h3 class="font-bold text-lg mb-4">Review</h3>
           <div v-for="reviewClass in reviewData" :key="reviewClass.reviewClassId" class="review-section mb-4">
             <h4 class="font-semibold text-md mb-2 text-blue-600">{{ reviewClass.reviewClassName }}:</h4>
-            <div class="grid grid-cols-1 gap-2">
-              <div v-for="item in reviewClass.reviewItems" :key="item.id" class="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span class="text-sm">{{ item.name }}</span>
+            <div class="hidden md:grid grid-cols-1 gap-2">
+              <div v-for="item in reviewClass.reviewItems" :key="item.id" class="flex items-center justify-between p-2 bg-gray-50 rounded whitespace-nowrap">
+                <span class="text-sm mr-4">{{ item.name }}</span>
                 <InputSwitch v-model="item.checked" />
+              </div>
+            </div>
+            <div class="md:hidden overflow-x-auto">
+              <div class="flex gap-2 min-w-max">
+                <div v-for="item in reviewClass.reviewItems" :key="item.id" class="flex items-center justify-between p-2 bg-gray-50 rounded whitespace-nowrap">
+                  <span class="text-sm mr-4">{{ item.name }}</span>
+                  <InputSwitch v-model="item.checked" />
+                </div>
               </div>
             </div>
           </div>
@@ -502,5 +510,29 @@ defineExpose({
 
 .review-section .flex:hover {
   background-color: #e9ecef !important;
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+  .service-info .grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+  .service-info {
+    max-height: 60vh;
+    padding: 0.5rem;
+  }
+}
+@media (max-width: 640px) {
+  .service-info {
+    max-height: 50vh;
+    padding: 0.25rem;
+  }
+  .review-section {
+    padding-left: 0.5rem;
+    border-left-width: 2px;
+  }
+  .info-group {
+    padding: 0.5rem;
+  }
 }
 </style>

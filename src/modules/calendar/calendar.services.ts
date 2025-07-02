@@ -27,7 +27,6 @@ export class CalendarServices {
         this.store.setIsLoading(true)
         try {
             const { data } = await apiServicesQps.get(`/reviews/items-with-classes`)
-            console.log('data',data)
             return data
         } catch (error) {
             return []
