@@ -77,8 +77,8 @@
             <h3 class="font-bold text-lg mb-2">Servicio</h3>
             <p><strong>Tipo:</strong> {{ selectedServiceInfo.type?.cleaningType || 'N/A' }}</p>
             <p><strong>Descripción:</strong> {{ selectedServiceInfo.type?.description || 'N/A' }}</p>
-            <p><strong>Precio:</strong> ${{ selectedServiceInfo.type?.price || 'N/A' }}</p>
-            <p><strong>Comisión:</strong> {{ selectedServiceInfo.type?.commission || 'N/A' }}</p>
+            <p><strong>Precio:</strong> ${{ userStore.userData?.roleId === '7' ? 'XXXX' : (selectedServiceInfo.type?.price || 'N/A') }}</p>
+            <p><strong>Comisión:</strong> {{ userStore.userData?.roleId === '7' ? 'XXXX' : (selectedServiceInfo.type?.commission || 'N/A') }}</p>
           </div>
           
           <div class="info-group">
