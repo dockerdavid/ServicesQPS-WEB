@@ -56,6 +56,8 @@ const rows = ref(10);
 const first = ref(0);
 
 const onPageChange = (event: any) => {
+    console.log('DataTableServices - onPageChange event:', event);
+    console.log('DataTableServices - props.data length:', props.data.length);
     first.value = event.first;
     rows.value = event.rows;
     emit('page-change', event);

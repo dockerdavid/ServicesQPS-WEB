@@ -217,34 +217,36 @@ export class ServiceAdapter {
 export class CleanerServiceAdapter {
 
     static internalToExternal(service: Service) {
+        const extrasByServices = service.extrasByServices || [];
+        
         return {
-            id: service.id,
-            date: service.date,
-            schedule: service.schedule,
-            comment: service.comment,
-            userComment: service.userComment,
-            unitySize: service.unitySize,
-            unitNumber: service.unitNumber,
-            communityId: service.communityId,
-            typeId: service.typeId,
-            statusId: service.statusId,
-            userId: service.userId,
-            createdAt: service.createdAt,
-            updatedAt: service.updatedAt,
-            community: service.community,
-            extras: service.extrasByServices.map((extra: any) => extra.extra.item).join(' / '),
+            id: service.id ?? '',
+            date: service.date ?? '',
+            schedule: service.schedule ?? '',
+            comment: service.comment ?? '',
+            userComment: service.userComment ?? '',
+            unitySize: service.unitySize ?? '',
+            unitNumber: service.unitNumber ?? '',
+            communityId: service.communityId ?? '',
+            typeId: service.typeId ?? '',
+            statusId: service.statusId ?? '',
+            userId: service.userId ?? '',
+            createdAt: service.createdAt ?? '',
+            updatedAt: service.updatedAt ?? '',
+            community: service.community ?? '',
+            extras: extrasByServices.map((extra: any) => extra?.extra?.item ?? '').join(' / '),
             type: {
-                cleaningType: service.type.cleaningType,
-                price: `$ ${service.type.price.toFixed(2)}`,
-                commission: `$ ${service.type.commission}`,
+                cleaningType: service?.type?.cleaningType ?? '',
+                price: service?.type?.price != null ? `$ ${service.type.price.toFixed(2)}` : '$ 0.00',
+                commission: service?.type?.commission != null ? `$ ${service.type.commission}` : '$ 0.00',
             },
-            status: service.status,
-            user: service.user,
-            extrasPrice: service.extrasByServices
-                .map((extraService: any) => `$${extraService.extra.itemPrice.toFixed(2)}`)
+            status: service.status ?? '',
+            user: service.user ?? '',
+            extrasPrice: extrasByServices
+                .map((extraService: any) => `$${extraService?.extra?.itemPrice?.toFixed(2) ?? '0.00'}`)
                 .join('; '),
-            extrasCommission: service.extrasByServices
-                .map((extraService: any) => `$${extraService.extra.commission.toFixed(2)}`)
+            extrasCommission: extrasByServices
+                .map((extraService: any) => `$${extraService?.extra?.commission?.toFixed(2) ?? '0.00'}`)
                 .join('; '),
         };
     }
@@ -272,34 +274,36 @@ export class CleanerServiceAdapterExternal {
 export class ManagerServiceAdapter {
 
     static internalToExternal(service: Service) {
+        const extrasByServices = service.extrasByServices || [];
+        
         return {
-            id: service.id,
-            date: service.date,
-            schedule: service.schedule,
-            comment: service.comment,
-            userComment: service.userComment,
-            unitySize: service.unitySize,
-            unitNumber: service.unitNumber,
-            communityId: service.communityId,
-            typeId: service.typeId,
-            statusId: service.statusId,
-            userId: service.userId,
-            createdAt: service.createdAt,
-            updatedAt: service.updatedAt,
-            community: service.community,
-            extras: service.extrasByServices.map(extra => extra.extra.item).join(' / '),
+            id: service.id ?? '',
+            date: service.date ?? '',
+            schedule: service.schedule ?? '',
+            comment: service.comment ?? '',
+            userComment: service.userComment ?? '',
+            unitySize: service.unitySize ?? '',
+            unitNumber: service.unitNumber ?? '',
+            communityId: service.communityId ?? '',
+            typeId: service.typeId ?? '',
+            statusId: service.statusId ?? '',
+            userId: service.userId ?? '',
+            createdAt: service.createdAt ?? '',
+            updatedAt: service.updatedAt ?? '',
+            community: service.community ?? '',
+            extras: extrasByServices.map(extra => extra?.extra?.item ?? '').join(' / '),
             type: {
-                cleaningType: service.type.cleaningType,
-                price: `$ ${service.type.price.toFixed(2)}`,
-                commission: `$ ${service.type.commission}`,
+                cleaningType: service?.type?.cleaningType ?? '',
+                price: service?.type?.price != null ? `$ ${service.type.price.toFixed(2)}` : '$ 0.00',
+                commission: service?.type?.commission != null ? `$ ${service.type.commission}` : '$ 0.00',
             },
-            status: service.status,
-            user: service.user,
-            extrasPrice: service.extrasByServices
-                .map(extraService => `$${extraService.extra.itemPrice.toFixed(2)}`)
+            status: service.status ?? '',
+            user: service.user ?? '',
+            extrasPrice: extrasByServices
+                .map(extraService => `$${extraService?.extra?.itemPrice?.toFixed(2) ?? '0.00'}`)
                 .join('; '),
-            extrasCommission: service.extrasByServices
-                .map(extraService => `$${extraService.extra.commission.toFixed(2)}`)
+            extrasCommission: extrasByServices
+                .map(extraService => `$${extraService?.extra?.commission?.toFixed(2) ?? '0.00'}`)
                 .join('; '),
         };
     }
