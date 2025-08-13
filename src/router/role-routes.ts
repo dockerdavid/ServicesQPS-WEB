@@ -39,6 +39,13 @@ const roleRoutes = {
     'services-edit',
     'notFound'
   ],
+  supervisor: [
+    'services',
+    'services-default',
+    'services-create',
+    'services-edit',
+    'notFound'
+  ],
   cleaner: [
     'services',
     'services-default',
