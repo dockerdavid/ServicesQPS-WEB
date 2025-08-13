@@ -14,6 +14,24 @@ import MyRejectToast from "./MyRejectToast.vue";
 import { showToast } from "../../../../src/utils/show-toast";
 import { CleanersServices } from "../services.services";
 
+// Función para manejar campos anidados de forma segura
+const getNestedValue = (obj: any, path: string): string => {
+    if (!obj) return '';
+    
+    const keys = path.split('.');
+    let value = obj;
+    
+    for (const key of keys) {
+        if (value && typeof value === 'object' && key in value) {
+            value = value[key];
+        } else {
+            return '';
+        }
+    }
+    
+    return value || '';
+};
+
 
 
 interface TableI {
@@ -149,8 +167,11 @@ const closeToastByAction = (group: string) => {
         <div v-else-if="props.data.length > 0">
             <DataTable :value="props.data" tableStyle="min-width: 50rem">
 
-                <Column v-for="(header, index) in headers" :key="index" :field="header.field" :header="header.name"
+                <Column v-for="(header, index) in headers" :key="index" :header="header.name"
                     :style="header.style">
+                    <template #body="{ data }">
+                        <span>{{ getNestedValue(data, header.field) }}</span>
+                    </template>
                 </Column>
 
                 <Column v-if="!props.lockEdit && store.userData?.roleId !== '4'" field="actions" style="width: 25%">
