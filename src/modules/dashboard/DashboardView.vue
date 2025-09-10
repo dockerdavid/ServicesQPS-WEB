@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 import { CleanersServices } from "../services/services.services";
 import GenericDataView from "../shared/views/GenericDataView.vue";
-import { Button, DatePicker, InputGroup, InputGroupAddon, FloatLabel } from "primevue";
+import { Button, Calendar, InputGroup, InputGroupAddon, FloatLabel } from "primevue";
 import { apiServicesQps } from "../../../src/api/api";
 import { useGlobalStateStore } from "../../../src/store/auth.store";
 import LoadingButton from "../shared/components/LoadingButton.vue";
@@ -22,10 +22,15 @@ const searchService = async (searchWord: any, page: number, rows: number) => {
     return await CleanersServices.searchService(searchWord, page, rows)
 };
 
-const reportDate = ref(new Date());
+const startDate = ref(new Date());
+const endDate = ref(new Date());
 
-const formattedDate = computed(() =>
-    reportDate.value ? moment(reportDate.value).format('YYYY-MM-DD') : ''
+const formattedStartDate = computed(() =>
+    startDate.value ? moment(startDate.value).format('YYYY-MM-DD') : ''
+);
+
+const formattedEndDate = computed(() =>
+    endDate.value ? moment(endDate.value).format('YYYY-MM-DD') : ''
 );
 
 const { setIsLoading } = useGlobalStateStore();
@@ -33,7 +38,7 @@ const { setIsLoading } = useGlobalStateStore();
 const getWeeklyReports = async () => {
     setIsLoading(true);
     try {
-        const { data } = await apiServicesQps.get(`/reports/reporte-semana/${formattedDate.value}`, {
+        const { data } = await apiServicesQps.get(`/reports/reporte-semana?startDate=${formattedStartDate.value}&endDate=${formattedEndDate.value}`, {
             responseType: 'blob'
         });
 
@@ -41,7 +46,7 @@ const getWeeklyReports = async () => {
         const url = window.URL.createObjectURL(new Blob([data]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `reporte-semana-${formattedDate.value}.pdf`);
+        link.setAttribute('download', `reporte-semana-${formattedStartDate.value}-${formattedEndDate.value}.pdf`);
         document.body.appendChild(link);
         link.click();
 
@@ -57,7 +62,7 @@ const getWeeklyReports = async () => {
 const getGeneralReport = async () => {
     setIsLoading(true);
     try {
-        const { data } = await apiServicesQps.get(`/reports/reporte-general/${formattedDate.value}`, {
+        const { data } = await apiServicesQps.get(`/reports/reporte-general?startDate=${formattedStartDate.value}&endDate=${formattedEndDate.value}`, {
             responseType: 'blob'
         });
 
@@ -65,7 +70,7 @@ const getGeneralReport = async () => {
         const url = window.URL.createObjectURL(new Blob([data]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `reporte-general-${formattedDate.value}.pdf`);
+        link.setAttribute('download', `reporte-general-${formattedStartDate.value}-${formattedEndDate.value}.pdf`);
         document.body.appendChild(link);
         link.click();
 
@@ -81,7 +86,7 @@ const getGeneralReport = async () => {
 const getCleanerReport = async () => {
     setIsLoading(true);
     try {
-        const { data } = await apiServicesQps.get(`/reports/reporte-cleaner/${formattedDate.value}`, {
+        const { data } = await apiServicesQps.get(`/reports/reporte-cleaner?startDate=${formattedStartDate.value}&endDate=${formattedEndDate.value}`, {
             responseType: 'blob'
         });
 
@@ -89,7 +94,7 @@ const getCleanerReport = async () => {
         const url = window.URL.createObjectURL(new Blob([data]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `reporte-cleaner-${formattedDate.value}.pdf`);
+        link.setAttribute('download', `reporte-cleaner-${formattedStartDate.value}-${formattedEndDate.value}.pdf`);
         document.body.appendChild(link);
         link.click();
 
@@ -133,16 +138,29 @@ const getCleanerReport = async () => {
         <template #header-search>
             <div class="flex justify-between py-2 overflow-x-auto w-full">
 
-                <div class="flex items-center px-3 min-w-[12rem]">
-                    <InputGroup>
-                        <InputGroupAddon>
-                            <i class="pi pi-calendar"></i>
-                        </InputGroupAddon>
-                        <FloatLabel variant="on">
-                            <DatePicker v-model="reportDate" />
-                            <label>Select date</label>
-                        </FloatLabel>
-                    </InputGroup>
+                <div class="flex items-center px-3 gap-4">
+                    <div class="min-w-[12rem]">
+                        <InputGroup>
+                            <InputGroupAddon>
+                                <i class="pi pi-calendar"></i>
+                            </InputGroupAddon>
+                            <FloatLabel variant="on">
+                                <Calendar v-model="startDate" dateFormat="yy-mm-dd" />
+                                <label>Start date</label>
+                            </FloatLabel>
+                        </InputGroup>
+                    </div>
+                    <div class="min-w-[12rem]">
+                        <InputGroup>
+                            <InputGroupAddon>
+                                <i class="pi pi-calendar"></i>
+                            </InputGroupAddon>
+                            <FloatLabel variant="on">
+                                <Calendar v-model="endDate" dateFormat="yy-mm-dd" />
+                                <label>End date</label>
+                            </FloatLabel>
+                        </InputGroup>
+                    </div>
                 </div>
 
                 <div class="flex">
@@ -158,7 +176,7 @@ const getCleanerReport = async () => {
 </template>
 
 <style lang="scss" scoped>
-.p-datepicker {
+.p-calendar {
     max-height: 46px !important;
 }
 </style>

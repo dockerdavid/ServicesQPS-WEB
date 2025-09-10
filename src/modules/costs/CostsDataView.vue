@@ -6,12 +6,17 @@ import { CostsServices } from "./costs.services";
 import { useGlobalStateStore } from "../../../src/store/auth.store";
 import { computed, ref } from "vue";
 import moment from "moment";
-import { DatePicker, FloatLabel, InputGroup, InputGroupAddon } from "primevue";
+import { Calendar, FloatLabel, InputGroup, InputGroupAddon } from "primevue";
 
-const reportDate = ref(new Date());
+const startDate = ref(new Date());
+const endDate = ref(new Date());
 
-const formattedDate = computed(() =>
-    reportDate.value ? moment(reportDate.value).format('YYYY-MM-DD') : ''
+const formattedStartDate = computed(() =>
+    startDate.value ? moment(startDate.value).format('YYYY-MM-DD') : ''
+);
+
+const formattedEndDate = computed(() =>
+    endDate.value ? moment(endDate.value).format('YYYY-MM-DD') : ''
 );
 
 const { setIsLoading } = useGlobalStateStore();
@@ -32,7 +37,7 @@ const searchCost = async (searchWord: any, page: number, rows: number) => {
 const getWeeklyCosts = async () => {
     setIsLoading(true);
     try {
-        const { data } = await apiServicesQps.get(`/reports/costos-semana/${formattedDate.value}`, {
+        const { data } = await apiServicesQps.get(`/reports/costos-semana?startDate=${formattedStartDate.value}&endDate=${formattedEndDate.value}`, {
             responseType: 'blob'
         });
 
@@ -40,7 +45,7 @@ const getWeeklyCosts = async () => {
         const url = window.URL.createObjectURL(new Blob([data]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `reporte-semana-${formattedDate.value}.pdf`);
+        link.setAttribute('download', `reporte-costos-${formattedStartDate.value}-${formattedEndDate.value}.pdf`);
         document.body.appendChild(link);
         link.click();
 
@@ -64,16 +69,29 @@ const getWeeklyCosts = async () => {
 
         <template #header-search>
             <div class=" w-full flex justify-between">
-                <div class="flex items-center px-3 min-w-[12rem]">
-                    <InputGroup>
-                        <InputGroupAddon>
-                            <i class="pi pi-calendar"></i>
-                        </InputGroupAddon>
-                        <FloatLabel variant="on">
-                            <DatePicker v-model="reportDate" />
-                            <label>Select date</label>
-                        </FloatLabel>
-                    </InputGroup>
+                <div class="flex items-center px-3 gap-4">
+                    <div class="min-w-[12rem]">
+                        <InputGroup>
+                            <InputGroupAddon>
+                                <i class="pi pi-calendar"></i>
+                            </InputGroupAddon>
+                            <FloatLabel variant="on">
+                                <Calendar v-model="startDate" dateFormat="yy-mm-dd" />
+                                <label>Start date</label>
+                            </FloatLabel>
+                        </InputGroup>
+                    </div>
+                    <div class="min-w-[12rem]">
+                        <InputGroup>
+                            <InputGroupAddon>
+                                <i class="pi pi-calendar"></i>
+                            </InputGroupAddon>
+                            <FloatLabel variant="on">
+                                <Calendar v-model="endDate" dateFormat="yy-mm-dd" />
+                                <label>End date</label>
+                            </FloatLabel>
+                        </InputGroup>
+                    </div>
                 </div>
 
                 <LoadingButton @click="getWeeklyCosts" label="Export costs" />
