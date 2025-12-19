@@ -8,12 +8,17 @@ export class CalendarServices {
 
     static store = useGlobalStateStore();
 
-    static async getCalendarData(): Promise<CalendarInterface[]> {
+    static async getCalendarData(year?: number, month?: number): Promise<CalendarInterface[]> {
 
         this.store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get<CalendarInterface[]>(`/calendar?type=year`)
+            // Si no se proporcionan año y mes, usar el mes actual por defecto
+            const currentDate = new Date()
+            const currentYear = year ?? currentDate.getFullYear()
+            const currentMonth = month ?? (currentDate.getMonth() + 1) // getMonth() retorna 0-11, necesitamos 1-12
+
+            const { data } = await apiServicesQps.get<CalendarInterface[]>(`/calendar/by-month?year=${currentYear}&month=${currentMonth}`)
             return data
         } catch (error: any) {
             return []

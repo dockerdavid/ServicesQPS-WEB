@@ -166,6 +166,7 @@ const filterType = ref('');
 const filterText = ref('');
 const allEvents = ref<CalendarInterface[]>([]);
 const calendarEvents = ref<EventInput[]>([]);
+const isInitialLoad = ref(true);
 
 // Estado para el modal
 const showServiceModal = ref(false);
@@ -219,8 +220,8 @@ const clearFilter = () => {
   applyFilter();
 };
 
-const reloadCalendarEvents = async () => {
-  let events = await CalendarServices.getCalendarData();
+const reloadCalendarEvents = async (year?: number, month?: number) => {
+  let events = await CalendarServices.getCalendarData(year, month);
   if (userStore.userData?.roleId === '7') {
     events = events.filter(ev => ['3', '5', '6'].includes(ev.statusId));
   }
@@ -329,6 +330,14 @@ const calendarOptions = ref({
   editable: false,
   selectable: false,
   timeZone: 'local',
+  datesSet: async (dateInfo: any) => {
+    // Se dispara cuando cambia el mes/año en el calendario (incluyendo la carga inicial)
+    const currentDate = dateInfo.view.currentStart;
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1; // getMonth() retorna 0-11, necesitamos 1-12
+    await reloadCalendarEvents(year, month);
+    isInitialLoad.value = false;
+  },
   eventClick: (info: any) => {
     // Verificar si el usuario tiene rol '7' - si es así, no permitir acceso
     if (userStore.userData?.roleId === '7') {
@@ -441,14 +450,8 @@ function formatDate(date: string | Date): string {
 }
 
 onMounted(async () => {
-  let events = await CalendarServices.getCalendarData();
-  // Si el usuario es roleId 7, filtrar por statusId 3, 5, 6
-  if (userStore.userData?.roleId === '7') {
-    events = events.filter(ev => ['3', '5', '6'].includes(ev.statusId));
-  }
-  allEvents.value = events;
-  calendarEvents.value = events.map(eventToCalendarEvent);
-  calendarOptions.value.events = calendarEvents.value;
+  // datesSet se encargará de cargar los datos iniciales
+  // No necesitamos cargar aquí para evitar doble carga
 });
 
 const fullCalendar = ref<typeof FullCalendar | null>(null);
