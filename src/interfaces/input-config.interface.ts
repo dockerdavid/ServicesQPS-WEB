@@ -4,7 +4,7 @@ export type InputNumericMode = 'currency' | 'decimal';
 
 interface InputOption {
     label: string;
-    value: string;
+    value: string | boolean | number;
 }
 
 
@@ -21,4 +21,3 @@ export interface InputConfig {
     isNotNeccesary?:boolean;
     placeholder?: string;
 }
-
