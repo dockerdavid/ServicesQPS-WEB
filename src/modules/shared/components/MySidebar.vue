@@ -107,11 +107,13 @@ window.addEventListener('resize', () => {
   position: relative;
   z-index: 10;
   height: 100vh;
-  padding: 1rem;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background-color: white;
+  background: linear-gradient(180deg, #111827 0%, #0b1220 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-tight);
   overflow-x: hidden;
 
   img {
@@ -119,10 +121,13 @@ window.addEventListener('resize', () => {
   }
 
   ul {
-    margin-top: 60px;
+    margin-top: 48px;
     list-style: none;
     width: 100%;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
 
     li {
       width: 100%;

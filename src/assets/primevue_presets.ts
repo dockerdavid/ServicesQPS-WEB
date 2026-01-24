@@ -4,17 +4,17 @@ import Aura from '@primevue/themes/aura';
 export const MyCustomPreset = definePreset(Aura, {
     semantic: {
         primary: {
-            50: '{orange.50}',
-            100: '{orange.100}',
-            200: '{orange.200}',
-            300: '{orange.300}',
-            400: '{orange.400}',
-            500: '{orange.500}',
-            600: '{orange.600}',
-            700: '{orange.700}',
-            800: '{orange.800}',
-            900: '{orange.900}',
-            950: '{orange.950}'
+            50: '#eef3ff',
+            100: '#d9e4ff',
+            200: '#b8ccff',
+            300: '#8fafef',
+            400: '#5f86e5',
+            500: '#2d6cdf',
+            600: '#235aa9',
+            700: '#1f4b99',
+            800: '#1b3f7a',
+            900: '#17355e',
+            950: '#0e213c'
         }
     }
 });

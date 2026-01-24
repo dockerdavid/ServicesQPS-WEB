@@ -528,9 +528,9 @@ defineExpose({
 .tippy-box[data-theme="custom-tooltip"] {
   background-color: #ffffff;
   border-radius: 8px;
-  border: 1px solid black;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  color: black;
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-tight);
+  color: var(--ink-800);
 }
 
 .tippy-box[data-theme="custom-tooltip"] .tippy-arrow {
@@ -543,15 +543,15 @@ defineExpose({
 }
 
 .info-group {
-  background-color: #f8f9fa;
+  background-color: #f8fafc;
   padding: 1rem;
   border-radius: 8px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--border-soft);
 }
 
 .info-group h3 {
-  color: #495057;
-  border-bottom: 2px solid #007bff;
+  color: var(--ink-800);
+  border-bottom: 2px solid var(--accent-500);
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
 }
@@ -562,18 +562,18 @@ defineExpose({
 }
 
 .info-group strong {
-  color: #495057;
+  color: var(--ink-700);
 }
 
 .review-section {
-  border-left: 3px solid #007bff;
+  border-left: 3px solid var(--accent-500);
   padding-left: 1rem;
 }
 
 .review-section h4 {
   margin-bottom: 0.75rem;
   font-weight: 600;
-  color: #007bff;
+  color: var(--accent-600);
 }
 
 .review-section .flex {
@@ -581,7 +581,7 @@ defineExpose({
 }
 
 .review-section .flex:hover {
-  background-color: #e9ecef !important;
+  background-color: #f1f5f9 !important;
 }
 
 /* Responsive styles */

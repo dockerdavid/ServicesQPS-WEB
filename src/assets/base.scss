@@ -1,17 +1,23 @@
 :root {
-  --white: #f5f5f5;
+  --ink-900: #111827;
+  --ink-800: #1f2937;
+  --ink-700: #374151;
+  --ink-500: #6b7280;
+  --surface-900: #0b1220;
+  --surface-100: #f4f0ea;
+  --surface-50: #fbf8f3;
+  --accent-700: #1f4b99;
+  --accent-600: #235aa9;
+  --accent-500: #2d6cdf;
+  --accent-200: #d9e4ff;
+  --accent-100: #eef3ff;
+  --border-soft: #e6e1d8;
+  --border-strong: #d6d0c6;
+  --shadow-soft: 0 10px 28px rgba(17, 24, 39, 0.08);
+  --shadow-tight: 0 4px 14px rgba(17, 24, 39, 0.08);
   --transition-soft-3: .3s cubic-bezier(0.25, 0.8, 0.25, 1);
-
-
-  --orange-300: #fba86f;
-  --orange-400: #fa8e42;
-  --orange-500: #fa8e42;
-  --orange-600: #fa8e42;
-
-}
-
-:root {
-  --color-body-background: var(--white);
+  --page-gradient: radial-gradient(900px circle at 12% 8%, #eee7dd 0%, #f4f0ea 45%, #fbf8f3 100%);
+  --color-body-background: var(--surface-100);
   --sidebar-open-transition: var(--transition-soft-3);
 }
 
@@ -44,7 +50,9 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-family: "Poppins", serif;
+  font-family: "IBM Plex Sans", "Space Grotesk", sans-serif;
+  color: var(--ink-800);
+  background: var(--page-gradient);
 }
 
 
@@ -57,9 +65,32 @@ a {
   color: inherit;
 }
 
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(17, 24, 39, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 24, 39, 0.03) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.35;
+  z-index: -1;
+}
+
 h1 {
   margin-top: .3rem;
   font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink-900);
+}
+
+h2,
+h3,
+h4 {
+  font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
 }
 
 
@@ -72,5 +103,37 @@ form {
   label {
     display: block;
     margin-bottom: .4rem !important;
+    color: var(--ink-700);
   }
+}
+
+.fc {
+  background: #ffffff;
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  padding: 0.5rem;
+}
+
+.fc .fc-toolbar-title {
+  font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.fc .fc-daygrid-day-number {
+  color: var(--ink-500);
+  font-weight: 500;
+}
+
+.fc .fc-col-header-cell-cushion {
+  color: var(--ink-700);
+  font-weight: 600;
+}
+
+.fc .fc-daygrid-event {
+  border-radius: 8px;
+  padding: 2px 6px;
+  font-weight: 500;
+  font-size: 0.78rem;
 }

@@ -32,28 +32,27 @@ const signOut = () => {
         <MySidebar />
 
         <main>
-            <Card>
-                <template #content>
-                    <div class="user-header py-1">
-                        <Icon icon="ph:arrows-left-right" @click="sidebarState.toggleSidebar()" />
-                        <div>
-                            <Button class="cursor-pointer" unstyled @click="toggle">
-                                <Avatar
-                                    :label="store.userData?.name?.charAt(0).toUpperCase() ?? '?'"
-                                    class="mr-2"
-                                    size="normal"
-                                    shape="circle"
-                                />
-                            </Button>
-                            <Popover ref="op">
-                                <div class="w-[10rem]">
-                                    <Button variant="text" icon="pi pi-sign-out" label="Sign out" @click="signOut" />
-                                </div>
-                            </Popover>
+            <header class="topbar">
+                <div class="topbar-left">
+                    <Button class="sidebar-toggle" unstyled @click="sidebarState.toggleSidebar()">
+                        <Icon icon="ph:arrows-left-right" />
+                    </Button>
+                </div>
+                <div class="topbar-right">
+                    <Button class="avatar-button" unstyled @click="toggle">
+                        <Avatar
+                            :label="store.userData?.name?.charAt(0).toUpperCase() ?? '?'"
+                            size="normal"
+                            shape="circle"
+                        />
+                    </Button>
+                    <Popover ref="op">
+                        <div class="w-[10rem]">
+                            <Button variant="text" icon="pi pi-sign-out" label="Sign out" @click="signOut" />
                         </div>
-                    </div>
-                </template>
-            </Card>
+                    </Popover>
+                </div>
+            </header>
 
             <RouterView />
         </main>
@@ -68,17 +67,67 @@ const signOut = () => {
         flex: 1;
         height: 100vh;
         overflow: auto;
-        padding: 1rem 2rem;
-        background-color: var(--color-body-background);
+        padding: 1.25rem 2.5rem 2rem;
+        background: var(--page-gradient);
 
-        .user-header {
+        .topbar {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 1rem;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid var(--border-soft);
+            border-radius: 14px;
+            box-shadow: var(--shadow-tight);
+            backdrop-filter: blur(12px);
+            position: static;
+        }
 
-            .iconify {
-                cursor: pointer;
-            }
+        .topbar-left,
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-soft);
+            background: #ffffff;
+            transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--accent-100);
+            border-color: var(--accent-200);
+            transform: translateY(-1px);
+        }
+
+        .sidebar-toggle .iconify {
+            font-size: 1.35rem;
+            color: var(--ink-700);
+        }
+
+        .avatar-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 999px;
+            border: 1px solid var(--border-soft);
+            background: #ffffff;
+            transition: box-shadow 0.2s ease;
+        }
+
+        .avatar-button:hover {
+            box-shadow: var(--shadow-tight);
         }
     }
 }

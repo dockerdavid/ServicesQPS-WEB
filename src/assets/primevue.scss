@@ -1,19 +1,39 @@
 .p-card {
-    border: 1px solid #dedede;
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
     overflow: hidden;
+    box-shadow: var(--shadow-soft);
+    background: #fffaf5;
 }
 
 .p-inputtext,
 .p-select,
 .p-datepicker,
-.p-inputnumber, .p-multiselect {
-
+.p-inputnumber,
+.p-multiselect {
     width: 100% !important;
+    border-radius: 12px;
+    border: 1px solid var(--border-strong);
+    background: #fffdf9;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.p-button{
+.p-inputtext:focus,
+.p-select:focus,
+.p-datepicker:focus,
+.p-inputnumber:focus,
+.p-multiselect:focus {
+    border-color: var(--accent-500);
+    box-shadow: 0 0 0 3px rgba(24, 179, 158, 0.15);
+}
+
+.p-button {
     white-space: nowrap;
     text-wrap: nowrap;
+    border-radius: 12px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .p-paginator-content {
@@ -32,14 +52,26 @@
 }
 
 .p-card-body {
-    padding: 0 1rem !important;
+    padding: 0 1.5rem 1.5rem !important;
     gap: 0 !important;
-
 }
 
 .p-button {
-    padding: .35rem .7rem !important;
-    font-size: .875rem !important;
+    padding: .45rem .9rem !important;
+    font-size: .9rem !important;
+}
+
+.p-button:not(.p-button-text):not(.p-button-outlined) {
+    box-shadow: 0 6px 14px rgba(45, 108, 223, 0.18);
+}
+
+.p-button:not(.p-button-text):not(.p-button-outlined):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 18px rgba(45, 108, 223, 0.22);
+}
+
+.p-button.p-button-text {
+    color: var(--ink-700);
 }
 
 
@@ -56,4 +88,81 @@ th {
 .p-breadcrumb {
     padding: 0 !important;
     background-color: transparent !important;
+}
+
+.p-breadcrumb .p-breadcrumb-item .p-menuitem-link {
+    color: var(--ink-500);
+}
+
+.p-breadcrumb .p-breadcrumb-item.p-breadcrumb-item-active .p-menuitem-link {
+    color: var(--ink-900);
+    font-weight: 600;
+}
+
+.p-datatable {
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fffdf9;
+}
+
+.p-datatable .p-datatable-header {
+    background: #f6efe6;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+    background: #f6efe6;
+    color: var(--ink-700);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+    border-bottom: 1px solid #f0f2f5;
+    color: var(--ink-700);
+}
+
+.p-datatable .p-datatable-tbody > tr:nth-child(even) {
+    background: #fdf7f1;
+}
+
+.p-datatable .p-datatable-tbody > tr:hover {
+    background: #f6f8ff;
+}
+
+.p-paginator {
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    background: #fffdf9;
+    padding: .35rem .5rem;
+}
+
+.p-paginator .p-paginator-page.p-highlight {
+    background: var(--accent-100);
+    color: var(--accent-700);
+}
+
+.p-button.p-button-text.p-button-danger {
+    color: #c2410c;
+}
+
+.p-button.p-button-text.p-button-danger:hover {
+    background: rgba(194, 65, 12, 0.12);
+}
+
+.p-button.p-button-text.p-button-warn {
+    color: #9a3412;
+}
+
+.p-button.p-button-text.p-button-warn:hover {
+    background: rgba(154, 52, 18, 0.12);
+}
+
+.p-button.p-button-text.p-button-info {
+    color: #1d4ed8;
+}
+
+.p-button.p-button-text.p-button-info:hover {
+    background: rgba(29, 78, 216, 0.12);
 }
