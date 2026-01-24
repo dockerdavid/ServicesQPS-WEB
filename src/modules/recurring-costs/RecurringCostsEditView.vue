@@ -12,7 +12,7 @@ const inputs: InputConfig[] = [
   { label: 'Description', inputId: 'description', inputType: 'input' },
   { label: 'Amount', inputId: 'amount', inputType: 'numeric' },
   { label: 'Start date', inputId: 'startDate', inputType: 'datepicker', icon: 'calendar' },
-  { label: 'End date', inputId: 'endDate', inputType: 'datepicker', icon: 'calendar' },
+  { label: 'End date', inputId: 'endDate', inputType: 'datepicker', icon: 'calendar', required: false },
   {
     label: 'Active',
     inputId: 'isActive',

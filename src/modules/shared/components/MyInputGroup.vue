@@ -33,7 +33,7 @@
             <InputIcon :placeholder="props.placeholder" v-if="props.inputType !== 'select' && props.icon"
                 :class="`pi pi-${props.icon}`" />
         </IconField>
-        <small v-if="props.required && props.isFormSubmitted && !modelValue" class="text-red-500">Field required</small>
+        <small v-if="props.required && props.isFormSubmitted && !hasValue" class="text-red-500">Field required</small>
     </fieldset>
 </template>
 
@@ -104,5 +104,31 @@ const numericValue = computed({
 
         model.value = value !== null ? value : undefined;
     },
+});
+
+const hasValue = computed(() => {
+    const value = model.value;
+
+    if (props.inputType === 'multiselect') {
+        return Array.isArray(value) && value.length > 0;
+    }
+
+    if (props.inputType === 'numeric') {
+        return value !== null && value !== undefined && value !== '';
+    }
+
+    if (props.inputType === 'select') {
+        return value !== null && value !== undefined && value !== '';
+    }
+
+    if (props.inputType === 'datepicker') {
+        return value !== null && value !== undefined && value !== '';
+    }
+
+    if (typeof value === 'string') {
+        return value.trim().length > 0;
+    }
+
+    return value !== null && value !== undefined;
 });
 </script>

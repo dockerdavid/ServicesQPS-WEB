@@ -98,22 +98,18 @@ const updateEntity = async () => {
 
   isFormSubmitted.value = true;
 
+  const isEmptyValue = (value: any) => {
+    if (value === null || value === undefined) return true;
+    if (typeof value === 'string') return value.trim() === '';
+    if (Array.isArray(value)) return value.length === 0;
+    return false;
+  };
+
   const errors = props.inputs
     .filter((input) => {
-  
-      if (input.required === undefined || true) {
-
-        const value = entityData.value[input.inputId];
-
-        if (input.inputType === 'input') {
-          return !value || value.toString().trim() === '';
-        }
-        if (input.inputType === 'numeric') {
-          return value === null || value === undefined || value.toString().trim() === '';
-        }
-
-      }
-      return false;
+      if (input.required === false) return false;
+      const value = entityData.value[input.inputId];
+      return isEmptyValue(value);
     })
     .map((input) => input.label);
 
@@ -130,15 +126,16 @@ const updateEntity = async () => {
 
 
     const dataToUpdate = Object.keys(entityData.value).reduce((acc, key) => {
-
       const inputConfig = props.inputs.find(input => input.inputId === key);
       if (inputConfig?.isNotNeccesary && entityData.value[key] === '') {
+        return acc;
+      }
+      if (inputConfig?.required === false && isEmptyValue(entityData.value[key])) {
         return acc;
       }
       acc[key] = entityData.value[key];
       return acc;
     }, {} as Record<string, any>);
-
 
     props.inputs.forEach((input) => {
       if (input.inputType === 'numeric' && typeof dataToUpdate[input.inputId] === 'string') {

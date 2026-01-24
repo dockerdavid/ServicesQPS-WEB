@@ -64,20 +64,18 @@ onMounted(async () => {
 const createEntity = async (leave: boolean) => {
   isFormSubmitted.value = true;
 
+  const isEmptyValue = (value: any) => {
+    if (value === null || value === undefined) return true;
+    if (typeof value === 'string') return value.trim() === '';
+    if (Array.isArray(value)) return value.length === 0;
+    return false;
+  };
+
   const errors = props.inputs
     .filter((input) => {
-      if (input.required === undefined || true) {
-        const value = entityData.value[input.inputId];
-
-        if (input.inputType === 'input' || input.inputType === 'numeric') {
-          return !value || value.toString().trim() === '';
-        }
-
-        if (input.inputType === 'select' || input.inputType === 'datepicker') {
-          return !value || value === '';
-        }
-      }
-      return false;
+      if (input.required === false) return false;
+      const value = entityData.value[input.inputId];
+      return isEmptyValue(value);
     })
     .map((input) => input.label);
 
@@ -100,11 +98,15 @@ const createEntity = async (leave: boolean) => {
   }
 
   try {
-
     const dataToCreate = { ...entityData.value };
     props.inputs.forEach((input) => {
-      if (input.inputType === 'numeric' && typeof dataToCreate[input.inputId] === 'string') {
-        dataToCreate[input.inputId] = parseFloat(dataToCreate[input.inputId]);
+      const value = dataToCreate[input.inputId];
+      if (input.required === false && isEmptyValue(value)) {
+        delete dataToCreate[input.inputId];
+        return;
+      }
+      if (input.inputType === 'numeric' && typeof value === 'string') {
+        dataToCreate[input.inputId] = parseFloat(value);
       }
     });
 

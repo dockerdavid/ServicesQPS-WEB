@@ -13,7 +13,7 @@ const inputs: InputConfig[] = [
   { inputId: 'description', label: 'Description', inputType: 'input' },
   { inputId: 'amount', label: 'Amount', inputType: 'numeric' },
   { inputId: 'startDate', label: 'Start date', inputType: 'datepicker' },
-  { inputId: 'endDate', label: 'End date', inputType: 'datepicker' },
+  { inputId: 'endDate', label: 'End date', inputType: 'datepicker', required: false },
   { inputId: 'isActive', label: 'Active', inputType: 'select' },
 ];
 
