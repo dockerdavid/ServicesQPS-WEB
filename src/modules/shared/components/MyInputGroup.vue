@@ -52,7 +52,7 @@ interface InputGroupProps {
     hourFormat?: boolean;
     icon?: string;
     timeOnly?: boolean;
-    options?: Array<{ label: string; value: string }>;
+    options?: Array<{ label: string; value: string | boolean | number }>;
     inputNumericMode?: InputNumericMode;
     required?: boolean;
     isFormSubmitted: boolean;
