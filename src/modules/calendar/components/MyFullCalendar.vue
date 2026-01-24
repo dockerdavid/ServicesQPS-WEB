@@ -157,10 +157,13 @@ import 'tippy.js/dist/tippy.css';
 import MyInputGroup from '../../shared/components/MyInputGroup.vue';
 import LoadingButton from '../../shared/components/LoadingButton.vue';
 import { useUserStore } from '../../../store/user.store';
-import { Dialog, Button, InputSwitch, Textarea } from 'primevue';
+import { Dialog, Button, InputSwitch, Textarea, useToast } from 'primevue';
+import { showToast } from '../../../../src/utils/show-toast';
+import { CleanersServices } from '../../services/services.services';
 
 const router = useRouter();
 const userStore = useUserStore();
+const toast = useToast();
 
 const filterType = ref('');
 const filterText = ref('');
@@ -228,6 +231,22 @@ const reloadCalendarEvents = async (year?: number, month?: number) => {
   allEvents.value = events;
   calendarEvents.value = events.map(eventToCalendarEvent);
   calendarOptions.value.events = calendarEvents.value;
+};
+
+const getCurrentViewDate = () => {
+  const api = fullCalendar.value?.getApi();
+  return api?.getDate() ?? new Date();
+};
+
+const handleDeleteFromCalendar = async (serviceId: string) => {
+  try {
+    await CleanersServices.deleteService(serviceId);
+    showToast(toast, { severity: 'success', detail: 'Service was deleted' });
+    const currentDate = getCurrentViewDate();
+    await reloadCalendarEvents(currentDate.getFullYear(), currentDate.getMonth() + 1);
+  } catch (error) {
+    showToast(toast, { severity: 'error', summary: "Service wasn't deleted" });
+  }
 };
 
 const openServiceModal = async (serviceInfo: CalendarInterface) => {
@@ -367,6 +386,7 @@ const calendarOptions = ref({
     
     // Verificar si el usuario puede ver el botón (roles 1 y 7)
     const canShowButton = userStore.userData?.roleId === '1' || userStore.userData?.roleId === '7';
+    const canDelete = userStore.userData?.roleId === '1';
     
     const tooltipContent = `
       <div style="font-family: inherit; font-size: 13px;">
@@ -378,22 +398,42 @@ const calendarOptions = ref({
         <b>Status:</b> ${event.extendedProps.status}
         ${canShowButton && serviceInfo ? `
           <br/><br/>
-          <button 
-            id="service-modal-btn-${event.id}" 
-            style="
-              background-color: #007bff; 
-              color: white; 
-              border: none; 
-              padding: 5px 10px; 
-              border-radius: 4px; 
-              cursor: pointer; 
-              font-size: 12px;
-            "
-            onmouseover="this.style.backgroundColor='#0056b3'"
-            onmouseout="this.style.backgroundColor='#007bff'"
-          >
-            Ver Detalles
-          </button>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button 
+              id="service-modal-btn-${event.id}" 
+              style="
+                background-color: #007bff; 
+                color: white; 
+                border: none; 
+                padding: 5px 10px; 
+                border-radius: 4px; 
+                cursor: pointer; 
+                font-size: 12px;
+              "
+              onmouseover="this.style.backgroundColor='#0056b3'"
+              onmouseout="this.style.backgroundColor='#007bff'"
+            >
+              Ver Detalles
+            </button>
+            ${canDelete ? `
+              <button 
+                id="service-delete-btn-${event.id}" 
+                style="
+                  background-color: #dc2626; 
+                  color: white; 
+                  border: none; 
+                  padding: 5px 10px; 
+                  border-radius: 4px; 
+                  cursor: pointer; 
+                  font-size: 12px;
+                "
+                onmouseover="this.style.backgroundColor='#b91c1c'"
+                onmouseout="this.style.backgroundColor='#dc2626'"
+              >
+                Eliminar
+              </button>
+            ` : ''}
+          </div>
         ` : ''}
       </div>
     `;
@@ -411,10 +451,21 @@ const calendarOptions = ref({
           setTimeout(() => {
             const button = document.getElementById(`service-modal-btn-${event.id}`);
             if (button) {
-              button.addEventListener('click', () => {
+              button.addEventListener('click', (eventClick) => {
+                eventClick.stopPropagation();
                 openServiceModal(serviceInfo);
                 instance.hide();
               });
+            }
+            if (canDelete) {
+              const deleteButton = document.getElementById(`service-delete-btn-${event.id}`);
+              if (deleteButton) {
+                deleteButton.addEventListener('click', async (eventClick) => {
+                  eventClick.stopPropagation();
+                  await handleDeleteFromCalendar(event.id);
+                  instance.hide();
+                });
+              }
             }
           }, 100);
         }
