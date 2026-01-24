@@ -22,7 +22,18 @@ const authGuard = (
     return;
   }
 
-  const userRole = userStore?.userData?.role.name.toLowerCase() as keyof typeof roleRoutes;
+  if (to.name === 'notFound') {
+    next();
+    return;
+  }
+
+  const roleName = userStore?.userData?.role?.name;
+  if (!roleName) {
+    next();
+    return;
+  }
+
+  const userRole = roleName.toLowerCase() as keyof typeof roleRoutes;
   const allowedRoutes = roleRoutes[userRole] || [];
   if (allowedRoutes.includes(to.name as string)) {
     next();

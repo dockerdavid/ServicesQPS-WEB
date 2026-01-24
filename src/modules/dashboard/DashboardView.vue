@@ -107,6 +107,28 @@ const getCleanerReport = async () => {
     }
 }
 
+const getCleanerReportZip = async () => {
+    setIsLoading(true);
+    try {
+        const { data } = await apiServicesQps.get(`/reports/reporte-cleaner-zip?startDate=${formattedStartDate.value}&endDate=${formattedEndDate.value}`, {
+            responseType: 'blob'
+        });
+
+        const url = window.URL.createObjectURL(new Blob([data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `reporte-cleaner-${formattedStartDate.value}-${formattedEndDate.value}.zip`);
+        document.body.appendChild(link);
+        link.click();
+
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error("Error al obtener el reporte:", error);
+    } finally {
+        setIsLoading(false);
+    }
+}
 
 
 </script>
@@ -136,7 +158,7 @@ const getCleanerReport = async () => {
         ]" :fetch-data="fetchServices" :delete-data="deleteService" :search-data="searchService">
 
         <template #header-search>
-            <div class="flex justify-between py-2 overflow-x-auto w-full">
+            <div class="flex flex-wrap justify-between gap-3 py-2 w-full">
 
                 <div class="flex items-center px-3 gap-4">
                     <div class="min-w-[12rem]">
@@ -163,10 +185,10 @@ const getCleanerReport = async () => {
                     </div>
                 </div>
 
-                <div class="flex">
+                <div class="flex flex-wrap justify-end gap-3">
                     <LoadingButton label="Export general reports" @click="getGeneralReport" />
-                    <div class="px-3"></div>
                     <LoadingButton label="Export cleaner reports" @click="getCleanerReport" />
+                    <LoadingButton label="Export cleaner reports (zip)" @click="getCleanerReportZip" />
                 </div>
             </div>
         </template>
