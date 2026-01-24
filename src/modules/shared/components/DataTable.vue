@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useToast } from 'primevue/usetoast';
-import { Column, DataTable, InputText, Button, Skeleton, Paginator } from "primevue";
+import { Column, DataTable, InputText, Button, Skeleton } from "primevue";
 import MyDeleteToast from "./MyDeleteToast.vue";
 import { useGlobalStateStore } from "../../../store/auth.store";
 import { storeToRefs } from "pinia";
@@ -102,7 +102,8 @@ const handleExport = async (id: string) => {
         </div>
 
         <div v-else-if="data.length > 0">
-            <DataTable :value="data" :paginator="true" :rows="10" :totalRecords="totalRecords" @page="onPageChange"
+            <DataTable :value="data" :paginator="true" :lazy="true" :rows="rows" :first="first"
+                :totalRecords="totalRecords" @page="onPageChange"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 20, 50]" currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                 responsiveLayout="scroll">
@@ -131,8 +132,6 @@ const handleExport = async (id: string) => {
                 </Column>
             </DataTable>
 
-            <Paginator :rows="rows" :totalRecords="totalRecords" :rowsPerPageOptions="[5, 10, 20]" :first="first"
-                @page="onPageChange" />
         </div>
 
         <div v-else class="py-2">
