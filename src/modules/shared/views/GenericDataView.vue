@@ -24,6 +24,9 @@ interface Props {
     dontShowBreadCrumb?: boolean;
     useServicesTable?: boolean;
     showExportButton?: boolean;
+    createNewRoute?: string;
+    editRoute?: string;
+    routeBase?: string;
 }
 
 const props = defineProps<Props>();
@@ -68,8 +71,19 @@ const onDelete = async (item: any) => {
     }
 };
 
-const editRoute = `${props.viewTitle.toLocaleLowerCase()}`
-const createNewRoute = `${props.viewTitle.toLowerCase()}-create`
+const toRouteBase = (value: string) => value.toLowerCase().replace(/\s+/g, '-');
+const routeBase = ref(props.routeBase ?? toRouteBase(props.viewTitle));
+
+const editRoute = props.editRoute ?? routeBase.value;
+const createNewRouteTarget = () => {
+    if (props.createNewRoute) {
+        return props.createNewRoute.startsWith('/')
+            ? { path: props.createNewRoute }
+            : { name: props.createNewRoute };
+    }
+
+    return { name: `${routeBase.value}-create` };
+};
 
 const debounce = (fn: Function, delay: number) => {
     let timeoutId: number;
@@ -130,7 +144,7 @@ onMounted(async () => {
         <template #view-title>{{ viewTitle }}</template>
 
         <template #create-new v-if="!lockCreateNew">
-            <router-link :to="{ name: createNewRoute }">New {{ viewTitle.toLowerCase() }}</router-link>
+            <router-link :to="createNewRouteTarget()">New {{ viewTitle.toLowerCase() }}</router-link>
         </template>
 
         <template #header-search>

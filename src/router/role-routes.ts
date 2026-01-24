@@ -11,6 +11,10 @@ const roleRoutes = {
     'costs-default',
     'costs-create',
     'costs-edit',
+    'recurring-costs',
+    'recurring-costs-default',
+    'recurring-costs-create',
+    'recurring-costs-edit',
     'extras-default',
     'extras-create',
     'extras-edit',
@@ -58,6 +62,10 @@ const roleRoutes = {
     'costs-default',
     'costs-create',
     'costs-edit',
+    'recurring-costs',
+    'recurring-costs-default',
+    'recurring-costs-create',
+    'recurring-costs-edit',
     'notFound'
   ],
 };

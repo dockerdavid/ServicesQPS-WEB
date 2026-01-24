@@ -94,6 +94,28 @@ const router = createRouter({
           ],
         },
         {
+          path: 'recurring-costs',
+          name: 'recurring-costs',
+          component: () => import('../modules/recurring-costs/RecurringCostsView.vue'),
+          children: [
+            {
+              path: '',
+              name: 'recurring-costs-default',
+              component: () => import('../modules/recurring-costs/RecurringCostsDataView.vue'),
+            },
+            {
+              path: 'create',
+              name: 'recurring-costs-create',
+              component: () => import('../modules/recurring-costs/RecurringCostsCreateView.vue'),
+            },
+            {
+              path: 'edit/:id',
+              name: 'recurring-costs-edit',
+              component: () => import('../modules/recurring-costs/RecurringCostsEditView.vue'),
+            },
+          ],
+        },
+        {
           path: 'extras',
           name: 'extras',
           component: () => import('../modules/extras/ExtrasView.vue'),

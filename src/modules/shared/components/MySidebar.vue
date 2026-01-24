@@ -11,6 +11,7 @@ const adminRoutes: RouteLink[] = [
   { route: 'communities-default', icon: 'ph:fediverse-logo-duotone', label: 'communities' },
   { route: 'companies-default', icon: 'ph:briefcase-duotone', label: 'companies' },
   { route: 'costs-default', icon: 'ph:calculator-duotone', label: 'cost' },
+  { route: 'recurring-costs-default', icon: 'ph:repeat-duotone', label: 'recurring costs' },
   { route: 'extras-default', icon: 'ph:stack-plus-duotone', label: 'extras' },
   { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
   { route: 'statuses-default', icon: 'ph:faders-duotone', label: 'statuses' },
@@ -30,6 +31,7 @@ const cheoRoutes: RouteLink[] = [
   { route: 'dashboard', icon: 'ph:house-line', label: 'dashboard' },
   { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
   { route: 'costs-default', icon: 'ph:calculator-duotone', label: 'cost' },
+  { route: 'recurring-costs-default', icon: 'ph:repeat-duotone', label: 'recurring costs' },
 ]
 
 const qaRoutes: RouteLink[] = [
