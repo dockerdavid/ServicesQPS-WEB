@@ -167,7 +167,7 @@ const getCleanerReportZip = async () => {
                                 <i class="pi pi-calendar"></i>
                             </InputGroupAddon>
                             <FloatLabel variant="on">
-                                <Calendar v-model="startDate" dateFormat="yy-mm-dd" />
+                                <Calendar v-model="startDate" dateFormat="mm-dd-yy" />
                                 <label>Start date</label>
                             </FloatLabel>
                         </InputGroup>
@@ -178,7 +178,7 @@ const getCleanerReportZip = async () => {
                                 <i class="pi pi-calendar"></i>
                             </InputGroupAddon>
                             <FloatLabel variant="on">
-                                <Calendar v-model="endDate" dateFormat="yy-mm-dd" />
+                                <Calendar v-model="endDate" dateFormat="mm-dd-yy" />
                                 <label>End date</label>
                             </FloatLabel>
                         </InputGroup>
