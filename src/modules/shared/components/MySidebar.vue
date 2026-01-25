@@ -111,9 +111,9 @@ window.addEventListener('resize', () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: linear-gradient(180deg, #111827 0%, #0b1220 100%);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: var(--shadow-tight);
+  background: linear-gradient(180deg, var(--surface-50) 0%, var(--surface-100) 100%);
+  border-right: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
   overflow-x: hidden;
 
   img {
@@ -146,6 +146,7 @@ window.addEventListener('resize', () => {
 
   .icon-close {
     display: none;
+    color: var(--ink-700);
   }
 
 }

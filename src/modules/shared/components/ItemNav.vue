@@ -38,7 +38,7 @@ const accentColor = accentMap[props.route] ?? '#2d6cdf';
     border-radius: 10px;
     display: flex;
     align-items: center;
-    color: #e2e8f0;
+    color: var(--ink-700);
     transition: background-color 0.2s ease, color 0.2s ease;
     position: relative;
 
@@ -48,15 +48,16 @@ const accentColor = accentMap[props.route] ?? '#2d6cdf';
     }
 
     .iconify {
-        color: #94a3b8;
+        color: var(--ink-500);
     }
 
     &:hover {
-        background-color: rgba(45, 108, 223, 0.18);
+        background-color: color-mix(in srgb, var(--nav-accent) 16%, transparent);
+        color: var(--ink-900);
     }
 
     &:hover>.iconify {
-        color: #c7d2fe;
+        color: var(--nav-accent);
     }
 
     .none {
@@ -70,14 +71,14 @@ const accentColor = accentMap[props.route] ?? '#2d6cdf';
 
 .router-link-active {
 
-    background-color: color-mix(in srgb, var(--nav-accent) 25%, transparent);
+    background-color: color-mix(in srgb, var(--nav-accent) 20%, transparent);
     
     span {
-        color: #eef2ff;  
+        color: var(--ink-900);  
     }
 
     .iconify {
-        color: #e0e7ff; 
+        color: var(--nav-accent); 
     }
 }
 
