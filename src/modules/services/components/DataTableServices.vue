@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useToast } from 'primevue/usetoast';
-import { Column, DataTable, Button, Skeleton, Paginator } from "primevue";
+import { Column, DataTable, Button, Skeleton, Paginator, Dialog } from "primevue";
 import MyDeleteToast from "../../shared/components/MyDeleteToast.vue";
 import { useGlobalStateStore } from "../../../store/auth.store";
 import { storeToRefs } from "pinia";
@@ -13,6 +13,7 @@ import MyAcceptToast from "./MyAcceptToast.vue";
 import MyRejectToast from "./MyRejectToast.vue";
 import { showToast } from "../../../../src/utils/show-toast";
 import { CleanersServices } from "../services.services";
+import ServiceChatPanel from "./ServiceChatPanel.vue";
 
 // Función para manejar campos anidados de forma segura
 const getNestedValue = (obj: any, path: string): string => {
@@ -70,6 +71,19 @@ const redirectToEdit = (id: string) => {
 const itemToDelete = ref<Service | null>();
 const itemToUpdate = ref<EditService | null>();
 const itemToUpdateId = ref('');
+const isChatDialogOpen = ref(false);
+const activeChatService = ref<Service | ExternalService | null>(null);
+
+const canAccessChat = computed(() => {
+    const roleId = store.userData?.roleId ?? '';
+    const roleName = store.userData?.role?.name?.toLowerCase() ?? '';
+    return roleId === '1'
+        || roleId === '4'
+        || roleId === '6'
+        || roleName === 'super_admin'
+        || roleName === 'supervisor'
+        || roleName === 'cleaner';
+});
 
 const showDeleteToast = (item: Service) => {
     itemToDelete.value = item;
@@ -157,6 +171,16 @@ const closeToastByAction = (group: string) => {
     toast.removeGroup(group);
 };
 
+const openChat = (service: Service | ExternalService) => {
+    activeChatService.value = service;
+    isChatDialogOpen.value = true;
+};
+
+const closeChat = () => {
+    isChatDialogOpen.value = false;
+    activeChatService.value = null;
+};
+
 </script>
 
 <template>
@@ -203,6 +227,14 @@ const closeToastByAction = (group: string) => {
                     </template>
                 </Column>
 
+                <Column v-if="canAccessChat" field="chat" style="width: 15%" header="Chat">
+                    <template #body="{ data }">
+                        <div class="flex justify-center">
+                            <Button variant="text" icon="pi pi-comments" label="Chat" @click="openChat(data)" />
+                        </div>
+                    </template>
+                </Column>
+
             </DataTable>
 
             <Paginator :rows="rows" :totalRecords="totalRecords" :rowsPerPageOptions="[5, 10, 20]" :first="first"
@@ -222,6 +254,11 @@ const closeToastByAction = (group: string) => {
         <MyRejectToast @reject="(comment) => handleAction('4', 'reject', comment)"
             @close="closeToastByAction('reject')" />
         <MyConfirmToast @confirm="handleAction('5', 'complete')" @close="closeToastByAction('confirm')" />
+
+        <Dialog v-model:visible="isChatDialogOpen" modal header="Service chat" :style="{ width: 'min(720px, 94vw)' }"
+            @hide="closeChat">
+            <ServiceChatPanel v-if="activeChatService" :service="activeChatService" />
+        </Dialog>
 
     </div>
 </template>
