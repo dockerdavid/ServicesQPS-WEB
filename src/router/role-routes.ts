@@ -34,6 +34,8 @@ const roleRoutes = {
   ],
   qa: [
     'calendar',
+    'services',
+    'services-default',
     'notFound'
   ],
   manager: [

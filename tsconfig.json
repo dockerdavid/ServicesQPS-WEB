@@ -12,7 +12,8 @@
     "types": ["vite/client", "vue"],
     "paths": {
       "@/*": ["src/*"]
-    }
+    },
+    "noEmit": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
   "exclude": ["node_modules", "dist"]

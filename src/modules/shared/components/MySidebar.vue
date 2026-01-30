@@ -36,6 +36,7 @@ const cheoRoutes: RouteLink[] = [
 
 const qaRoutes: RouteLink[] = [
   { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
+  { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
 ]
 
 

@@ -79,9 +79,9 @@ const canAccessChat = computed(() => {
     const roleName = store.userData?.role?.name?.toLowerCase() ?? '';
     return roleId === '1'
         || roleId === '4'
-        || roleId === '6'
+        || roleId === '7'
         || roleName === 'super_admin'
-        || roleName === 'supervisor'
+        || roleName === 'qa'
         || roleName === 'cleaner';
 });
 
