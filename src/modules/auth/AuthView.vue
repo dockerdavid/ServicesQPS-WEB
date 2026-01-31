@@ -38,7 +38,7 @@ import { useUserStore } from '../../store/user.store';
 import { UsersServices } from '../users/users.services';
 
 import router from '../../router';
-import roleRoutes from '../../../src/router/role-routes';
+import { resolveRoleRoutes } from '../../../src/router/role-routes';
 
 interface Form {
     username: string;
@@ -124,13 +124,12 @@ const getUserData = async (userId: string) => {
         // Wait a bit to ensure the store is updated
         await new Promise(resolve => setTimeout(resolve, 100))
         
-        const userRole = data.role.name.toLowerCase() as keyof typeof roleRoutes;
-        
-        if (roleRoutes[userRole] && roleRoutes[userRole].length > 0) {
-            const firstRoute = roleRoutes[userRole][0];
+        const routesForRole = resolveRoleRoutes(data.role?.name, data.roleId);
+        if (routesForRole.length > 0) {
+            const firstRoute = routesForRole[0];
             router.push({ name: firstRoute })
         } else {
-            console.error('No routes found for role:', userRole)
+            console.error('No routes found for role:', data.role?.name, data.roleId)
             toast.add({ severity: 'error', summary: 'Error', detail: 'No routes available for your role', life: 3000 });
         }
     } catch (error) {

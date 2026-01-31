@@ -1,7 +1,7 @@
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 import { useAuthStore } from '../store/auth.store';
 import { useUserStore } from '../store/user.store';
-import roleRoutes from './role-routes';
+import { resolveRoleRoutes } from './role-routes';
 
 
 const authGuard = (
@@ -28,13 +28,13 @@ const authGuard = (
   }
 
   const roleName = userStore?.userData?.role?.name;
-  if (!roleName) {
+  const roleId = userStore?.userData?.roleId;
+  if (!roleName && !roleId) {
     next();
     return;
   }
 
-  const userRole = roleName.toLowerCase() as keyof typeof roleRoutes;
-  const allowedRoutes = roleRoutes[userRole] || [];
+  const allowedRoutes = resolveRoleRoutes(roleName, roleId);
   if (allowedRoutes.includes(to.name as string)) {
     next();
   } else {
