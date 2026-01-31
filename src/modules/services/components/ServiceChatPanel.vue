@@ -44,12 +44,13 @@ const serviceTitle = computed(() => {
 });
 
 const isAdmin = computed(() => userStore.userData?.roleId === '1');
+const isQa = computed(() => userStore.userData?.roleId === '7');
 const isChatOpen = computed(() =>
-  isAdmin.value || isChatOpenStatus(statusId.value ?? props.service?.statusId ?? null),
+  isAdmin.value || isQa.value || isChatOpenStatus(statusId.value ?? props.service?.statusId ?? null),
 );
 
 const chatStatusMessage = computed(() => {
-  if (isAdmin.value) {
+  if (isAdmin.value || isQa.value) {
     return '';
   }
 
