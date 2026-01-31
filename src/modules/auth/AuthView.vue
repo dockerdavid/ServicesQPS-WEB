@@ -38,7 +38,7 @@ import { useUserStore } from '../../store/user.store';
 import { UsersServices } from '../users/users.services';
 
 import router from '../../router';
-import { resolveRoleRoutes } from '../../../src/router/role-routes';
+import { resolveRoleRoutes } from '../../router/role-routes';
 
 interface Form {
     username: string;
