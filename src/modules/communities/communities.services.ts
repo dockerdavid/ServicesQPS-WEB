@@ -75,9 +75,10 @@ export class CommunitiesServices {
         }
     }
 
-    static async exportCommunityReport(communityId: string) {
+    static async exportCommunityReport(communityId: string, startDate?: string, endDate?: string) {
         try {
-            const { data } = await apiServicesQps.get(`/reports/community/${communityId}`, {
+            const params = startDate && endDate ? `?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}` : '';
+            const { data } = await apiServicesQps.get(`/reports/community/${communityId}${params}`, {
                 responseType: 'blob'
             });
             
@@ -93,7 +94,8 @@ export class CommunitiesServices {
             
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `reporte-comunidad-${communityId}.pdf`);
+            const fileSuffix = startDate && endDate ? `-${startDate}-${endDate}` : '';
+            link.setAttribute('download', `reporte-comunidad-${communityId}${fileSuffix}.pdf`);
             link.style.display = 'none';
             document.body.appendChild(link);
 

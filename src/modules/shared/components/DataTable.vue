@@ -23,6 +23,8 @@ interface TableI {
     editRoute: string;
     lockEdit?: boolean;
     showExportButton?: boolean;
+    exportStartDate?: string;
+    exportEndDate?: string;
 }
 
 const { isLoading } = storeToRefs(useGlobalStateStore());
@@ -76,7 +78,7 @@ const getNestedValue = (obj: any, path: string) => {
 
 const handleExport = async (id: string) => {
     try {
-        await CommunitiesServices.exportCommunityReport(id);
+        await CommunitiesServices.exportCommunityReport(id, props.exportStartDate, props.exportEndDate);
         toast.add({
             severity: 'success',
             summary: 'Export successful',

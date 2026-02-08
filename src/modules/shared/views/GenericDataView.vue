@@ -24,6 +24,8 @@ interface Props {
     dontShowBreadCrumb?: boolean;
     useServicesTable?: boolean;
     showExportButton?: boolean;
+    exportStartDate?: string;
+    exportEndDate?: string;
     createNewRoute?: string;
     editRoute?: string;
     routeBase?: string;
@@ -148,7 +150,7 @@ onMounted(async () => {
         </template>
 
         <template #header-search>
-            <slot name="header-search">
+            <slot name="header-search" :search-word="searchWord" :on-search="onSearch" :clear-search="clearSearch" :set-search-word="(value: string) => { searchWord = value; onSearch(); }">
                 <IconField>
                     <InputIcon class="pi pi-search" />
                     <InputText v-model="searchWord" @input="onSearch" placeholder="Search" />
@@ -168,7 +170,8 @@ onMounted(async () => {
 
             <DataTable v-if="!props.useServicesTable" :data="dataList.data" :headers="headers" :onDelete="onDelete"
                 :lockEdit="lockEdit" @page-change="handlePageChange" :total-records="dataList.meta.totalCount"
-                :edit-route="editRoute" :show-export-button="props.showExportButton" />
+                :edit-route="editRoute" :show-export-button="props.showExportButton"
+                :export-start-date="props.exportStartDate" :export-end-date="props.exportEndDate" />
 
             <DataTableServices v-if="props.useServicesTable" :data="dataList.data" :headers="headers"
                 :onDelete="onDelete" :lockEdit="lockEdit" @page-change="handlePageChange"

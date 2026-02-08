@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { computed, ref } from "vue";
+import moment from "moment";
+import { Calendar, FloatLabel, IconField, InputGroup, InputGroupAddon, InputIcon, InputText } from "primevue";
 import GenericDataView from "../shared/views/GenericDataView.vue";
 import { CommunitiesServices } from "./communities.services";
 
@@ -14,6 +17,17 @@ const deleteCommunity = async (id: string) => {
 const searchCommunity = async (searchWord: any, page: number, rows: number) => {
     return await CommunitiesServices.searchCommunity(searchWord, page, rows)
 };
+
+const startDate = ref(moment().startOf('year').toDate());
+const endDate = ref(moment().endOf('year').toDate());
+
+const formattedStartDate = computed(() =>
+    startDate.value ? moment(startDate.value).format('MM-DD-YYYY') : ''
+);
+
+const formattedEndDate = computed(() =>
+    endDate.value ? moment(endDate.value).format('MM-DD-YYYY') : ''
+);
 
 const headers = [
     { field: 'communityName', name: 'Community name', style: 'width: 25%' },
@@ -44,7 +58,45 @@ const headers = [
         :delete-data="deleteCommunity"
         :search-data="searchCommunity"
         :show-export-button="true"
-    />
+        :export-start-date="formattedStartDate"
+        :export-end-date="formattedEndDate"
+    >
+        <template #header-search="{ searchWord, onSearch, clearSearch, setSearchWord }">
+            <div class="flex flex-wrap items-center justify-between gap-3 w-full">
+                <IconField>
+                    <InputIcon class="pi pi-search" />
+                    <InputText :modelValue="searchWord" @update:modelValue="setSearchWord" placeholder="Search" />
+                    <InputIcon v-if="searchWord" class="pi pi-times cursor-pointer text-gray-500 hover:text-black"
+                        @click="clearSearch" />
+                </IconField>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="min-w-[12rem]">
+                        <InputGroup>
+                            <InputGroupAddon>
+                                <i class="pi pi-calendar"></i>
+                            </InputGroupAddon>
+                            <FloatLabel variant="on">
+                                <Calendar v-model="startDate" dateFormat="mm-dd-yy" />
+                                <label>Start date</label>
+                            </FloatLabel>
+                        </InputGroup>
+                    </div>
+                    <div class="min-w-[12rem]">
+                        <InputGroup>
+                            <InputGroupAddon>
+                                <i class="pi pi-calendar"></i>
+                            </InputGroupAddon>
+                            <FloatLabel variant="on">
+                                <Calendar v-model="endDate" dateFormat="mm-dd-yy" />
+                                <label>End date</label>
+                            </FloatLabel>
+                        </InputGroup>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </GenericDataView>
 </template>
 
 <style scoped>
