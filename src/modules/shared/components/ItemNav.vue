@@ -21,6 +21,7 @@ const accentMap: Record<string, string> = {
     'companies-default': '#1f7a6d',
     'costs-default': '#c2410c',
     'recurring-costs-default': '#b45309',
+    'recurring-services-default': '#0ea5e9',
     'extras-default': '#8b5cf6',
     'services-default': '#2563eb',
     'statuses-default': '#0f766e',

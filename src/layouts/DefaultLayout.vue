@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import router from '../router';
 import { Avatar, Button, Card, Popover } from 'primevue';
 
@@ -8,6 +8,10 @@ import MySidebar from '../modules/shared/components/MySidebar.vue';
 import { useSidebarStore } from '../store/sidebar.store';
 import { useAuthStore } from '../store/auth.store';
 import { useUserStore } from '../store/user.store';
+import {
+    isNotificationSupported,
+    requestNotificationPermission,
+} from '../utils/web-notifications';
 
 const sidebarState = useSidebarStore();
 const store = useUserStore();
@@ -24,6 +28,24 @@ const signOut = () => {
     useUserStore().removeUserData();
     router.push('/auth');
 };
+
+const notificationPermission = ref<NotificationPermission>('default');
+const notificationSupported = ref(false);
+
+const canRequestNotifications = computed(
+    () => notificationSupported.value && notificationPermission.value === 'default',
+);
+
+const requestNotifications = async () => {
+    notificationPermission.value = await requestNotificationPermission();
+};
+
+onMounted(() => {
+    notificationSupported.value = isNotificationSupported();
+    if (notificationSupported.value) {
+        notificationPermission.value = Notification.permission;
+    }
+});
 </script>
 
 <template>
@@ -39,6 +61,14 @@ const signOut = () => {
                     </Button>
                 </div>
                 <div class="topbar-right">
+                    <Button
+                        v-if="canRequestNotifications"
+                        class="notify-button"
+                        icon="pi pi-bell"
+                        label="Enable notifications"
+                        severity="secondary"
+                        @click="requestNotifications"
+                    />
                     <Button class="avatar-button" unstyled @click="toggle">
                         <Avatar
                             :label="store.userData?.name?.charAt(0).toUpperCase() ?? '?'"
@@ -128,6 +158,11 @@ const signOut = () => {
 
         .avatar-button:hover {
             box-shadow: var(--shadow-tight);
+        }
+
+        .notify-button {
+            border-radius: 999px;
+            font-weight: 600;
         }
     }
 }

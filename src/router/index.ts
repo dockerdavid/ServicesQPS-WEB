@@ -116,6 +116,28 @@ const router = createRouter({
           ],
         },
         {
+          path: 'recurring-services',
+          name: 'recurring-services',
+          component: () => import('../modules/recurring-services/RecurringServicesView.vue'),
+          children: [
+            {
+              path: '',
+              name: 'recurring-services-default',
+              component: () => import('../modules/recurring-services/RecurringServicesDataView.vue'),
+            },
+            {
+              path: 'create',
+              name: 'recurring-services-create',
+              component: () => import('../modules/recurring-services/RecurringServicesCreateView.vue'),
+            },
+            {
+              path: 'edit/:id',
+              name: 'recurring-services-edit',
+              component: () => import('../modules/recurring-services/RecurringServicesEditView.vue'),
+            },
+          ],
+        },
+        {
           path: 'extras',
           name: 'extras',
           component: () => import('../modules/extras/ExtrasView.vue'),

@@ -4,6 +4,7 @@ import { computed, onMounted, ref, watchEffect } from 'vue';
 import { useSidebarStore } from '../../../store/sidebar.store';
 import { useUserStore } from '../../../store/user.store';
 import type { RouteLink } from '../../../interfaces/routeLink';
+import { resolveRoleKey } from '../../../router/role-routes';
 
 const adminRoutes: RouteLink[] = [
   { route: 'dashboard', icon: 'ph:house-line', label: 'dashboard' },
@@ -12,6 +13,7 @@ const adminRoutes: RouteLink[] = [
   { route: 'companies-default', icon: 'ph:briefcase-duotone', label: 'companies' },
   { route: 'costs-default', icon: 'ph:calculator-duotone', label: 'cost' },
   { route: 'recurring-costs-default', icon: 'ph:repeat-duotone', label: 'recurring costs' },
+  { route: 'recurring-services-default', icon: 'ph:repeat-duotone', label: 'recurring services' },
   { route: 'extras-default', icon: 'ph:stack-plus-duotone', label: 'extras' },
   { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
   { route: 'statuses-default', icon: 'ph:faders-duotone', label: 'statuses' },
@@ -47,18 +49,21 @@ const windowWidth = ref(window.innerWidth);
 
 
 const routes = computed(() => {
+  const roleKey = resolveRoleKey(userStore?.userData?.role?.name, userStore?.userData?.roleId);
 
-  switch (userStore?.userData?.roleId) {
-    case "1":
+  switch (roleKey) {
+    case "super_admin":
       return adminRoutes;
-    case "3":
+    case "manager":
       return managerRoutes;
-    case "4":
+    case "cleaner":
       return cleanerRoutes;
-    case "5":
+    case "cheo":
       return cheoRoutes;
-    case "7":
+    case "qa":
       return qaRoutes;
+    case "supervisor":
+      return managerRoutes;
     default:
       return [
         { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
@@ -93,7 +98,7 @@ window.addEventListener('resize', () => {
       </Icon>
     </div>
     
-    <ul v-if="userStore?.userData?.roleId">
+    <ul v-if="userStore?.userData">
       <li v-for="route in routes" :key="route.route">
         <ItemNav :icon="route.icon" :label="route.label" :route="route.route" />
       </li>
