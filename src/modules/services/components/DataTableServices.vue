@@ -78,6 +78,7 @@ const itemToUpdateId = ref('');
 const isChatDialogOpen = ref(false);
 const activeChatService = ref<Service | ExternalService | null>(null);
 const socket = ref<Socket | null>(null);
+const chatToastServiceId = ref<string | null>(null);
 
 interface ChatNotificationPayload {
     serviceId: string;
@@ -243,18 +244,19 @@ const showChatToast = (payload: ChatNotificationPayload) => {
     const unit = payload.unitNumber ? ` · Unit ${payload.unitNumber}` : '';
     const detail = `${community}${unit} — ${buildChatPreview(payload)}`;
 
+    chatToastServiceId.value = payload.serviceId;
     toast.add({
         group: 'chat',
         severity: 'info',
         summary: `New message from ${sender}`,
         detail,
-        data: { serviceId: payload.serviceId },
         life: 10000,
     });
 };
 
 const handleChatToastOpen = async (serviceId: string) => {
     toast.removeGroup('chat');
+    chatToastServiceId.value = null;
 
     if (!serviceId) {
         return;
@@ -280,6 +282,7 @@ const handleChatToastOpen = async (serviceId: string) => {
 
 const closeChatToast = () => {
     toast.removeGroup('chat');
+    chatToastServiceId.value = null;
 };
 
 const handleChatNotification = (payload: ChatNotificationPayload) => {
@@ -417,7 +420,11 @@ onBeforeUnmount(() => {
         <MyRejectToast @reject="(comment) => handleAction('4', 'reject', comment)"
             @close="closeToastByAction('reject')" />
         <MyConfirmToast @confirm="handleAction('5', 'complete')" @close="closeToastByAction('confirm')" />
-        <MyChatToast @open="handleChatToastOpen" @close="closeChatToast" />
+        <MyChatToast
+            :service-id="chatToastServiceId"
+            @open="handleChatToastOpen"
+            @close="closeChatToast"
+        />
 
         <Dialog v-model:visible="isChatDialogOpen" modal header="Service chat" :style="{ width: 'min(720px, 94vw)' }"
             @hide="closeChat">

@@ -14,7 +14,7 @@ const searchRecurringService = async (searchWord: any, page: number, rows: numbe
   return await RecurringServicesServices.searchRecurringService(searchWord, page, rows);
 };
 
-const formatActive = (value: boolean) => (value ? 'Yes' : 'No');
+const formatActive = (value: boolean | number) => (value ? 'Yes' : 'No');
 const formatDays = (value: string[] | string | null | undefined) => {
   if (!value) return 'N/A';
   const daysArray = Array.isArray(value) ? value : value.split(',');
