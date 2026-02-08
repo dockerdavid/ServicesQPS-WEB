@@ -1,22 +1,20 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { useToast } from 'primevue/usetoast';
 import { Column, DataTable, Button, Skeleton, Paginator, Dialog } from "primevue";
-import { io, type Socket } from 'socket.io-client';
 import MyDeleteToast from "../../shared/components/MyDeleteToast.vue";
-import { useAuthStore, useGlobalStateStore } from "../../../store/auth.store";
+import { useGlobalStateStore } from "../../../store/auth.store";
 import { storeToRefs } from "pinia";
 import router from "../../../router";
+import { useRoute } from "vue-router";
 import { useUserStore } from "../../../store/user.store";
 import {  CleanerServiceAdapterExternal, type EditService, type ExternalService, type Service } from "../../../../src/interfaces/services/services.interface";
 import MyConfirmToast from "./MyCompleteToast.vue";
 import MyAcceptToast from "./MyAcceptToast.vue";
 import MyRejectToast from "./MyRejectToast.vue";
-import MyChatToast from "./MyChatToast.vue";
 import { showToast } from "../../../../src/utils/show-toast";
 import { CleanersServices } from "../services.services";
 import ServiceChatPanel from "./ServiceChatPanel.vue";
-import { showWebNotification, isNotificationSupported, getNotificationPermission } from "../../../utils/web-notifications";
 
 // Función para manejar campos anidados de forma segura
 const getNestedValue = (obj: any, path: string): string => {
@@ -50,7 +48,7 @@ interface TableI {
 const { isLoading } = storeToRefs(useGlobalStateStore());
 
 const store = useUserStore();
-const authStore = useAuthStore();
+const route = useRoute();
 
 const props = defineProps<TableI>();
 const emit = defineEmits(['update', 'page-change']);
@@ -77,18 +75,6 @@ const itemToUpdate = ref<EditService | null>();
 const itemToUpdateId = ref('');
 const isChatDialogOpen = ref(false);
 const activeChatService = ref<Service | ExternalService | null>(null);
-const socket = ref<Socket | null>(null);
-const chatToastServiceId = ref<string | null>(null);
-
-interface ChatNotificationPayload {
-    serviceId: string;
-    senderId: string;
-    senderName: string;
-    message: string | null;
-    hasAttachment: boolean;
-    communityName: string | null;
-    unitNumber: string | null;
-}
 
 const canAccessChat = computed(() => {
     const roleId = store.userData?.roleId ?? '';
@@ -197,67 +183,7 @@ const closeChat = () => {
     activeChatService.value = null;
 };
 
-const socketUrl = computed(() => {
-    const baseUrl = import.meta.env.VITE_API_URL as string;
-    return baseUrl?.replace(/\/$/, '');
-});
-
-const truncateText = (value: string, maxLength: number) => {
-    if (value.length <= maxLength) return value;
-    return `${value.slice(0, maxLength - 3)}...`;
-};
-
-const buildChatPreview = (payload: ChatNotificationPayload) => {
-    const baseMessage = payload.message?.trim() ?? '';
-    if (baseMessage) {
-        return truncateText(baseMessage, 120);
-    }
-
-    return payload.hasAttachment ? 'Sent an attachment.' : 'Sent a new message.';
-};
-
-const showNativeNotification = (payload: ChatNotificationPayload) => {
-    if (!isNotificationSupported() || getNotificationPermission() !== 'granted') {
-        return;
-    }
-
-    const sender = payload.senderName || 'Someone';
-    const community = payload.communityName || 'Service';
-    const unit = payload.unitNumber ? ` · Unit ${payload.unitNumber}` : '';
-    const preview = buildChatPreview(payload);
-    const body = `${sender} — ${community}${unit}\n${preview}`;
-
-    showWebNotification('New chat message', {
-        body,
-        tag: `service-chat-${payload.serviceId}`,
-        data: { serviceId: payload.serviceId },
-        onClick: () => {
-            window.focus();
-            handleChatToastOpen(payload.serviceId);
-        },
-    });
-};
-
-const showChatToast = (payload: ChatNotificationPayload) => {
-    const sender = payload.senderName || 'Someone';
-    const community = payload.communityName || 'Service';
-    const unit = payload.unitNumber ? ` · Unit ${payload.unitNumber}` : '';
-    const detail = `${community}${unit} — ${buildChatPreview(payload)}`;
-
-    chatToastServiceId.value = payload.serviceId;
-    toast.add({
-        group: 'chat',
-        severity: 'info',
-        summary: `New message from ${sender}`,
-        detail,
-        life: 10000,
-    });
-};
-
-const handleChatToastOpen = async (serviceId: string) => {
-    toast.removeGroup('chat');
-    chatToastServiceId.value = null;
-
+const openChatById = async (serviceId: string) => {
     if (!serviceId) {
         return;
     }
@@ -280,72 +206,22 @@ const handleChatToastOpen = async (serviceId: string) => {
     }
 };
 
-const closeChatToast = () => {
-    toast.removeGroup('chat');
-    chatToastServiceId.value = null;
-};
-
-const handleChatNotification = (payload: ChatNotificationPayload) => {
-    if (!payload?.serviceId) {
-        return;
-    }
-
-    if (payload.senderId && payload.senderId === store.userData?.id) {
-        return;
-    }
-
-    if (isChatDialogOpen.value && activeChatService.value?.id === payload.serviceId) {
-        return;
-    }
-
-    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
-        showNativeNotification(payload);
-    }
-
-    showChatToast(payload);
-};
-
-const connectNotificationSocket = () => {
-    if (socket.value || !authStore.token || !canAccessChat.value) {
-        return;
-    }
-
-    socket.value = io(socketUrl.value, {
-        auth: { token: authStore.token },
-        transports: ['websocket'],
-    });
-
-    socket.value.on('serviceChat:notify', handleChatNotification);
-    socket.value.on('serviceChat:error', (payload: { message?: string }) => {
-        if (payload?.message) {
-            showToast(toast, { severity: 'error', summary: payload.message });
-        }
-    });
-};
-
-const disconnectNotificationSocket = () => {
-    if (socket.value) {
-        socket.value.disconnect();
-        socket.value = null;
-    }
-};
-
 watch(
-    () => [authStore.token, canAccessChat.value],
-    ([token, allowed]) => {
-        if (token && allowed) {
-            connectNotificationSocket();
+    () => route.query.chatServiceId,
+    (value) => {
+        const serviceId = Array.isArray(value) ? value[0] : value;
+        if (!serviceId) {
             return;
         }
 
-        disconnectNotificationSocket();
+        openChatById(serviceId);
+
+        const nextQuery = { ...route.query };
+        delete (nextQuery as Record<string, any>).chatServiceId;
+        router.replace({ name: 'services-default', query: nextQuery });
     },
     { immediate: true },
 );
-
-onBeforeUnmount(() => {
-    disconnectNotificationSocket();
-});
 
 </script>
 
@@ -420,11 +296,6 @@ onBeforeUnmount(() => {
         <MyRejectToast @reject="(comment) => handleAction('4', 'reject', comment)"
             @close="closeToastByAction('reject')" />
         <MyConfirmToast @confirm="handleAction('5', 'complete')" @close="closeToastByAction('confirm')" />
-        <MyChatToast
-            :service-id="chatToastServiceId"
-            @open="handleChatToastOpen"
-            @close="closeChatToast"
-        />
 
         <Dialog v-model:visible="isChatDialogOpen" modal header="Service chat" :style="{ width: 'min(720px, 94vw)' }"
             @hide="closeChat">

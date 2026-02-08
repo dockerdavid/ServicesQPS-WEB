@@ -1,20 +1,27 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import router from '../router';
 import { Avatar, Button, Card, Popover } from 'primevue';
+import { useToast } from 'primevue/usetoast';
+import { io, type Socket } from 'socket.io-client';
 
 import MySidebar from '../modules/shared/components/MySidebar.vue';
+import MyChatToast from '../modules/services/components/MyChatToast.vue';
 
 import { useSidebarStore } from '../store/sidebar.store';
 import { useAuthStore } from '../store/auth.store';
 import { useUserStore } from '../store/user.store';
 import {
     isNotificationSupported,
+    getNotificationPermission,
     requestNotificationPermission,
+    showWebNotification,
 } from '../utils/web-notifications';
 
 const sidebarState = useSidebarStore();
 const store = useUserStore();
+const authStore = useAuthStore();
+const toast = useToast();
 
 // Referencia al componente Popover (no un booleano)
 const op = ref<InstanceType<typeof Popover> | null>(null);
@@ -31,6 +38,18 @@ const signOut = () => {
 
 const notificationPermission = ref<NotificationPermission>('default');
 const notificationSupported = ref(false);
+const chatToastServiceId = ref<string | null>(null);
+const socket = ref<Socket | null>(null);
+
+interface ChatNotificationPayload {
+    serviceId: string;
+    senderId: string;
+    senderName: string;
+    message: string | null;
+    hasAttachment: boolean;
+    communityName: string | null;
+    unitNumber: string | null;
+}
 
 const canRequestNotifications = computed(
     () => notificationSupported.value && notificationPermission.value === 'default',
@@ -40,11 +59,179 @@ const requestNotifications = async () => {
     notificationPermission.value = await requestNotificationPermission();
 };
 
+const canAccessChat = computed(() => {
+    const roleId = store.userData?.roleId ?? '';
+    const roleName = store.userData?.role?.name?.toLowerCase() ?? '';
+    return roleId === '1'
+        || roleId === '4'
+        || roleId === '7'
+        || roleName === 'super_admin'
+        || roleName === 'qa'
+        || roleName === 'cleaner';
+});
+
+const socketUrl = computed(() => {
+    const baseUrl = import.meta.env.VITE_API_URL as string;
+    return baseUrl?.replace(/\/$/, '');
+});
+
+const playNotificationSound = () => {
+    try {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioContextClass) {
+            return;
+        }
+        const context = new AudioContextClass();
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = 880;
+        gain.gain.setValueAtTime(0.001, context.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.15, context.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.25);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start();
+        oscillator.stop(context.currentTime + 0.3);
+        oscillator.onended = () => {
+            context.close().catch(() => null);
+        };
+    } catch (error) {
+        // Ignore audio errors (browser may block autoplay)
+    }
+};
+
+const truncateText = (value: string, maxLength: number) => {
+    if (value.length <= maxLength) return value;
+    return `${value.slice(0, maxLength - 3)}...`;
+};
+
+const buildChatPreview = (payload: ChatNotificationPayload) => {
+    const baseMessage = payload.message?.trim() ?? '';
+    if (baseMessage) {
+        return truncateText(baseMessage, 120);
+    }
+
+    return payload.hasAttachment ? 'Sent an attachment.' : 'Sent a new message.';
+};
+
+const showNativeNotification = (payload: ChatNotificationPayload) => {
+    if (!isNotificationSupported() || getNotificationPermission() !== 'granted') {
+        return;
+    }
+
+    const sender = payload.senderName || 'Someone';
+    const community = payload.communityName || 'Service';
+    const unit = payload.unitNumber ? ` · Unit ${payload.unitNumber}` : '';
+    const preview = buildChatPreview(payload);
+    const body = `${sender} — ${community}${unit}\n${preview}`;
+
+    showWebNotification('New chat message', {
+        body,
+        tag: `service-chat-${payload.serviceId}`,
+        onClick: () => {
+            window.focus();
+            handleChatToastOpen(payload.serviceId);
+        },
+    });
+};
+
+const showChatToast = (payload: ChatNotificationPayload) => {
+    const sender = payload.senderName || 'Someone';
+    const community = payload.communityName || 'Service';
+    const unit = payload.unitNumber ? ` · Unit ${payload.unitNumber}` : '';
+    const detail = `${community}${unit} — ${buildChatPreview(payload)}`;
+
+    chatToastServiceId.value = payload.serviceId;
+    toast.add({
+        group: 'chat',
+        severity: 'info',
+        summary: `New message from ${sender}`,
+        detail,
+        life: 10000,
+    });
+};
+
+const handleChatNotification = (payload: ChatNotificationPayload) => {
+    if (!payload?.serviceId) {
+        return;
+    }
+
+    if (payload.senderId && payload.senderId === store.userData?.id) {
+        return;
+    }
+
+    playNotificationSound();
+
+    if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        showNativeNotification(payload);
+    }
+
+    showChatToast(payload);
+};
+
+const connectNotificationSocket = () => {
+    if (socket.value || !authStore.token || !canAccessChat.value) {
+        return;
+    }
+
+    socket.value = io(socketUrl.value, {
+        auth: { token: authStore.token },
+        transports: ['websocket'],
+    });
+
+    socket.value.on('serviceChat:notify', handleChatNotification);
+    socket.value.on('serviceChat:error', (payload: { message?: string }) => {
+        if (payload?.message) {
+            toast.add({ severity: 'error', summary: payload.message });
+        }
+    });
+};
+
+const disconnectNotificationSocket = () => {
+    if (socket.value) {
+        socket.value.disconnect();
+        socket.value = null;
+    }
+};
+
+const handleChatToastOpen = (serviceId: string) => {
+    toast.removeGroup('chat');
+    chatToastServiceId.value = null;
+
+    if (!serviceId) {
+        return;
+    }
+
+    router.push({ name: 'services-default', query: { chatServiceId: serviceId } });
+};
+
+const closeChatToast = () => {
+    toast.removeGroup('chat');
+    chatToastServiceId.value = null;
+};
+
 onMounted(() => {
     notificationSupported.value = isNotificationSupported();
     if (notificationSupported.value) {
         notificationPermission.value = Notification.permission;
     }
+});
+
+watch(
+    () => [authStore.token, canAccessChat.value],
+    ([token, allowed]) => {
+        if (token && allowed) {
+            connectNotificationSocket();
+            return;
+        }
+        disconnectNotificationSocket();
+    },
+    { immediate: true },
+);
+
+onBeforeUnmount(() => {
+    disconnectNotificationSocket();
 });
 </script>
 
@@ -85,6 +272,7 @@ onMounted(() => {
             </header>
 
             <RouterView />
+            <MyChatToast :service-id="chatToastServiceId" @open="handleChatToastOpen" @close="closeChatToast" />
         </main>
     </div>
 </template>
