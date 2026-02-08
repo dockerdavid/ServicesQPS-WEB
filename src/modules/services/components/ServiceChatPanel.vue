@@ -43,17 +43,11 @@ const serviceTitle = computed(() => {
   return `${communityName}${unitNumber}`;
 });
 
-const isAdmin = computed(() => userStore.userData?.roleId === '1');
-const isQa = computed(() => userStore.userData?.roleId === '7');
 const isChatOpen = computed(() =>
-  isAdmin.value || isQa.value || isChatOpenStatus(statusId.value ?? props.service?.statusId ?? null),
+  isChatOpenStatus(statusId.value ?? props.service?.statusId ?? null),
 );
 
 const chatStatusMessage = computed(() => {
-  if (isAdmin.value || isQa.value) {
-    return '';
-  }
-
   if (messages.value.some((message) => message.userId === '0')) {
     return '';
   }
