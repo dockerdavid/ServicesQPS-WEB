@@ -71,7 +71,7 @@ const props = withDefaults(defineProps<InputGroupProps>(), {
 });
 
 
-const model = defineModel<string | number | undefined>();
+const model = defineModel<string | number | null | undefined>();
 
 const modelValue = computed({
     get() {

@@ -14,7 +14,7 @@ export interface RecurringService {
   daysOfWeek: string[];
   extraIds?: string[] | null;
   startDate: string;
-  isActive: boolean;
+  isActive: boolean | number;
   community?: { communityName?: string | null };
   type?: { cleaningType?: string | null; description?: string | null };
   status?: { statusName?: string | null };

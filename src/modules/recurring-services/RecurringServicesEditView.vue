@@ -210,8 +210,7 @@ const loadOptions = async () => {
 };
 
 const fillInitialData = (recurring: RecurringService) => {
-  const normalizedActive =
-    recurring.isActive === true || recurring.isActive === 1 || recurring.isActive === '1';
+  const normalizedActive = recurring.isActive === true || recurring.isActive === 1;
 
   updatedRecurring.value = {
     communityId: recurring.communityId,

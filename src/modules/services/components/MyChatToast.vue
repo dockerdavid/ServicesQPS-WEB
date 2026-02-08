@@ -13,7 +13,7 @@
             icon="pi pi-comments"
             label="Open chat"
             severity="info"
-            @click="handleOpen(slotProps.message.data?.serviceId)"
+            @click="handleOpen"
           />
           <Button label="Dismiss" variant="text" severity="secondary" @click="$emit('close')" />
         </div>
@@ -25,13 +25,14 @@
 <script setup lang="ts">
 import { Button, Toast } from 'primevue';
 
+const props = defineProps<{ serviceId?: string | null }>();
 const emit = defineEmits(['open', 'close']);
 
-const handleOpen = (serviceId?: string) => {
-  if (!serviceId) {
+const handleOpen = () => {
+  if (!props.serviceId) {
     emit('close');
     return;
   }
-  emit('open', serviceId);
+  emit('open', props.serviceId);
 };
 </script>

@@ -65,7 +65,11 @@ const headers = [
             <div class="flex flex-wrap items-center justify-between gap-3 w-full">
                 <IconField>
                     <InputIcon class="pi pi-search" />
-                    <InputText :modelValue="searchWord" @update:modelValue="setSearchWord" placeholder="Search" />
+                    <InputText
+                        :modelValue="searchWord"
+                        @update:modelValue="(value) => setSearchWord(value ?? '')"
+                        placeholder="Search"
+                    />
                     <InputIcon v-if="searchWord" class="pi pi-times cursor-pointer text-gray-500 hover:text-black"
                         @click="clearSearch" />
                 </IconField>
