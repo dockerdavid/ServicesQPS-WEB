@@ -168,8 +168,8 @@ const getAllUsers = async () => {
         currentPage++;
     }
     
-    // Filter only users with roleId "4" (Cleaners)
-    const cleanersOnly = allUsers.filter(user => user.roleId === "4");
+    // Filter only users with roleId "4" (Cleaners) or "7" (QA)
+    const cleanersOnly = allUsers.filter(user => user.roleId === "4" || user.roleId === "7");
     
     return {
         data: cleanersOnly,
@@ -328,8 +328,8 @@ onMounted(async () => {
                     optionValue="value" placeholder="Select extras" class="w-full md:w-80" />
             </fieldset>
 
-            <!-- Campo: Limpiador -->
-            <MyInputGroup v-if="userStore.userData?.roleId === '1'" :required="false" v-model="newService.userId" label="Cleaner" inputId="userId"
+            <!-- Campo: Limpiador / QA -->
+            <MyInputGroup v-if="userStore.userData?.roleId === '1'" :required="false" v-model="newService.userId" label="Cleaner / QA" inputId="userId"
                 inputType="select" :options="cleaners.data.map((c) => ({ label: c.name, value: c.id }))"
                 :is-form-submitted="isFormSubmitted" />
 
