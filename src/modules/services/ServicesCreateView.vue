@@ -71,6 +71,9 @@ const hasLoadedOptions = ref(false);
 
 
 const loadOptions = async () => {
+    if (!authStore.token) {
+        return;
+    }
     // Fetch all data with pagination handling
     const [allCommunities, allStatuses, allExtras, allUsers, activeIds] = await Promise.all([
         getAllCommunities(),

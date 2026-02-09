@@ -11,6 +11,7 @@ import MyChatToast from '../modules/services/components/MyChatToast.vue';
 import { useSidebarStore } from '../store/sidebar.store';
 import { useAuthStore } from '../store/auth.store';
 import { useUserStore } from '../store/user.store';
+import { UsersServices } from '../modules/users/users.services';
 import {
     isNotificationSupported,
     getNotificationPermission,
@@ -57,6 +58,29 @@ const canRequestNotifications = computed(
 
 const requestNotifications = async () => {
     notificationPermission.value = await requestNotificationPermission();
+};
+
+const hydrateUserFromToken = async () => {
+    if (store.userData || !authStore.token) {
+        return;
+    }
+
+    try {
+        const parts = authStore.token.split('.');
+        if (parts.length < 2) {
+            return;
+        }
+        const payloadJson = atob(parts[1].replace(/-/g, '+').replace(/_/g, '/'));
+        const payload = JSON.parse(payloadJson);
+        const userId = payload?.id;
+        if (!userId) {
+            return;
+        }
+        const user = await UsersServices.getUserById(String(userId));
+        store.setUserData(user);
+    } catch (error) {
+        // ignore decode errors
+    }
 };
 
 const canAccessChat = computed(() => {
@@ -216,6 +240,7 @@ onMounted(() => {
     if (notificationSupported.value) {
         notificationPermission.value = Notification.permission;
     }
+    hydrateUserFromToken();
 });
 
 watch(

@@ -199,6 +199,9 @@ const getTypesByCommunity = async (communityId: string) => {
 };
 
 const loadOptions = async () => {
+  if (!authStore.token) {
+    return;
+  }
   const [allCommunities, allStatuses, allExtras, allUsers, activeIds] = await Promise.all([
     getAllCommunities(),
     getAllStatuses(),

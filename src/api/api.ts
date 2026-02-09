@@ -14,8 +14,23 @@ export const apiServicesQps = axios.create({
 });
 
 apiServicesQps.interceptors.request.use(async function (config: InternalAxiosRequestConfig) {
-    const { token } = useAuthStore();
-    
+    const { token: storeToken } = useAuthStore();
+    let token = storeToken;
+
+    if (!token && typeof window !== 'undefined') {
+        try {
+            const raw = window.localStorage.getItem('auth');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed?.userToken) {
+                    token = parsed.userToken;
+                }
+            }
+        } catch (error) {
+            // ignore localStorage errors
+        }
+    }
+
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -32,5 +47,4 @@ apiServicesQps.interceptors.response.use((response) => {
 }, (error) => {
     return Promise.reject(error)
 })
-
 

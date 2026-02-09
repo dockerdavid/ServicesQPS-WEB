@@ -212,6 +212,9 @@ const updateService = async () => {
 };
 
 const loadInitialData = async () => {
+  if (!authStore.token) {
+    return;
+  }
   const [allCommunities, allStatuses, allExtras, allUsers, initialData, activeIds] = await Promise.all([
     getAllCommunities(),
     getAllStatuses(),
