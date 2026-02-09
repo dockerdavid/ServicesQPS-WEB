@@ -74,6 +74,7 @@ const typesByCommunity = ref<TypeByCommunity[]>([]);
 const statuses = ref<Statuses>(genericNullObject);
 const extras = ref<Extras>(genericNullObject);
 const cleaners = ref<Users>(genericNullObject);
+const activeAssigneeIds = ref<Set<string>>(new Set());
 
 const communityOptions = computed(() => {
   return communities.value.data.map((community) => {
@@ -112,12 +113,20 @@ const extrasOptions = computed(() => {
 });
 
 const cleanerOptions = computed(() => {
-  return cleaners.value.data.map((cleaner) => {
-    return {
-      label: cleaner.name,
-      value: cleaner.id,
-    };
+  const activeSet = activeAssigneeIds.value;
+  const sorted = [...cleaners.value.data].sort((a, b) => {
+    const aActive = activeSet.has(a.id);
+    const bActive = activeSet.has(b.id);
+    if (aActive !== bActive) {
+      return aActive ? -1 : 1;
+    }
+    return a.name.localeCompare(b.name);
   });
+
+  return sorted.map((cleaner) => ({
+    label: `${cleaner.name} (${activeSet.has(cleaner.id) ? 'active' : 'inactive'})`,
+    value: cleaner.id,
+  }));
 });
 
 const unitSizeOptions = [
@@ -200,18 +209,20 @@ const updateService = async () => {
 };
 
 const loadInitialData = async () => {
-  const [allCommunities, allStatuses, allExtras, allUsers, initialData] = await Promise.all([
+  const [allCommunities, allStatuses, allExtras, allUsers, initialData, activeIds] = await Promise.all([
     getAllCommunities(),
     getAllStatuses(),
     getAllExtras(),
     getAllUsers(),
-    CleanersServices.getServiceById(entityId)
+    CleanersServices.getServiceById(entityId),
+    UsersServices.getActiveAssigneeIds(3),
   ]);
 
   communities.value = allCommunities;
   statuses.value = allStatuses;
   extras.value = allExtras;
   cleaners.value = allUsers;
+  activeAssigneeIds.value = new Set(activeIds);
   fillInitialData(initialData);
 };
 

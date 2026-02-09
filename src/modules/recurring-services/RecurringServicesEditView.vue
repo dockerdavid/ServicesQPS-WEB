@@ -76,6 +76,8 @@ const typesByCommunity = ref<TypeByCommunity[]>([]);
 const statuses = ref<Statuses>({ data: [], meta: genericNullObject.meta });
 const extras = ref<Extras>({ data: [], meta: genericNullObject.meta });
 const cleaners = ref<Users>({ data: [], meta: genericNullObject.meta });
+const activeAssigneeIds = ref<Set<string>>(new Set());
+const assigneeOptions = ref<{ label: string; value: string }[]>([]);
 
 const startDateValue = ref<string>('');
 const startDateLabel = computed(() =>
@@ -194,11 +196,12 @@ const getTypesByCommunity = async (communityId: string) => {
 };
 
 const loadOptions = async () => {
-  const [allCommunities, allStatuses, allExtras, allUsers] = await Promise.all([
+  const [allCommunities, allStatuses, allExtras, allUsers, activeIds] = await Promise.all([
     getAllCommunities(),
     getAllStatuses(),
     getAllExtras(),
     getAllUsers(),
+    UsersServices.getActiveAssigneeIds(3),
   ]);
 
   communities.value = allCommunities.data.sort((a, b) =>
@@ -207,7 +210,29 @@ const loadOptions = async () => {
   statuses.value = allStatuses;
   extras.value = allExtras;
   cleaners.value = allUsers;
+  activeAssigneeIds.value = new Set(activeIds);
 };
+
+watch(
+  () => [cleaners.value.data, activeAssigneeIds.value],
+  () => {
+    const activeSet = activeAssigneeIds.value;
+    const sorted = [...cleaners.value.data].sort((a, b) => {
+      const aActive = activeSet.has(a.id);
+      const bActive = activeSet.has(b.id);
+      if (aActive !== bActive) {
+        return aActive ? -1 : 1;
+      }
+      return a.name.localeCompare(b.name);
+    });
+
+    assigneeOptions.value = sorted.map((cleaner) => ({
+      label: `${cleaner.name} (${activeSet.has(cleaner.id) ? 'active' : 'inactive'})`,
+      value: cleaner.id,
+    }));
+  },
+  { immediate: true, deep: true },
+);
 
 const fillInitialData = (recurring: RecurringService) => {
   const normalizedActive = recurring.isActive === true || recurring.isActive === 1;
@@ -397,7 +422,7 @@ onMounted(async () => {
         label="Cleaner / QA"
         inputId="userId"
         inputType="select"
-        :options="cleaners.data.map((c) => ({ label: c.name, value: c.id }))"
+        :options="assigneeOptions"
         :required="false"
         :is-form-submitted="isFormSubmitted"
       />

@@ -92,6 +92,15 @@ export class UsersServices {
         }
     }
 
+    static async getActiveAssigneeIds(months: number = 3): Promise<string[]> {
+        try {
+            const { data } = await apiServicesQps.get(`/services/active-assignees?months=${months}`);
+            return Array.isArray(data?.userIds) ? data.userIds : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
     static async updateUser(userId: string, changedValue: NewUser) {
         if (!userId) return;
         const store = useGlobalStateStore();

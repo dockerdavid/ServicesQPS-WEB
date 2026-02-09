@@ -64,21 +64,24 @@ const typesByCommunity = ref<TypeByCommunity[]>([]);
 const statuses = ref<Statuses>({ data: [], meta: genericNullObject.meta });
 const extras = ref<Extras>({ data: [], meta: genericNullObject.meta });
 const cleaners = ref<Users>({ data: [], meta: genericNullObject.meta });
+const activeAssigneeIds = ref<Set<string>>(new Set());
 
 
 const loadOptions = async () => {
     // Fetch all data with pagination handling
-    const [allCommunities, allStatuses, allExtras, allUsers] = await Promise.all([
+    const [allCommunities, allStatuses, allExtras, allUsers, activeIds] = await Promise.all([
         getAllCommunities(),
         getAllStatuses(),
         getAllExtras(),
         getAllUsers(),
+        UsersServices.getActiveAssigneeIds(3),
     ]);
     
     communities.value = allCommunities.data.sort((a, b) => a.communityName.localeCompare(b.communityName));
     statuses.value = allStatuses;
     extras.value = allExtras;
     cleaners.value = allUsers;
+    activeAssigneeIds.value = new Set(activeIds);
 };
 
 const getAllCommunities = async () => {
@@ -190,6 +193,29 @@ const getTypesByCommunity = async (communityId: string) => {
         typesByCommunity.value = types;
     }
 };
+
+const assigneeOptions = ref<{ label: string; value: string }[]>([]);
+
+watch(
+    () => [cleaners.value.data, activeAssigneeIds.value],
+    () => {
+        const activeSet = activeAssigneeIds.value;
+        const sorted = [...cleaners.value.data].sort((a, b) => {
+            const aActive = activeSet.has(a.id);
+            const bActive = activeSet.has(b.id);
+            if (aActive !== bActive) {
+                return aActive ? -1 : 1;
+            }
+            return a.name.localeCompare(b.name);
+        });
+
+        assigneeOptions.value = sorted.map((cleaner) => ({
+            label: `${cleaner.name} (${activeSet.has(cleaner.id) ? 'active' : 'inactive'})`,
+            value: cleaner.id,
+        }));
+    },
+    { immediate: true, deep: true },
+);
 
 
 watch(
@@ -330,7 +356,7 @@ onMounted(async () => {
 
             <!-- Campo: Limpiador / QA -->
             <MyInputGroup v-if="userStore.userData?.roleId === '1'" :required="false" v-model="newService.userId" label="Cleaner / QA" inputId="userId"
-                inputType="select" :options="cleaners.data.map((c) => ({ label: c.name, value: c.id }))"
+                inputType="select" :options="assigneeOptions"
                 :is-form-submitted="isFormSubmitted" />
 
             <!-- Campo: Comentario -->
