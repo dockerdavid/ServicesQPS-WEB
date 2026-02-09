@@ -21,10 +21,12 @@ import type { Users } from '../../../src/interfaces/users/users.interface';
 import genericNullObject from '../../../src/utils/null-data-meta';
 import router from '../../../src/router';
 import { useUserStore } from '../../../src/store/user.store';
+import { useAuthStore } from '../../../src/store/auth.store';
 
 const toast = useToast();
 
 const userStore = useUserStore();
+const authStore = useAuthStore();
 
 const breadcrumbRoutes = [
     { label: 'Services', to: { name: 'services-default' } },
@@ -65,6 +67,7 @@ const statuses = ref<Statuses>({ data: [], meta: genericNullObject.meta });
 const extras = ref<Extras>({ data: [], meta: genericNullObject.meta });
 const cleaners = ref<Users>({ data: [], meta: genericNullObject.meta });
 const activeAssigneeIds = ref<Set<string>>(new Set());
+const hasLoadedOptions = ref(false);
 
 
 const loadOptions = async () => {
@@ -82,6 +85,7 @@ const loadOptions = async () => {
     extras.value = allExtras;
     cleaners.value = allUsers;
     activeAssigneeIds.value = new Set(activeIds);
+    hasLoadedOptions.value = true;
 };
 
 const getAllCommunities = async () => {
@@ -307,6 +311,16 @@ const clearForm = () => {
 onMounted(async () => {
     await loadOptions();
 });
+
+watch(
+    () => authStore.token,
+    async (token) => {
+        if (!token || hasLoadedOptions.value) {
+            return;
+        }
+        await loadOptions();
+    },
+);
 </script>
 
 <template>

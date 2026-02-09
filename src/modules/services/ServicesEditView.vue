@@ -19,6 +19,7 @@ import type { Extras } from '../../interfaces/extras/extras.interface';
 import type { Users } from '../../interfaces/users/users.interface';
 import genericNullObject from '../../utils/null-data-meta';
 import { useUserStore } from '../../../src/store/user.store';
+import { useAuthStore } from '../../../src/store/auth.store';
 
 const toast = useToast();
 const route = useRoute();
@@ -26,6 +27,7 @@ const router = useRouter();
 const entityId = route.params.id as string;
 
 const userStore = useUserStore();
+const authStore = useAuthStore();
 
 const breadcrumbRoutes = [
   { label: 'Services', to: { name: 'services-default' } },
@@ -75,6 +77,7 @@ const statuses = ref<Statuses>(genericNullObject);
 const extras = ref<Extras>(genericNullObject);
 const cleaners = ref<Users>(genericNullObject);
 const activeAssigneeIds = ref<Set<string>>(new Set());
+const hasLoadedOptions = ref(false);
 
 const communityOptions = computed(() => {
   return communities.value.data.map((community) => {
@@ -224,6 +227,7 @@ const loadInitialData = async () => {
   cleaners.value = allUsers;
   activeAssigneeIds.value = new Set(activeIds);
   fillInitialData(initialData);
+  hasLoadedOptions.value = true;
 };
 
 const getAllCommunities = async () => {
@@ -342,6 +346,16 @@ const deleteCurrentService = async () => {
 onMounted(async () => {
   await loadInitialData();
 });
+
+watch(
+  () => authStore.token,
+  async (token) => {
+    if (!token || hasLoadedOptions.value) {
+      return;
+    }
+    await loadInitialData();
+  },
+);
 </script>
 
 <template>

@@ -21,11 +21,13 @@ import type { Users } from '../../../src/interfaces/users/users.interface';
 import type { NewRecurringService, RecurringService } from '../../interfaces/recurring-services/recurring-services.interface';
 import genericNullObject from '../../../src/utils/null-data-meta';
 import { useUserStore } from '../../../src/store/user.store';
+import { useAuthStore } from '../../../src/store/auth.store';
 
 const toast = useToast();
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
+const authStore = useAuthStore();
 
 const entityId = route.params.id as string;
 
@@ -78,6 +80,7 @@ const extras = ref<Extras>({ data: [], meta: genericNullObject.meta });
 const cleaners = ref<Users>({ data: [], meta: genericNullObject.meta });
 const activeAssigneeIds = ref<Set<string>>(new Set());
 const assigneeOptions = ref<{ label: string; value: string }[]>([]);
+const hasLoadedOptions = ref(false);
 
 const startDateValue = ref<string>('');
 const startDateLabel = computed(() =>
@@ -211,6 +214,7 @@ const loadOptions = async () => {
   extras.value = allExtras;
   cleaners.value = allUsers;
   activeAssigneeIds.value = new Set(activeIds);
+  hasLoadedOptions.value = true;
 };
 
 watch(
@@ -330,6 +334,16 @@ const loadInitialData = async () => {
 onMounted(async () => {
   await loadInitialData();
 });
+
+watch(
+  () => authStore.token,
+  async (token) => {
+    if (!token || hasLoadedOptions.value) {
+      return;
+    }
+    await loadInitialData();
+  },
+);
 </script>
 
 <template>

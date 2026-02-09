@@ -21,9 +21,11 @@ import type { NewRecurringService } from '../../interfaces/recurring-services/re
 import genericNullObject from '../../../src/utils/null-data-meta';
 import router from '../../../src/router';
 import { useUserStore } from '../../../src/store/user.store';
+import { useAuthStore } from '../../../src/store/auth.store';
 
 const toast = useToast();
 const userStore = useUserStore();
+const authStore = useAuthStore();
 
 const breadcrumbRoutes = [
   { label: 'Recurring Services', to: { name: 'recurring-services-default' } },
@@ -74,6 +76,7 @@ const extras = ref<Extras>({ data: [], meta: genericNullObject.meta });
 const cleaners = ref<Users>({ data: [], meta: genericNullObject.meta });
 const activeAssigneeIds = ref<Set<string>>(new Set());
 const assigneeOptions = ref<{ label: string; value: string }[]>([]);
+const hasLoadedOptions = ref(false);
 
 const nextWeekStartLabel = computed(() =>
   moment().startOf('isoWeek').add(1, 'week').format('MM/DD/YYYY'),
@@ -204,6 +207,7 @@ const loadOptions = async () => {
   extras.value = allExtras;
   cleaners.value = allUsers;
   activeAssigneeIds.value = new Set(activeIds);
+  hasLoadedOptions.value = true;
 };
 
 watch(
@@ -312,6 +316,16 @@ const clearForm = () => {
 onMounted(async () => {
   await loadOptions();
 });
+
+watch(
+  () => authStore.token,
+  async (token) => {
+    if (!token || hasLoadedOptions.value) {
+      return;
+    }
+    await loadOptions();
+  },
+);
 </script>
 
 <template>
