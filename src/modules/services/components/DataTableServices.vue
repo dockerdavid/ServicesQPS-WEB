@@ -87,6 +87,16 @@ const canAccessChat = computed(() => {
         || roleName === 'cleaner';
 });
 
+const canManageService = (service: ExternalService) => {
+    const roleId = store.userData?.roleId ?? '';
+    const currentUserId = store.userData?.id ?? '';
+    const isAssignedToCurrentUser = service.userId === currentUserId;
+
+    if (roleId === '4') return true;
+    if (roleId === '7') return isAssignedToCurrentUser;
+    return false;
+};
+
 const showDeleteToast = (item: Service) => {
     itemToDelete.value = item;
     toast.add({
@@ -242,7 +252,7 @@ watch(
                     </template>
                 </Column>
 
-                <Column v-if="!props.lockEdit && store.userData?.roleId !== '4'" field="actions" style="width: 25%">
+                <Column v-if="!props.lockEdit && store.userData?.roleId !== '4' && store.userData?.roleId !== '7'" field="actions" style="width: 25%">
                     <template #body="{ data }">
                         <div class="flex justify-around">
                             <Button variant="text" icon="pi pi-pencil" severity="warn" label="Edit"
@@ -253,17 +263,17 @@ watch(
                     </template>
                 </Column>
 
-                <Column v-if="store.userData?.roleId === '4'" field="actions" style="width: 25%">
+                <Column v-if="store.userData?.roleId === '4' || store.userData?.roleId === '7'" field="actions" style="width: 25%">
                     <template #body="{ data }: { data: ExternalService }">
                         <div class="flex justify-around">
 
-                            <Button v-if="data.statusId == '2'" variant="text" icon="pi pi-check" severity="warn"
+                            <Button v-if="data.statusId == '2' && canManageService(data)" variant="text" icon="pi pi-check" severity="warn"
                                 label="Accept" @click="showToastByAction(data, '3')" />
 
-                            <Button v-if="data.statusId === '2'" variant="text" icon="pi pi-times" severity="danger"
+                            <Button v-if="data.statusId === '2' && canManageService(data)" variant="text" icon="pi pi-times" severity="danger"
                                 label="Reject" @click="showToastByAction(data, '4')" />
 
-                            <Button v-if="data.statusId === '3'" variant="text" icon="pi pi-verified" severity="warn"
+                            <Button v-if="data.statusId === '3' && canManageService(data)" variant="text" icon="pi pi-verified" severity="warn"
                                 label="Complete" @click="showToastByAction(data, '5')" />
                         </div>
                     </template>
