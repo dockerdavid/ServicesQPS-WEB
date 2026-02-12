@@ -29,6 +29,18 @@ const app = createApp(App);
 
 app.component('Icon', Icon);
 
+// Evitar pantalla en blanco: mostrar mensaje si algo falla al renderizar
+app.config.errorHandler = (err, _instance, info) => {
+  const el = document.getElementById('app');
+  if (el && !el.querySelector('[data-error-fallback]')) {
+    const div = document.createElement('div');
+    div.setAttribute('data-error-fallback', 'true');
+    div.innerHTML = '<p><strong>Error al cargar la aplicación.</strong></p><p>Prueba: F12 → pestaña Application → Storage → Clear site data, luego recarga.</p>';
+    div.style.cssText = 'padding: 2rem; font-family: sans-serif; max-width: 32rem;';
+    el.appendChild(div);
+  }
+};
+
 app.use(pinia)
    .use(router)
    .use(PrimeVue, {
