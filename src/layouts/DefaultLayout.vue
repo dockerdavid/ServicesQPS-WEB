@@ -11,6 +11,7 @@ import MyChatToast from '../modules/services/components/MyChatToast.vue';
 import { useSidebarStore } from '../store/sidebar.store';
 import { useAuthStore } from '../store/auth.store';
 import { useUserStore } from '../store/user.store';
+import { useChatNotificationsStore } from '../store/chat-notifications.store';
 import { UsersServices } from '../modules/users/users.services';
 import {
     isNotificationSupported,
@@ -18,10 +19,12 @@ import {
     requestNotificationPermission,
     showWebNotification,
 } from '../utils/web-notifications';
+import type { ServiceChatNotificationPayload } from '../interfaces/chat/service-chat-notification.interface';
 
 const sidebarState = useSidebarStore();
 const store = useUserStore();
 const authStore = useAuthStore();
+const chatNotificationsStore = useChatNotificationsStore();
 const toast = useToast();
 
 // Referencia al componente Popover (no un booleano)
@@ -32,6 +35,7 @@ const toggle = (event: any) => {
 };
 
 const signOut = () => {
+    chatNotificationsStore.clearAll();
     useAuthStore().removeToken();
     useUserStore().removeUserData();
     router.push('/auth');
@@ -42,19 +46,11 @@ const notificationSupported = ref(false);
 const chatToastServiceId = ref<string | null>(null);
 const socket = ref<Socket | null>(null);
 
-interface ChatNotificationPayload {
-    serviceId: string;
-    senderId: string;
-    senderName: string;
-    message: string | null;
-    hasAttachment: boolean;
-    communityName: string | null;
-    unitNumber: string | null;
-}
-
 const canRequestNotifications = computed(
     () => notificationSupported.value && notificationPermission.value === 'default',
 );
+
+const chatNotificationCount = computed(() => chatNotificationsStore.totalCount);
 
 const requestNotifications = async () => {
     notificationPermission.value = await requestNotificationPermission();
@@ -94,6 +90,12 @@ const canAccessChat = computed(() => {
         || roleName === 'cleaner';
 });
 
+const canAccessChatHub = computed(() => {
+    const roleId = store.userData?.roleId ?? '';
+    const roleName = store.userData?.role?.name?.toLowerCase() ?? '';
+    return roleId === '1' || roleId === '7' || roleName === 'super_admin' || roleName === 'qa';
+});
+
 const socketUrl = computed(() => {
     const baseUrl = import.meta.env.VITE_API_URL as string;
     return baseUrl?.replace(/\/$/, '');
@@ -130,7 +132,7 @@ const truncateText = (value: string, maxLength: number) => {
     return `${value.slice(0, maxLength - 3)}...`;
 };
 
-const buildChatPreview = (payload: ChatNotificationPayload) => {
+const buildChatPreview = (payload: ServiceChatNotificationPayload) => {
     const baseMessage = payload.message?.trim() ?? '';
     if (baseMessage) {
         return truncateText(baseMessage, 120);
@@ -139,7 +141,7 @@ const buildChatPreview = (payload: ChatNotificationPayload) => {
     return payload.hasAttachment ? 'Sent an attachment.' : 'Sent a new message.';
 };
 
-const showNativeNotification = (payload: ChatNotificationPayload) => {
+const showNativeNotification = (payload: ServiceChatNotificationPayload) => {
     if (!isNotificationSupported() || getNotificationPermission() !== 'granted') {
         return;
     }
@@ -160,7 +162,7 @@ const showNativeNotification = (payload: ChatNotificationPayload) => {
     });
 };
 
-const showChatToast = (payload: ChatNotificationPayload) => {
+const showChatToast = (payload: ServiceChatNotificationPayload) => {
     const sender = payload.senderName || 'Someone';
     const community = payload.communityName || 'Service';
     const unit = payload.unitNumber ? ` · Unit ${payload.unitNumber}` : '';
@@ -176,13 +178,29 @@ const showChatToast = (payload: ChatNotificationPayload) => {
     });
 };
 
-const handleChatNotification = (payload: ChatNotificationPayload) => {
+const shouldCountChatNotification = (payload: ServiceChatNotificationPayload) => {
+    const current = router.currentRoute.value;
+    if (current?.name === 'chat') {
+        const activeServiceId = String((current.params as any)?.serviceId ?? '');
+        if (activeServiceId && activeServiceId === payload.serviceId) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+const handleChatNotification = (payload: ServiceChatNotificationPayload) => {
     if (!payload?.serviceId) {
         return;
     }
 
     if (payload.senderId && payload.senderId === store.userData?.id) {
         return;
+    }
+
+    if (shouldCountChatNotification(payload)) {
+        chatNotificationsStore.add(payload);
     }
 
     playNotificationSound();
@@ -227,7 +245,40 @@ const handleChatToastOpen = (serviceId: string) => {
         return;
     }
 
+    if (canAccessChatHub.value) {
+        router.push({ name: 'chat', params: { serviceId } });
+        return;
+    }
+
     router.push({ name: 'services-default', query: { chatServiceId: serviceId } });
+};
+
+const openChatFromBell = () => {
+    if (!canAccessChat.value) {
+        return;
+    }
+
+    const serviceId =
+        chatNotificationsStore.lastNotifiedServiceId
+        ?? Object.keys(chatNotificationsStore.countsByServiceId).slice(-1)[0]
+        ?? null;
+
+    if (serviceId) {
+        if (canAccessChatHub.value) {
+            router.push({ name: 'chat', params: { serviceId } });
+            return;
+        }
+
+        router.push({ name: 'services-default', query: { chatServiceId: serviceId } });
+        return;
+    }
+
+    if (canAccessChatHub.value) {
+        router.push({ name: 'chat' });
+        return;
+    }
+
+    router.push({ name: 'services-default' });
 };
 
 const closeChatToast = () => {
@@ -281,6 +332,14 @@ onBeforeUnmount(() => {
                         severity="secondary"
                         @click="requestNotifications"
                     />
+                    <Button v-if="canAccessChat" class="bell-button" unstyled @click="openChatFromBell">
+                        <div class="bell-button__icon">
+                            <Icon icon="ph:bell" />
+                            <span v-if="chatNotificationCount > 0" class="bell-button__badge">
+                                {{ chatNotificationCount }}
+                            </span>
+                        </div>
+                    </Button>
                     <Button class="avatar-button" unstyled @click="toggle">
                         <Avatar
                             :label="store.userData?.name?.charAt(0).toUpperCase() ?? '?'"
@@ -371,6 +430,54 @@ onBeforeUnmount(() => {
 
         .avatar-button:hover {
             box-shadow: var(--shadow-tight);
+        }
+
+        .bell-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 999px;
+            border: 1px solid var(--border-soft);
+            background: #ffffff;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .bell-button:hover {
+            background: var(--accent-100);
+            box-shadow: var(--shadow-tight);
+        }
+
+        .bell-button__icon {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bell-button__icon .iconify {
+            font-size: 1.35rem;
+            color: var(--ink-700);
+        }
+
+        .bell-button__badge {
+            position: absolute;
+            top: -0.35rem;
+            right: -0.55rem;
+            min-width: 1.25rem;
+            height: 1.25rem;
+            padding: 0 0.35rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: #ef4444;
+            color: #ffffff;
+            font-size: 0.72rem;
+            line-height: 1;
+            font-weight: 700;
+            border: 2px solid #ffffff;
         }
 
         .notify-button {

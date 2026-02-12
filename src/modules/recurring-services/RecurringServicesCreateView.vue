@@ -74,7 +74,6 @@ const typesByCommunity = ref<TypeByCommunity[]>([]);
 const statuses = ref<Statuses>({ data: [], meta: genericNullObject.meta });
 const extras = ref<Extras>({ data: [], meta: genericNullObject.meta });
 const cleaners = ref<Users>({ data: [], meta: genericNullObject.meta });
-const activeAssigneeIds = ref<Set<string>>(new Set());
 const assigneeOptions = ref<{ label: string; value: string }[]>([]);
 const hasLoadedOptions = ref(false);
 
@@ -163,7 +162,7 @@ const getAllUsers = async () => {
   let hasNextPage = true;
 
   while (hasNextPage) {
-    const response = await UsersServices.getUsers(currentPage, 50);
+    const response = await UsersServices.getUsers(currentPage, 50, false, true);
     allUsers = [...allUsers, ...response.data];
     hasNextPage = response.meta.hasNextPage;
     currentPage++;
@@ -195,12 +194,11 @@ const loadOptions = async () => {
   if (!authStore.token) {
     return;
   }
-  const [allCommunities, allStatuses, allExtras, allUsers, activeIds] = await Promise.all([
+  const [allCommunities, allStatuses, allExtras, allUsers] = await Promise.all([
     getAllCommunities(),
     getAllStatuses(),
     getAllExtras(),
     getAllUsers(),
-    UsersServices.getActiveAssigneeIds(3),
   ]);
 
   communities.value = allCommunities.data.sort((a, b) =>
@@ -209,27 +207,15 @@ const loadOptions = async () => {
   statuses.value = allStatuses;
   extras.value = allExtras;
   cleaners.value = allUsers;
-  activeAssigneeIds.value = new Set(activeIds);
   hasLoadedOptions.value = true;
 };
 
 watch(
-  () => [cleaners.value.data, activeAssigneeIds.value],
+  () => cleaners.value.data,
   () => {
-    const activeSet = activeAssigneeIds.value;
-    const sorted = [...cleaners.value.data].sort((a, b) => {
-      const aActive = activeSet.has(a.id);
-      const bActive = activeSet.has(b.id);
-      if (aActive !== bActive) {
-        return aActive ? -1 : 1;
-      }
-      return a.name.localeCompare(b.name);
-    });
-
-    assigneeOptions.value = sorted.map((cleaner) => ({
-      label: `${cleaner.name} (${activeSet.has(cleaner.id) ? 'active' : 'inactive'})`,
-      value: cleaner.id,
-    }));
+    assigneeOptions.value = [...cleaners.value.data]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((cleaner) => ({ label: cleaner.name, value: cleaner.id }));
   },
   { immediate: true, deep: true },
 );

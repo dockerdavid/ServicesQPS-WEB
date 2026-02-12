@@ -76,7 +76,6 @@ const typesByCommunity = ref<TypeByCommunity[]>([]);
 const statuses = ref<Statuses>(genericNullObject);
 const extras = ref<Extras>(genericNullObject);
 const cleaners = ref<Users>(genericNullObject);
-const activeAssigneeIds = ref<Set<string>>(new Set());
 const hasLoadedOptions = ref(false);
 
 const communityOptions = computed(() => {
@@ -115,22 +114,11 @@ const extrasOptions = computed(() => {
   });
 });
 
-const cleanerOptions = computed(() => {
-  const activeSet = activeAssigneeIds.value;
-  const sorted = [...cleaners.value.data].sort((a, b) => {
-    const aActive = activeSet.has(a.id);
-    const bActive = activeSet.has(b.id);
-    if (aActive !== bActive) {
-      return aActive ? -1 : 1;
-    }
-    return a.name.localeCompare(b.name);
-  });
-
-  return sorted.map((cleaner) => ({
-    label: `${cleaner.name} (${activeSet.has(cleaner.id) ? 'active' : 'inactive'})`,
-    value: cleaner.id,
-  }));
-});
+const cleanerOptions = computed(() =>
+  [...cleaners.value.data]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((cleaner) => ({ label: cleaner.name, value: cleaner.id })),
+);
 
 const unitSizeOptions = [
   { label: 'N/A', value: 'N/A' },
@@ -215,20 +203,18 @@ const loadInitialData = async () => {
   if (!authStore.token) {
     return;
   }
-  const [allCommunities, allStatuses, allExtras, allUsers, initialData, activeIds] = await Promise.all([
+  const [allCommunities, allStatuses, allExtras, allUsers, initialData] = await Promise.all([
     getAllCommunities(),
     getAllStatuses(),
     getAllExtras(),
     getAllUsers(),
     CleanersServices.getServiceById(entityId),
-    UsersServices.getActiveAssigneeIds(3),
   ]);
 
   communities.value = allCommunities;
   statuses.value = allStatuses;
   extras.value = allExtras;
   cleaners.value = allUsers;
-  activeAssigneeIds.value = new Set(activeIds);
   fillInitialData(initialData);
   hasLoadedOptions.value = true;
 };
@@ -314,7 +300,7 @@ const getAllUsers = async () => {
   let hasNextPage = true;
   
   while (hasNextPage) {
-    const response = await UsersServices.getUsers(currentPage, 50);
+    const response = await UsersServices.getUsers(currentPage, 50, false, true);
     allUsers = [...allUsers, ...response.data];
     hasNextPage = response.meta.hasNextPage;
     currentPage++;

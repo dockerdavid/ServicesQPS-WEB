@@ -22,6 +22,9 @@ interface ServiceChatContext {
 }
 
 const props = defineProps<{ service: ServiceChatContext }>();
+const emit = defineEmits<{
+  (event: 'message', message: ServiceChatMessage): void;
+}>();
 
 const authStore = useAuthStore();
 const userStore = useUserStore();
@@ -82,6 +85,7 @@ const appendMessage = (message: ServiceChatMessage) => {
   }
 
   messages.value = [...messages.value, message];
+  emit('message', message);
   scrollToBottom();
 };
 

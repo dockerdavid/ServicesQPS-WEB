@@ -25,6 +25,7 @@ const roleRoutes = {
     'services-default',
     'services-create',
     'services-edit',
+    'chat',
     'statuses-default',
     'statuses-create',
     'statuses-edit',
@@ -40,6 +41,7 @@ const roleRoutes = {
     'calendar',
     'services',
     'services-default',
+    'chat',
     'notFound'
   ],
   manager: [

@@ -8,6 +8,7 @@ import { storeToRefs } from "pinia";
 import router from "../../../router";
 import { useRoute } from "vue-router";
 import { useUserStore } from "../../../store/user.store";
+import { useChatNotificationsStore } from "../../../store/chat-notifications.store";
 import {  CleanerServiceAdapterExternal, type EditService, type ExternalService, type Service } from "../../../../src/interfaces/services/services.interface";
 import MyConfirmToast from "./MyCompleteToast.vue";
 import MyAcceptToast from "./MyAcceptToast.vue";
@@ -48,6 +49,7 @@ interface TableI {
 const { isLoading } = storeToRefs(useGlobalStateStore());
 
 const store = useUserStore();
+const chatNotificationsStore = useChatNotificationsStore();
 const route = useRoute();
 
 const props = defineProps<TableI>();
@@ -85,6 +87,12 @@ const canAccessChat = computed(() => {
         || roleName === 'super_admin'
         || roleName === 'qa'
         || roleName === 'cleaner';
+});
+
+const canAccessChatHub = computed(() => {
+    const roleId = store.userData?.roleId ?? '';
+    const roleName = store.userData?.role?.name?.toLowerCase() ?? '';
+    return roleId === '1' || roleId === '7' || roleName === 'super_admin' || roleName === 'qa';
 });
 
 const canManageService = (service: ExternalService) => {
@@ -184,6 +192,14 @@ const closeToastByAction = (group: string) => {
 };
 
 const openChat = (service: Service | ExternalService) => {
+    const serviceId = String(service?.id ?? '');
+    chatNotificationsStore.clearService(serviceId);
+
+    if (serviceId && canAccessChatHub.value) {
+        router.push({ name: 'chat', params: { serviceId } });
+        return;
+    }
+
     activeChatService.value = service;
     isChatDialogOpen.value = true;
 };
@@ -195,6 +211,13 @@ const closeChat = () => {
 
 const openChatById = async (serviceId: string) => {
     if (!serviceId) {
+        return;
+    }
+
+    chatNotificationsStore.clearService(String(serviceId));
+
+    if (canAccessChatHub.value) {
+        router.push({ name: 'chat', params: { serviceId } });
         return;
     }
 

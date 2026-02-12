@@ -13,6 +13,7 @@ interface TableHeader {
     name: string;
     style?: string;
     format?: (value: any, row: any) => string;
+    slotName?: string;
 }
 
 interface TableI {
@@ -112,7 +113,10 @@ const handleExport = async (id: string) => {
                 <Column v-for="header in headers" :key="header.field" :field="header.field" :header="header.name"
                     :style="header.style">
                     <template #body="{ data: rowData }">
-                        <template v-if="header.format">
+                        <template v-if="header.slotName && $slots[header.slotName]">
+                            <slot :name="header.slotName" :row="rowData" />
+                        </template>
+                        <template v-else-if="header.format">
                             <span v-html="header.format(getNestedValue(rowData, header.field), rowData)"></span>
                         </template>
                         <template v-else>

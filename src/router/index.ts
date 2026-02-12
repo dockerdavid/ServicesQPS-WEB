@@ -182,6 +182,11 @@ const router = createRouter({
           ],
         },
         {
+          path: 'chat/:serviceId?',
+          name: 'chat',
+          component: () => import('../modules/chat/ChatView.vue'),
+        },
+        {
           path: 'statuses',
           name: 'statuses',
           component: () => import('../modules/statuses/StatusesView.vue'),

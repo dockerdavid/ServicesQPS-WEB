@@ -9,12 +9,14 @@ export class UsersServices {
 
 
 
-    static async getUsers(page: number = 1, take: number = 10, filterCleaners: boolean = false): Promise<Users> {
+    static async getUsers(page: number = 1, take: number = 10, filterCleaners: boolean = false, activeOnly: boolean = false): Promise<Users> {
         const store = useGlobalStateStore();
         store.setIsLoading(true)
 
         try {
-            const { data } = await apiServicesQps.get(`/users?page=${page}&take=${take}`)
+            const params = new URLSearchParams({ page: String(page), take: String(take) });
+            if (activeOnly) params.set('activeOnly', 'true');
+            const { data } = await apiServicesQps.get(`/users?${params}`)
 
             const filteredData = filterCleaners ? data.data.filter((user: any) => user.role.id === '4') : data.data;
             return {
@@ -112,6 +114,15 @@ export class UsersServices {
             throw new Error(error);
         } finally {
             store.setIsLoading(false);
+        }
+    }
+
+    static async updateUserIsActive(userId: string, isActive: boolean) {
+        if (!userId) return;
+        try {
+            await apiServicesQps.patch(`/users/${userId}`, { isActive });
+        } catch (error: any) {
+            throw new Error(error);
         }
     }
 

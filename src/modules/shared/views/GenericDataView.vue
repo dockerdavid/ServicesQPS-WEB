@@ -11,6 +11,7 @@ interface Header {
     name: string;
     style?: string;
     format?: (value: any, row?: any) => string;
+    slotName?: string;
 }
 
 interface Props {
@@ -171,7 +172,11 @@ onMounted(async () => {
             <DataTable v-if="!props.useServicesTable" :data="dataList.data" :headers="headers" :onDelete="onDelete"
                 :lockEdit="lockEdit" @page-change="handlePageChange" :total-records="dataList.meta.totalCount"
                 :edit-route="editRoute" :show-export-button="props.showExportButton"
-                :export-start-date="props.exportStartDate" :export-end-date="props.exportEndDate" />
+                :export-start-date="props.exportStartDate" :export-end-date="props.exportEndDate">
+                <template #isActive="slotProps">
+                    <slot name="isActive" v-bind="slotProps" />
+                </template>
+            </DataTable>
 
             <DataTableServices v-if="props.useServicesTable" :data="dataList.data" :headers="headers"
                 :onDelete="onDelete" :lockEdit="lockEdit" @page-change="handlePageChange"

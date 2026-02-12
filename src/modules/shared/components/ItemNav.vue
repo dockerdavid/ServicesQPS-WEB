@@ -24,6 +24,7 @@ const accentMap: Record<string, string> = {
     'recurring-services-default': '#0ea5e9',
     'extras-default': '#8b5cf6',
     'services-default': '#2563eb',
+    'chat': '#0ea5e9',
     'statuses-default': '#0f766e',
     'types-default': '#9333ea',
     'users-default': '#0ea5e9',
