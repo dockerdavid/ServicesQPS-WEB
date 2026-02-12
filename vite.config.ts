@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
-
+import { cacheBustAssets } from './plugins/cache-bust-assets';
 
 // https://vite.dev/config/
 export default defineConfig(async ({ mode }) => {
@@ -9,6 +9,7 @@ export default defineConfig(async ({ mode }) => {
   const plugins = [
     vue(),
     tailwindcss(),
+    cacheBustAssets(),
   ];
 
   if (!isProduction) {
