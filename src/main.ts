@@ -18,11 +18,16 @@ import { Icon } from '@iconify/vue';
 
 const pinia = createPinia();
 
-pinia.use(({store})=>{
+pinia.use(({ store }) => {
   store.router = markRaw(router);
 });
 
-pinia.use(createPersistedState());
+// Persistencia: si falla (p. ej. datos corruptos en localStorage), la app sigue arrancando
+try {
+  pinia.use(createPersistedState());
+} catch {
+  // ignorar fallo de rehidratación
+}
 
 
 const app = createApp(App);
