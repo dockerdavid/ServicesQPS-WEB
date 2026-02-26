@@ -30,4 +30,5 @@ coverage
 *.tsbuildinfo
 *.vue.js
 src/**/*.js
+src/**/*.js.map
 .env

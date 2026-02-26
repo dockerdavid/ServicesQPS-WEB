@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "clean:generated-src-js": "node ./scripts/clean-generated-src-js.mjs",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
-    "type-check": "vue-tsc --noEmit"
+    "type-check": "vue-tsc --noEmit",
+    "prebuild": "yarn clean:generated-src-js"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.15",
