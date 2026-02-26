@@ -6,11 +6,13 @@ import { useToast } from 'primevue/usetoast';
 
 import ServiceChatPanel from '../services/components/ServiceChatPanel.vue';
 import { ServiceChatServices } from '../services/service-chat.services';
+import { CleanersServices } from '../services/services.services';
 import type { ServiceChatMessage } from '../../interfaces/chat/service-chat.interface';
 import type {
   ServiceChatThread,
   ServiceChatThreads,
 } from '../../interfaces/chat/service-chat-threads.interface';
+import type { Service } from '../../interfaces/services/services.interface';
 import { useChatNotificationsStore } from '../../store/chat-notifications.store';
 import { useUserStore } from '../../store/user.store';
 import { resolveRoleKey } from '../../router/role-routes';
@@ -29,8 +31,11 @@ const meta = ref<ServiceChatThreads['meta'] | null>(null);
 const isLoading = ref(false);
 const isLoadingMore = ref(false);
 const isSyncing = ref(false);
+const isLoadingSelectedService = ref(false);
 const page = ref(1);
 const take = 150;
+const selectedServiceFallback = ref<Service | null>(null);
+let selectedServiceFetchToken = 0;
 
 const canAccessChatHub = computed(() => {
   const roleKey = resolveRoleKey(userStore.userData?.role?.name, userStore.userData?.roleId);
@@ -70,6 +75,34 @@ const filteredThreads = computed(() => {
 const selectedThread = computed(() => {
   if (!selectedServiceId.value) return null;
   return threads.value.find((thread) => thread.serviceId === selectedServiceId.value) ?? null;
+});
+
+const selectedChatContext = computed(() => {
+  if (selectedThread.value) {
+    return {
+      id: selectedThread.value.serviceId,
+      statusId: selectedThread.value.statusId,
+      community: { communityName: selectedThread.value.communityName },
+      unitNumber: selectedThread.value.unitNumber,
+      user: { name: selectedThread.value.cleanerName },
+    };
+  }
+
+  if (
+    selectedServiceFallback.value &&
+    selectedServiceId.value &&
+    String(selectedServiceFallback.value.id) === String(selectedServiceId.value)
+  ) {
+    return {
+      id: String(selectedServiceFallback.value.id),
+      statusId: selectedServiceFallback.value.statusId,
+      community: { communityName: selectedServiceFallback.value.community?.communityName },
+      unitNumber: selectedServiceFallback.value.unitNumber,
+      user: { name: selectedServiceFallback.value.user?.name },
+    };
+  }
+
+  return null;
 });
 
 const threadTitle = (thread: ServiceChatThread) => {
@@ -216,6 +249,48 @@ watch(
   (serviceId) => {
     if (serviceId) {
       chatNotificationsStore.clearService(serviceId);
+    }
+  },
+  { immediate: true },
+);
+
+watch(
+  () => [selectedServiceId.value, selectedThread.value?.serviceId] as const,
+  async ([serviceId, threadServiceId]) => {
+    if (!serviceId) {
+      selectedServiceFallback.value = null;
+      isLoadingSelectedService.value = false;
+      return;
+    }
+
+    if (threadServiceId === serviceId) {
+      selectedServiceFallback.value = null;
+      isLoadingSelectedService.value = false;
+      return;
+    }
+
+    if (selectedServiceFallback.value?.id === serviceId) {
+      return;
+    }
+
+    const fetchToken = ++selectedServiceFetchToken;
+    isLoadingSelectedService.value = true;
+    try {
+      const service = await CleanersServices.getServiceById(serviceId);
+      if (fetchToken !== selectedServiceFetchToken) {
+        return;
+      }
+      selectedServiceFallback.value = service;
+    } catch (error) {
+      if (fetchToken !== selectedServiceFetchToken) {
+        return;
+      }
+      selectedServiceFallback.value = null;
+      showToast(toast, { severity: 'error', summary: 'Unable to load selected chat.' });
+    } finally {
+      if (fetchToken === selectedServiceFetchToken) {
+        isLoadingSelectedService.value = false;
+      }
     }
   },
   { immediate: true },
@@ -384,19 +459,17 @@ watch(
     </aside>
 
     <section class="chat-hub__content">
-      <div v-if="!selectedThread" class="chat-hub__placeholder">
+      <div v-if="!selectedChatContext && isLoadingSelectedService" class="chat-hub__placeholder">
+        <p>Loading chat...</p>
+      </div>
+
+      <div v-else-if="!selectedChatContext" class="chat-hub__placeholder">
         <p>Select a chat to start.</p>
       </div>
 
       <ServiceChatPanel
         v-else
-        :service="{
-          id: selectedThread.serviceId,
-          statusId: selectedThread.statusId,
-          community: { communityName: selectedThread.communityName },
-          unitNumber: selectedThread.unitNumber,
-          user: { name: selectedThread.cleanerName },
-        }"
+        :service="selectedChatContext"
         @message="handlePanelMessage"
       />
     </section>
