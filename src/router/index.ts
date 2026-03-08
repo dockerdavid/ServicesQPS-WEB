@@ -179,6 +179,11 @@ const router = createRouter({
               name: 'services-edit',
               component: () => import('../modules/services/ServicesEditView.vue'),
             },
+            {
+              path: 'tracking',
+              name: 'services-tracking',
+              component: () => import('../modules/services/ServicesTrackingView.vue'),
+            },
           ],
         },
         {

@@ -16,6 +16,7 @@ const adminRoutes: RouteLink[] = [
   { route: 'recurring-services-default', icon: 'ph:repeat-duotone', label: 'recurring services' },
   { route: 'extras-default', icon: 'ph:stack-plus-duotone', label: 'extras' },
   { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
+  { route: 'services-tracking', icon: 'ph:map-trifold-duotone', label: 'tracking map' },
   { route: 'chat', icon: 'ph:chats-circle-duotone', label: 'chat' },
   { route: 'statuses-default', icon: 'ph:faders-duotone', label: 'statuses' },
   { route: 'types-default', icon: 'ph:shapes-duotone', label: 'types' },
@@ -28,6 +29,7 @@ const cleanerRoutes: RouteLink[] = [
 
 const managerRoutes: RouteLink[] = [
   { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
+  { route: 'services-tracking', icon: 'ph:map-trifold-duotone', label: 'tracking map' },
 ]
 
 const cheoRoutes: RouteLink[] = [
@@ -40,6 +42,7 @@ const cheoRoutes: RouteLink[] = [
 const qaRoutes: RouteLink[] = [
   { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
   { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
+  { route: 'services-tracking', icon: 'ph:map-trifold-duotone', label: 'tracking map' },
   { route: 'chat', icon: 'ph:chats-circle-duotone', label: 'chat' },
 ]
 

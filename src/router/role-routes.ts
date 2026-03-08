@@ -25,6 +25,7 @@ const roleRoutes = {
     'services-default',
     'services-create',
     'services-edit',
+    'services-tracking',
     'chat',
     'statuses-default',
     'statuses-create',
@@ -41,6 +42,7 @@ const roleRoutes = {
     'calendar',
     'services',
     'services-default',
+    'services-tracking',
     'chat',
     'notFound'
   ],
@@ -49,6 +51,7 @@ const roleRoutes = {
     'services-default',
     'services-create',
     'services-edit',
+    'services-tracking',
     'notFound'
   ],
   supervisor: [
@@ -56,6 +59,7 @@ const roleRoutes = {
     'services-default',
     'services-create',
     'services-edit',
+    'services-tracking',
     'notFound'
   ],
   cleaner: [

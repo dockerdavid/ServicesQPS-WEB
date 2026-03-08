@@ -2,7 +2,7 @@ import { useUserStore } from "../../../src/store/user.store";
 import { apiServicesQps } from "../../api/api";
 import type CreateService from "../../interfaces/services/services.interface";
 import { CleanerServiceAdapter, ManagerServiceAdapter, ServiceAdapter, type EditService } from "../../interfaces/services/services.interface";
-import type { Service, Services } from "../../interfaces/services/services.interface";
+import type { Service, Services, ServicesDailyTracking } from "../../interfaces/services/services.interface";
 import { useGlobalStateStore } from "../../store/auth.store";
 import genericNullObject from "../../utils/null-data-meta";
 import { CommunitiesServices } from "../communities/communities.services";
@@ -142,6 +142,19 @@ export class CleanersServices {
 
         try {
             await apiServicesQps.patch(`/services/${serviceId}`, changedValue);
+        } catch (error: any) {
+            throw new Error(error);
+        } finally {
+            this.store.setIsLoading(false);
+        }
+    }
+
+    static async getDailyTracking(date: string): Promise<ServicesDailyTracking> {
+        this.store.setIsLoading(true);
+
+        try {
+            const { data } = await apiServicesQps.get<ServicesDailyTracking>(`/services/tracking/daily?date=${date}`);
+            return data;
         } catch (error: any) {
             throw new Error(error);
         } finally {

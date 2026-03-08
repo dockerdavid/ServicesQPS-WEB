@@ -19,6 +19,24 @@ export interface Service {
     userId: string;
     createdAt: Date;
     updatedAt: Date;
+    startedAt: Date | null;
+    startLatitude: string | null;
+    startLongitude: string | null;
+    startAccuracy: string | null;
+    startAltitude: string | null;
+    startAltitudeAccuracy: string | null;
+    startHeading: string | null;
+    startSpeed: string | null;
+    startLocationMeta: string | null;
+    finishedAt: Date | null;
+    finishLatitude: string | null;
+    finishLongitude: string | null;
+    finishAccuracy: string | null;
+    finishAltitude: string | null;
+    finishAltitudeAccuracy: string | null;
+    finishHeading: string | null;
+    finishSpeed: string | null;
+    finishLocationMeta: string | null;
     community: Community;
     type: Type;
     status: Status;
@@ -43,6 +61,24 @@ export interface ExternalService {
     userId: string;
     createdAt: string;
     updatedAt: string;
+    startedAt: string | null;
+    startLatitude: string | null;
+    startLongitude: string | null;
+    startAccuracy: string | null;
+    startAltitude: string | null;
+    startAltitudeAccuracy: string | null;
+    startHeading: string | null;
+    startSpeed: string | null;
+    startLocationMeta: string | null;
+    finishedAt: string | null;
+    finishLatitude: string | null;
+    finishLongitude: string | null;
+    finishAccuracy: string | null;
+    finishAltitude: string | null;
+    finishAltitudeAccuracy: string | null;
+    finishHeading: string | null;
+    finishSpeed: string | null;
+    finishLocationMeta: string | null;
     community: Community;
     type: {
         cleaningType: string;
@@ -153,6 +189,19 @@ export interface TypeByCommunity {
     createdAt: Date;
     updatedAt: Date;
     community: Community;
+}
+
+export interface ServicesDailyTrackingSummary {
+    totalAssigned: number;
+    started: number;
+    notStarted: number;
+    finished: number;
+}
+
+export interface ServicesDailyTracking {
+    date: string;
+    summary: ServicesDailyTrackingSummary;
+    services: Service[];
 }
 
 
