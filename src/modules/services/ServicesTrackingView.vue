@@ -14,6 +14,7 @@ import type { Service, ServicesDailyTracking } from '../../interfaces/services/s
 
 const US_CENTER: L.LatLngExpression = [39.8283, -98.5795];
 const US_DEFAULT_ZOOM = 4;
+const US_BOUNDS = L.latLngBounds([18, -179], [72, -60]);
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: marker2x,
@@ -54,6 +55,13 @@ const noStartedServices = computed(() =>
 const toCoordinate = (value?: string | null) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+};
+
+const isValidTrackPoint = (lat: number | null, lng: number | null) => {
+  if (lat === null || lng === null) return false;
+  if (lat === 0 && lng === 0) return false;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return false;
+  return US_BOUNDS.contains(L.latLng(lat, lng));
 };
 
 const formatDateTime = (value?: string | Date | null) => {
@@ -97,8 +105,13 @@ const drawMap = () => {
     const finishLat = toCoordinate(service.finishLatitude);
     const finishLng = toCoordinate(service.finishLongitude);
 
-    if (startLat !== null && startLng !== null) {
-      const markerStart = L.circleMarker([startLat, startLng], {
+    const hasStartPoint = isValidTrackPoint(startLat, startLng);
+    const hasFinishPoint = isValidTrackPoint(finishLat, finishLng);
+    const startPoint: [number, number] | null = hasStartPoint ? [startLat as number, startLng as number] : null;
+    const finishPoint: [number, number] | null = hasFinishPoint ? [finishLat as number, finishLng as number] : null;
+
+    if (startPoint) {
+      const markerStart = L.circleMarker(startPoint, {
         radius: 7,
         color: '#0f766e',
         fillColor: '#14b8a6',
@@ -106,11 +119,11 @@ const drawMap = () => {
         weight: 2,
       }).bindPopup(popupHtml(service, 'start'));
       markersLayer?.addLayer(markerStart);
-      points.push([startLat, startLng]);
+      points.push(startPoint);
     }
 
-    if (finishLat !== null && finishLng !== null) {
-      const markerFinish = L.circleMarker([finishLat, finishLng], {
+    if (finishPoint) {
+      const markerFinish = L.circleMarker(finishPoint, {
         radius: 7,
         color: '#991b1b',
         fillColor: '#ef4444',
@@ -118,19 +131,17 @@ const drawMap = () => {
         weight: 2,
       }).bindPopup(popupHtml(service, 'finish'));
       markersLayer?.addLayer(markerFinish);
-      points.push([finishLat, finishLng]);
+      points.push(finishPoint);
     }
 
     if (
-      startLat !== null &&
-      startLng !== null &&
-      finishLat !== null &&
-      finishLng !== null
+      hasStartPoint &&
+      hasFinishPoint
     ) {
       const route = L.polyline(
         [
-          [startLat, startLng],
-          [finishLat, finishLng],
+          startPoint as [number, number],
+          finishPoint as [number, number],
         ],
         {
           color: '#2563eb',
@@ -149,7 +160,7 @@ const drawMap = () => {
   }
 
   const bounds = L.latLngBounds(points as L.LatLngBoundsLiteral);
-  map.fitBounds(bounds.pad(0.15), { maxZoom: 16 });
+  map.fitBounds(bounds.pad(0.15), { maxZoom: 14 });
 };
 
 const ensureMap = async () => {
@@ -207,12 +218,15 @@ onBeforeUnmount(() => {
 
 <template>
   <BaseLayout :breadcrumb-routes="breadcrumbRoutes">
-    <template #view-title>Service Tracking</template>
+    <template #view-title>Operational Tracking</template>
 
     <template #header-button>
       <div class="tracking-header">
-        <input v-model="selectedDate" type="date" class="tracking-date" />
-        <Button label="Refresh" severity="contrast" @click="fetchTracking" />
+        <div class="tracking-header__group">
+          <label for="tracking-date" class="tracking-date-label">Service Date</label>
+          <input id="tracking-date" v-model="selectedDate" type="date" class="tracking-date" />
+        </div>
+        <Button label="Refresh Data" severity="contrast" @click="fetchTracking" />
       </div>
     </template>
 
@@ -240,6 +254,10 @@ onBeforeUnmount(() => {
         <Message v-if="requestError" severity="error" :closable="false">{{ requestError }}</Message>
 
         <div class="tracking-map-card">
+          <div class="tracking-map-title">
+            <h3>Map Overview</h3>
+            <span>Auto-focuses on valid U.S. coordinates for selected day</span>
+          </div>
           <div class="tracking-legend">
             <Tag severity="success" value="Arrival marker" />
             <Tag severity="danger" value="Departure marker" />
@@ -253,7 +271,7 @@ onBeforeUnmount(() => {
 
         <div class="tracking-grid">
           <section class="tracking-panel">
-            <h3>Today Missing Start</h3>
+            <h3>Missing Start Check-in</h3>
             <p v-if="selectedDate !== moment().format('YYYY-MM-DD')" class="tracking-note">
               This panel lists missing starts for {{ selectedDate }}.
             </p>
@@ -289,20 +307,35 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 .tracking-wrap {
   display: grid;
-  gap: 1rem;
+  gap: 1.1rem;
 }
 
 .tracking-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
+  width: 100%;
+}
+
+.tracking-header__group {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.tracking-date-label {
+  font-size: 0.78rem;
+  color: #475569;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .tracking-date {
-  border: 1px solid rgba(15, 23, 42, 0.2);
+  border: 1px solid rgba(100, 116, 139, 0.4);
   border-radius: 0.6rem;
-  padding: 0.55rem 0.8rem;
+  padding: 0.5rem 0.75rem;
   font-size: 0.95rem;
+  background: #fff;
 }
 
 .tracking-summary {
@@ -313,11 +346,11 @@ onBeforeUnmount(() => {
 
 .kpi-card {
   border-radius: 0.9rem;
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border: 1px solid rgba(148, 163, 184, 0.22);
   padding: 0.75rem 0.9rem;
   display: grid;
   gap: 0.2rem;
-  background: #fff;
+  background: #f8fafc;
 }
 
 .kpi-card span {
@@ -328,32 +361,55 @@ onBeforeUnmount(() => {
 
 .kpi-card strong {
   color: #0f172a;
-  font-size: 1.45rem;
+  font-size: 1.3rem;
   line-height: 1;
 }
 
 .kpi-card--assigned {
-  background: linear-gradient(140deg, #eff6ff, #ffffff);
+  border-left: 4px solid #3b82f6;
 }
 
 .kpi-card--started {
-  background: linear-gradient(140deg, #ecfdf5, #ffffff);
+  border-left: 4px solid #10b981;
 }
 
 .kpi-card--missing {
-  background: linear-gradient(140deg, #fef2f2, #ffffff);
+  border-left: 4px solid #ef4444;
 }
 
 .kpi-card--finished {
-  background: linear-gradient(140deg, #fffbeb, #ffffff);
+  border-left: 4px solid #f59e0b;
 }
 
 .tracking-map-card {
   position: relative;
   border-radius: 1rem;
   overflow: hidden;
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(100, 116, 139, 0.25);
   min-height: 420px;
+  background: #fff;
+}
+
+.tracking-map-title {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.7rem;
+  z-index: 500;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.tracking-map-title h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.tracking-map-title span {
+  font-size: 0.72rem;
+  color: #475569;
 }
 
 .tracking-map {
@@ -388,10 +444,10 @@ onBeforeUnmount(() => {
 }
 
 .tracking-panel {
-  border: 1px solid rgba(15, 23, 42, 0.1);
+  border: 1px solid rgba(100, 116, 139, 0.22);
   border-radius: 0.9rem;
   padding: 1rem;
-  background: linear-gradient(150deg, #f8fafc, #ffffff);
+  background: #fff;
 }
 
 .tracking-panel h3 {
@@ -418,8 +474,8 @@ onBeforeUnmount(() => {
   gap: 0.15rem;
   padding: 0.75rem;
   border-radius: 0.65rem;
-  background: #ffffff;
-  border: 1px solid rgba(30, 41, 59, 0.08);
+  background: #f8fafc;
+  border: 1px solid rgba(100, 116, 139, 0.18);
 }
 
 .tracking-item span {
@@ -437,6 +493,11 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 992px) {
+  .tracking-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .tracking-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
