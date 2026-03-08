@@ -12,6 +12,9 @@ import BaseLayout from '../../layouts/BaseLayout.vue';
 import { CleanersServices } from './services.services';
 import type { Service, ServicesDailyTracking } from '../../interfaces/services/services.interface';
 
+const US_CENTER: L.LatLngExpression = [39.8283, -98.5795];
+const US_DEFAULT_ZOOM = 4;
+
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: marker2x,
   iconUrl: marker,
@@ -141,12 +144,12 @@ const drawMap = () => {
   });
 
   if (points.length === 0) {
-    map.setView([28.538335, -81.379234], 10);
+    map.setView(US_CENTER, US_DEFAULT_ZOOM);
     return;
   }
 
   const bounds = L.latLngBounds(points as L.LatLngBoundsLiteral);
-  map.fitBounds(bounds.pad(0.15));
+  map.fitBounds(bounds.pad(0.15), { maxZoom: 16 });
 };
 
 const ensureMap = async () => {
@@ -157,7 +160,8 @@ const ensureMap = async () => {
   map = L.map(mapEl.value, {
     zoomControl: true,
     attributionControl: true,
-  }).setView([28.538335, -81.379234], 10);
+    minZoom: 3,
+  }).setView(US_CENTER, US_DEFAULT_ZOOM);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -215,15 +219,32 @@ onBeforeUnmount(() => {
     <template #card-content>
       <div class="tracking-wrap">
         <div class="tracking-summary">
-          <Tag severity="info" :value="`Assigned: ${summary.totalAssigned}`" />
-          <Tag severity="success" :value="`Started: ${summary.started}`" />
-          <Tag severity="danger" :value="`No Start: ${summary.notStarted}`" />
-          <Tag severity="warn" :value="`Finished: ${summary.finished}`" />
+          <article class="kpi-card kpi-card--assigned">
+            <span>Assigned</span>
+            <strong>{{ summary.totalAssigned }}</strong>
+          </article>
+          <article class="kpi-card kpi-card--started">
+            <span>Started</span>
+            <strong>{{ summary.started }}</strong>
+          </article>
+          <article class="kpi-card kpi-card--missing">
+            <span>No Start</span>
+            <strong>{{ summary.notStarted }}</strong>
+          </article>
+          <article class="kpi-card kpi-card--finished">
+            <span>Finished</span>
+            <strong>{{ summary.finished }}</strong>
+          </article>
         </div>
 
         <Message v-if="requestError" severity="error" :closable="false">{{ requestError }}</Message>
 
         <div class="tracking-map-card">
+          <div class="tracking-legend">
+            <Tag severity="success" value="Arrival marker" />
+            <Tag severity="danger" value="Departure marker" />
+            <Tag severity="info" value="Start/Finish route" />
+          </div>
           <div ref="mapEl" class="tracking-map"></div>
           <div v-if="isLoading" class="tracking-loading">
             <ProgressSpinner stroke-width="4" />
@@ -285,9 +306,46 @@ onBeforeUnmount(() => {
 }
 
 .tracking-summary {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.kpi-card {
+  border-radius: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 0.75rem 0.9rem;
+  display: grid;
+  gap: 0.2rem;
+  background: #fff;
+}
+
+.kpi-card span {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.kpi-card strong {
+  color: #0f172a;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.kpi-card--assigned {
+  background: linear-gradient(140deg, #eff6ff, #ffffff);
+}
+
+.kpi-card--started {
+  background: linear-gradient(140deg, #ecfdf5, #ffffff);
+}
+
+.kpi-card--missing {
+  background: linear-gradient(140deg, #fef2f2, #ffffff);
+}
+
+.kpi-card--finished {
+  background: linear-gradient(140deg, #fffbeb, #ffffff);
 }
 
 .tracking-map-card {
@@ -301,6 +359,18 @@ onBeforeUnmount(() => {
 .tracking-map {
   width: 100%;
   min-height: 420px;
+}
+
+.tracking-legend {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  z-index: 500;
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: calc(100% - 1.4rem);
 }
 
 .tracking-loading {
@@ -367,6 +437,10 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 992px) {
+  .tracking-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .tracking-grid {
     grid-template-columns: 1fr;
   }
