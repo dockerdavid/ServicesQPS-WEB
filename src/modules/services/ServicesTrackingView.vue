@@ -12,9 +12,8 @@ import BaseLayout from '../../layouts/BaseLayout.vue';
 import { CleanersServices } from './services.services';
 import type { Service, ServicesDailyTracking } from '../../interfaces/services/services.interface';
 
-const US_CENTER: L.LatLngExpression = [39.8283, -98.5795];
-const US_DEFAULT_ZOOM = 4;
-const US_BOUNDS = L.latLngBounds([18, -179], [72, -60]);
+const DEFAULT_CENTER: L.LatLngExpression = [20, -20];
+const DEFAULT_ZOOM = 2;
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: marker2x,
@@ -61,7 +60,7 @@ const isValidTrackPoint = (lat: number | null, lng: number | null) => {
   if (lat === null || lng === null) return false;
   if (lat === 0 && lng === 0) return false;
   if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return false;
-  return US_BOUNDS.contains(L.latLng(lat, lng));
+  return true;
 };
 
 const formatDateTime = (value?: string | Date | null) => {
@@ -155,7 +154,7 @@ const drawMap = () => {
   });
 
   if (points.length === 0) {
-    map.setView(US_CENTER, US_DEFAULT_ZOOM);
+    map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
     return;
   }
 
@@ -172,7 +171,7 @@ const ensureMap = async () => {
     zoomControl: true,
     attributionControl: true,
     minZoom: 3,
-  }).setView(US_CENTER, US_DEFAULT_ZOOM);
+  }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
