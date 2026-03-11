@@ -3,10 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import moment from 'moment';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import marker2x from 'leaflet/dist/images/marker-icon-2x.png';
-import marker from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import { Button, Message, ProgressSpinner, Tag } from 'primevue';
+import { Button, Message, ProgressSpinner } from 'primevue';
 
 import BaseLayout from '../../layouts/BaseLayout.vue';
 import { CleanersServices } from './services.services';
@@ -15,21 +12,26 @@ import type { Service, ServicesDailyTracking } from '../../interfaces/services/s
 const DEFAULT_CENTER: L.LatLngExpression = [20, -20];
 const DEFAULT_ZOOM = 2;
 
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: marker2x,
-  iconUrl: marker,
-  shadowUrl: markerShadow,
-});
+// Curated palette of 20 vivid, visually distinct colors
+const SERVICE_COLORS = [
+  '#e11d48', '#7c3aed', '#2563eb', '#059669', '#d97706',
+  '#0891b2', '#dc2626', '#16a34a', '#9333ea', '#ea580c',
+  '#0284c7', '#65a30d', '#db2777', '#0d9488', '#ca8a04',
+  '#4f46e5', '#c026d3', '#15803d', '#b45309', '#1d4ed8',
+];
 
 const selectedDate = ref(moment().format('YYYY-MM-DD'));
 const tracking = ref<ServicesDailyTracking | null>(null);
 const isLoading = ref(false);
 const requestError = ref('');
+const selectedServiceId = ref<string | null>(null);
 
 const mapEl = ref<HTMLElement | null>(null);
 let map: L.Map | null = null;
 let markersLayer: L.LayerGroup | null = null;
 let routesLayer: L.LayerGroup | null = null;
+
+const serviceMarkerRefs = new Map<string, { start: L.Marker | null; finish: L.Marker | null }>();
 
 const breadcrumbRoutes = [
   { label: 'Services', to: { name: 'services-default' } },
@@ -51,6 +53,13 @@ const noStartedServices = computed(() =>
   services.value.filter((service) => !service.startedAt),
 );
 
+// 1-based index for each service, correlates map pins with sidebar list
+const serviceIndexMap = computed(() => {
+  const m = new Map<string, number>();
+  services.value.forEach((s, i) => m.set(s.id, i + 1));
+  return m;
+});
+
 const toCoordinate = (value?: string | null) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
@@ -67,10 +76,7 @@ const distanceInMeters = (pointA: [number, number], pointB: [number, number]) =>
   const dLng = toRadians(pointB[1] - pointA[1]);
   const lat1 = toRadians(pointA[0]);
   const lat2 = toRadians(pointB[0]);
-
-  const a = Math.sin(dLat / 2) ** 2
-    + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return 2 * earthRadius * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
@@ -90,6 +96,9 @@ const serviceHash = (serviceId: string) =>
     .split('')
     .reduce((acc, current) => acc + current.charCodeAt(0), 0);
 
+const getServiceColor = (serviceId: string): string =>
+  SERVICE_COLORS[serviceHash(serviceId) % SERVICE_COLORS.length];
+
 const getDisplayPoints = (
   serviceId: string,
   startPoint: [number, number],
@@ -99,16 +108,11 @@ const getDisplayPoints = (
   if (distance > OVERLAP_THRESHOLD_METERS) {
     return { startDisplayPoint: startPoint, finishDisplayPoint: finishPoint, distance };
   }
-
   const angle = ((serviceHash(serviceId) % 360) * Math.PI) / 180;
-  const halfSeparation = OVERLAP_SEPARATION_METERS / 2;
-
-  const northOffset = Math.sin(angle) * halfSeparation;
-  const eastOffset = Math.cos(angle) * halfSeparation;
-
+  const halfSep = OVERLAP_SEPARATION_METERS / 2;
   return {
-    startDisplayPoint: offsetPointByMeters(startPoint, northOffset, eastOffset),
-    finishDisplayPoint: offsetPointByMeters(finishPoint, -northOffset, -eastOffset),
+    startDisplayPoint: offsetPointByMeters(startPoint, Math.sin(angle) * halfSep, Math.cos(angle) * halfSep),
+    finishDisplayPoint: offsetPointByMeters(finishPoint, -Math.sin(angle) * halfSep, -Math.cos(angle) * halfSep),
     distance,
   };
 };
@@ -122,10 +126,43 @@ const isValidTrackPoint = (lat: number | null, lng: number | null) => {
 
 const formatDateTime = (value?: string | Date | null) => {
   if (!value) return 'N/A';
-  return moment(value).format('YYYY-MM-DD HH:mm:ss');
+  return moment(value).format('MMM D, YYYY HH:mm');
 };
 
-const popupHtml = (service: Service, kind: 'start' | 'finish') => {
+// Start: numbered pin (solid fill)
+const createStartIcon = (color: string, index: number): L.DivIcon =>
+  L.divIcon({
+    className: '',
+    iconSize: [30, 38],
+    iconAnchor: [15, 38],
+    popupAnchor: [0, -42],
+    html: `<svg width="30" height="38" viewBox="0 0 30 38" xmlns="http://www.w3.org/2000/svg">
+      <filter id="ds${index}"><feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-opacity="0.4"/></filter>
+      <path d="M15 1.5C8.1 1.5 2.5 7.1 2.5 14C2.5 22.5 15 36.5 15 36.5C15 36.5 27.5 22.5 27.5 14C27.5 7.1 21.9 1.5 15 1.5Z"
+        fill="${color}" stroke="white" stroke-width="2" filter="url(#ds${index})"/>
+      <text x="15" y="19" text-anchor="middle" dominant-baseline="middle"
+        fill="white" font-size="12" font-weight="800" font-family="Inter,system-ui,sans-serif">${index}</text>
+    </svg>`,
+  });
+
+// Finish: checkmark pin (ring + check, same color)
+const createFinishIcon = (color: string, index: number): L.DivIcon =>
+  L.divIcon({
+    className: '',
+    iconSize: [30, 38],
+    iconAnchor: [15, 38],
+    popupAnchor: [0, -42],
+    html: `<svg width="30" height="38" viewBox="0 0 30 38" xmlns="http://www.w3.org/2000/svg">
+      <filter id="df${index}"><feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-opacity="0.4"/></filter>
+      <path d="M15 1.5C8.1 1.5 2.5 7.1 2.5 14C2.5 22.5 15 36.5 15 36.5C15 36.5 27.5 22.5 27.5 14C27.5 7.1 21.9 1.5 15 1.5Z"
+        fill="${color}" stroke="white" stroke-width="2" filter="url(#df${index})"/>
+      <circle cx="15" cy="14" r="7.5" fill="rgba(255,255,255,0.18)" stroke="white" stroke-width="1.5"/>
+      <path d="M10 14.3 L13.2 17.5 L20 11" stroke="white" stroke-width="2.5"
+        fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+  });
+
+const popupHtml = (service: Service, kind: 'start' | 'finish', color: string, index: number) => {
   const isStart = kind === 'start';
   const latitude = isStart ? service.startLatitude : service.finishLatitude;
   const longitude = isStart ? service.startLongitude : service.finishLongitude;
@@ -133,23 +170,44 @@ const popupHtml = (service: Service, kind: 'start' | 'finish') => {
   const timestamp = isStart ? service.startedAt : service.finishedAt;
 
   return `
-    <div style="min-width:220px;font-family:Inter,sans-serif;line-height:1.35;">
-      <strong>${service.community?.communityName ?? 'Community'}</strong><br/>
-      Unit: ${service.unitNumber ?? '-'}<br/>
-      Cleaner: ${service.user?.name ?? '-'}<br/>
-      Type: ${service.type?.cleaningType ?? '-'}<br/>
-      Status: ${service.status?.statusName ?? '-'}<br/>
-      ${isStart ? 'Start' : 'Finish'}: ${formatDateTime(timestamp)}<br/>
-      Lat: ${latitude ?? '-'}<br/>
-      Lng: ${longitude ?? '-'}<br/>
-      Accuracy: ${accuracy ?? '-'}m
+    <div style="min-width:240px;font-family:Inter,system-ui,sans-serif;line-height:1.45;border-radius:6px;overflow:hidden;margin:-1px;">
+      <div style="background:${color};padding:0.55rem 0.75rem;display:flex;align-items:center;gap:0.5rem;">
+        <span style="background:rgba(255,255,255,0.28);border-radius:50%;width:24px;height:24px;min-width:24px;display:inline-flex;align-items:center;justify-content:center;font-size:0.76rem;font-weight:800;color:#fff;">${index}</span>
+        <span style="color:#fff;font-weight:700;font-size:0.9rem;line-height:1.2;">
+          ${isStart ? '▶&nbsp;Start' : '✓&nbsp;Finish'} &mdash; ${service.community?.communityName ?? 'Community'}
+        </span>
+      </div>
+      <div style="padding:0.65rem 0.8rem;background:#fff;display:grid;gap:0.28rem;">
+        <div style="font-size:0.83rem;color:#1f2937;display:flex;gap:0.35rem;">
+          <span style="color:#6b7280;font-weight:600;min-width:52px;">Unit</span>${service.unitNumber ?? '-'}
+        </div>
+        <div style="font-size:0.83rem;color:#1f2937;display:flex;gap:0.35rem;">
+          <span style="color:#6b7280;font-weight:600;min-width:52px;">Cleaner</span>${service.user?.name ?? '-'}
+        </div>
+        <div style="font-size:0.83rem;color:#1f2937;display:flex;gap:0.35rem;">
+          <span style="color:#6b7280;font-weight:600;min-width:52px;">Type</span>${service.type?.cleaningType ?? '-'}
+        </div>
+        <div style="font-size:0.83rem;color:#1f2937;display:flex;gap:0.35rem;">
+          <span style="color:#6b7280;font-weight:600;min-width:52px;">Status</span>${service.status?.statusName ?? '-'}
+        </div>
+        <div style="height:1px;background:#f3f4f6;margin:0.3rem 0;"></div>
+        <div style="font-size:0.83rem;color:#1f2937;display:flex;gap:0.35rem;">
+          <span style="color:#6b7280;font-weight:600;min-width:52px;">${isStart ? 'Started' : 'Finished'}</span>${formatDateTime(timestamp)}
+        </div>
+        <div style="font-size:0.75rem;color:#9ca3af;margin-top:0.1rem;">
+          ${latitude ?? '-'}, ${longitude ?? '-'}${accuracy ? ` &bull; ±${accuracy}m` : ''}
+        </div>
+      </div>
     </div>
   `;
 };
 
-const markerLabelHtml = (service: Service, kind: 'start' | 'finish') => {
-  const label = kind === 'start' ? 'Start' : 'Finish';
-  return `<span class="tracking-marker-chip tracking-marker-chip--${kind}">${label} · Service #${service.id}</span>`;
+const tooltipHtml = (service: Service, kind: 'start' | 'finish', index: number, color: string) => {
+  const isStart = kind === 'start';
+  return `<span class="trk-tip">
+    <span class="trk-tip__dot" style="background:${color};">${index}</span>
+    <span class="trk-tip__text">${isStart ? '▶' : '✓'}&nbsp;${service.community?.communityName ?? ''} · Unit ${service.unitNumber ?? '-'}</span>
+  </span>`;
 };
 
 const drawMap = () => {
@@ -157,6 +215,7 @@ const drawMap = () => {
 
   markersLayer.clearLayers();
   routesLayer.clearLayers();
+  serviceMarkerRefs.clear();
 
   const points: L.LatLngExpression[] = [];
 
@@ -166,78 +225,67 @@ const drawMap = () => {
     const finishLat = toCoordinate(service.finishLatitude);
     const finishLng = toCoordinate(service.finishLongitude);
 
-    const hasStartPoint = isValidTrackPoint(startLat, startLng);
-    const hasFinishPoint = isValidTrackPoint(finishLat, finishLng);
-    const startPoint: [number, number] | null = hasStartPoint ? [startLat as number, startLng as number] : null;
-    const finishPoint: [number, number] | null = hasFinishPoint ? [finishLat as number, finishLng as number] : null;
+    const hasStart = isValidTrackPoint(startLat, startLng);
+    const hasFinish = isValidTrackPoint(finishLat, finishLng);
+    const startPoint: [number, number] | null = hasStart ? [startLat!, startLng!] : null;
+    const finishPoint: [number, number] | null = hasFinish ? [finishLat!, finishLng!] : null;
+
+    const color = getServiceColor(service.id);
+    const index = serviceIndexMap.value.get(service.id) ?? 0;
+    const refs: { start: L.Marker | null; finish: L.Marker | null } = { start: null, finish: null };
+
     let startDisplayPoint = startPoint;
     let finishDisplayPoint = finishPoint;
-    let startFinishDistance = Number.POSITIVE_INFINITY;
+    let distance = Number.POSITIVE_INFINITY;
 
     if (startPoint && finishPoint) {
-      const displayPoints = getDisplayPoints(service.id, startPoint, finishPoint);
-      startDisplayPoint = displayPoints.startDisplayPoint;
-      finishDisplayPoint = displayPoints.finishDisplayPoint;
-      startFinishDistance = displayPoints.distance;
+      const dp = getDisplayPoints(service.id, startPoint, finishPoint);
+      startDisplayPoint = dp.startDisplayPoint;
+      finishDisplayPoint = dp.finishDisplayPoint;
+      distance = dp.distance;
     }
 
     if (startDisplayPoint) {
-      const markerStart = L.circleMarker(startDisplayPoint, {
-        radius: 7,
-        color: '#0f766e',
-        fillColor: '#14b8a6',
-        fillOpacity: 0.95,
-        weight: 2,
-      })
-        .bindPopup(popupHtml(service, 'start'))
-        .bindTooltip(markerLabelHtml(service, 'start'), {
-          permanent: true,
+      const m = L.marker(startDisplayPoint, { icon: createStartIcon(color, index) })
+        .bindPopup(popupHtml(service, 'start', color, index), { maxWidth: 290, className: 'trk-popup' })
+        .bindTooltip(tooltipHtml(service, 'start', index, color), {
           direction: 'top',
-          offset: L.point(0, -10),
-          className: 'tracking-marker-tooltip',
+          offset: L.point(0, -42),
+          className: 'trk-tooltip',
           opacity: 1,
-          interactive: false,
         });
-      markersLayer?.addLayer(markerStart);
+      markersLayer?.addLayer(m);
+      refs.start = m;
       points.push(startDisplayPoint);
     }
 
     if (finishDisplayPoint) {
-      const markerFinish = L.circleMarker(finishDisplayPoint, {
-        radius: 7,
-        color: '#991b1b',
-        fillColor: '#ef4444',
-        fillOpacity: 0.95,
-        weight: 2,
-      })
-        .bindPopup(popupHtml(service, 'finish'))
-        .bindTooltip(markerLabelHtml(service, 'finish'), {
-          permanent: true,
+      const m = L.marker(finishDisplayPoint, { icon: createFinishIcon(color, index) })
+        .bindPopup(popupHtml(service, 'finish', color, index), { maxWidth: 290, className: 'trk-popup' })
+        .bindTooltip(tooltipHtml(service, 'finish', index, color), {
           direction: 'bottom',
           offset: L.point(0, 10),
-          className: 'tracking-marker-tooltip',
+          className: 'trk-tooltip',
           opacity: 1,
-          interactive: false,
         });
-      markersLayer?.addLayer(markerFinish);
+      markersLayer?.addLayer(m);
+      refs.finish = m;
       points.push(finishDisplayPoint);
     }
 
-    if (hasStartPoint && hasFinishPoint && startFinishDistance > OVERLAP_THRESHOLD_METERS) {
-      const route = L.polyline(
-        [
-          startPoint as [number, number],
-          finishPoint as [number, number],
-        ],
-        {
-          color: '#2563eb',
-          weight: 2,
-          opacity: 0.7,
-          dashArray: '6, 8',
-        },
+    // Route line in the service's own color — visually links start ↔ finish
+    if (hasStart && hasFinish && distance > OVERLAP_THRESHOLD_METERS) {
+      routesLayer?.addLayer(
+        L.polyline([startPoint as [number, number], finishPoint as [number, number]], {
+          color,
+          weight: 2.5,
+          opacity: 0.75,
+          dashArray: '6 8',
+        }),
       );
-      routesLayer?.addLayer(route);
     }
+
+    serviceMarkerRefs.set(service.id, refs);
   });
 
   if (points.length === 0) {
@@ -245,13 +293,44 @@ const drawMap = () => {
     return;
   }
 
-  const bounds = L.latLngBounds(points as L.LatLngBoundsLiteral);
-  map.fitBounds(bounds.pad(0.15), { maxZoom: 14 });
+  map.fitBounds(L.latLngBounds(points as L.LatLngBoundsLiteral).pad(0.15), { maxZoom: 14 });
+};
+
+const focusService = (service: Service) => {
+  if (!map) return;
+  selectedServiceId.value = service.id;
+
+  const startLat = toCoordinate(service.startLatitude);
+  const startLng = toCoordinate(service.startLongitude);
+  const finishLat = toCoordinate(service.finishLatitude);
+  const finishLng = toCoordinate(service.finishLongitude);
+
+  const hasStart = isValidTrackPoint(startLat, startLng);
+  const hasFinish = isValidTrackPoint(finishLat, finishLng);
+
+  const refs = serviceMarkerRefs.get(service.id);
+
+  if (hasStart && hasFinish) {
+    map.flyToBounds(
+      L.latLngBounds([[startLat!, startLng!], [finishLat!, finishLng!]]).pad(0.35),
+      { maxZoom: 16, duration: 0.8 },
+    );
+  } else if (hasStart) {
+    map.flyTo([startLat!, startLng!], 16, { duration: 0.8 });
+  } else if (hasFinish) {
+    map.flyTo([finishLat!, finishLng!], 16, { duration: 0.8 });
+  } else {
+    return;
+  }
+
+  setTimeout(() => {
+    if (refs?.start) refs.start.openPopup();
+    else if (refs?.finish) refs.finish.openPopup();
+  }, 900);
 };
 
 const ensureMap = async () => {
   await nextTick();
-
   if (!mapEl.value || map) return;
 
   map = L.map(mapEl.value, {
@@ -272,11 +351,12 @@ const ensureMap = async () => {
 const fetchTracking = async () => {
   isLoading.value = true;
   requestError.value = '';
+  selectedServiceId.value = null;
 
   try {
     tracking.value = await CleanersServices.getDailyTracking(selectedDate.value);
     drawMap();
-  } catch (error) {
+  } catch {
     requestError.value = 'Unable to load tracking for this date.';
     tracking.value = null;
     drawMap();
@@ -285,9 +365,7 @@ const fetchTracking = async () => {
   }
 };
 
-watch(selectedDate, () => {
-  fetchTracking();
-});
+watch(selectedDate, () => fetchTracking());
 
 onMounted(async () => {
   await ensureMap();
@@ -307,18 +385,20 @@ onBeforeUnmount(() => {
     <template #view-title>Operational Tracking</template>
 
     <template #header-button>
-      <div class="tracking-header">
-        <div class="tracking-header__group">
-          <label for="tracking-date" class="tracking-date-label">Service Date</label>
-          <input id="tracking-date" v-model="selectedDate" type="date" class="tracking-date" />
+      <div class="trk-header">
+        <div class="trk-header__group">
+          <label for="tracking-date" class="trk-date-label">Service Date</label>
+          <input id="tracking-date" v-model="selectedDate" type="date" class="trk-date" />
         </div>
-        <Button label="Refresh Data" severity="contrast" @click="fetchTracking" />
+        <Button label="Refresh" severity="contrast" @click="fetchTracking" />
       </div>
     </template>
 
     <template #card-content>
-      <div class="tracking-wrap">
-        <div class="tracking-summary">
+      <div class="trk-wrap">
+
+        <!-- KPI summary row -->
+        <div class="trk-summary">
           <article class="kpi-card kpi-card--assigned">
             <span>Assigned</span>
             <strong>{{ summary.totalAssigned }}</strong>
@@ -339,52 +419,106 @@ onBeforeUnmount(() => {
 
         <Message v-if="requestError" severity="error" :closable="false">{{ requestError }}</Message>
 
-        <div class="tracking-map-card">
-          <div class="tracking-map-title">
+        <!-- Map card -->
+        <div class="trk-map-card">
+
+          <!-- Top-left: title -->
+          <div class="trk-map-title">
             <h3>Map Overview</h3>
-            <span>Auto-focuses on valid coordinates for selected day</span>
+            <span>{{ selectedDate }}</span>
           </div>
-          <div class="tracking-legend">
-            <Tag severity="success" value="Arrival marker" />
-            <Tag severity="danger" value="Departure marker" />
-            <Tag severity="info" value="Straight line (start → finish)" />
+
+          <!-- Top-right: legend -->
+          <div class="trk-legend">
+            <div class="trk-legend__item">
+              <svg width="18" height="22" viewBox="0 0 30 38"><path d="M15 1.5C8.1 1.5 2.5 7.1 2.5 14C2.5 22.5 15 36.5 15 36.5S27.5 22.5 27.5 14C27.5 7.1 21.9 1.5 15 1.5Z" fill="#64748b" stroke="white" stroke-width="2"/><text x="15" y="19" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="12" font-weight="800" font-family="sans-serif">1</text></svg>
+              <span>Start (numbered)</span>
+            </div>
+            <div class="trk-legend__item">
+              <svg width="18" height="22" viewBox="0 0 30 38"><path d="M15 1.5C8.1 1.5 2.5 7.1 2.5 14C2.5 22.5 15 36.5 15 36.5S27.5 22.5 27.5 14C27.5 7.1 21.9 1.5 15 1.5Z" fill="#64748b" stroke="white" stroke-width="2"/><circle cx="15" cy="14" r="7.5" fill="rgba(255,255,255,0.18)" stroke="white" stroke-width="1.5"/><path d="M10 14.3 L13.2 17.5 L20 11" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Finish (checkmark)</span>
+            </div>
+            <div class="trk-legend__item trk-legend__item--line">
+              <span class="trk-legend__line-sample"></span>
+              <span>Same color = same service</span>
+            </div>
           </div>
-          <p class="tracking-legend-note">Route is a visual reference line, not a real GPS path.</p>
-          <div ref="mapEl" class="tracking-map"></div>
-          <div v-if="isLoading" class="tracking-loading">
+
+          <div ref="mapEl" class="trk-map"></div>
+
+          <div v-if="isLoading" class="trk-loading">
             <ProgressSpinner stroke-width="4" />
           </div>
         </div>
 
-        <div class="tracking-grid">
-          <section class="tracking-panel">
+        <!-- Bottom panels -->
+        <div class="trk-grid">
+
+          <!-- Missing start-checkin -->
+          <section class="trk-panel">
             <h3>Missing Start Check-in</h3>
-            <p v-if="selectedDate !== moment().format('YYYY-MM-DD')" class="tracking-note">
-              This panel lists missing starts for {{ selectedDate }}.
+            <p v-if="selectedDate !== moment().format('YYYY-MM-DD')" class="trk-note">
+              Showing missing starts for {{ selectedDate }}.
             </p>
-            <div v-if="noStartedServices.length === 0" class="tracking-empty">No pending start marks.</div>
-            <div v-else class="tracking-list">
-              <article v-for="service in noStartedServices" :key="service.id" class="tracking-item tracking-item--missing">
-                <strong>{{ service.community?.communityName }}</strong>
-                <span>Unit {{ service.unitNumber }} · {{ service.type?.cleaningType }}</span>
+            <div v-if="noStartedServices.length === 0" class="trk-empty">
+              No pending start marks.
+            </div>
+            <div v-else class="trk-list">
+              <article
+                v-for="service in noStartedServices"
+                :key="service.id"
+                class="trk-item trk-item--missing trk-item--clickable"
+                :class="{ 'trk-item--active': selectedServiceId === service.id }"
+                @click="focusService(service)"
+              >
+                <div class="trk-item__row">
+                  <span
+                    class="trk-item__badge"
+                    :style="{ background: getServiceColor(service.id) }"
+                  >{{ serviceIndexMap.get(service.id) }}</span>
+                  <strong>{{ service.community?.communityName }}</strong>
+                </div>
+                <span>Unit {{ service.unitNumber }} &middot; {{ service.type?.cleaningType }}</span>
                 <span>Cleaner: {{ service.user?.name || 'Unassigned' }}</span>
                 <span>Status: {{ service.status?.statusName }}</span>
               </article>
             </div>
           </section>
 
-          <section class="tracking-panel">
+          <!-- Service timeline -->
+          <section class="trk-panel">
             <h3>Service Timeline</h3>
-            <div v-if="services.length === 0" class="tracking-empty">No assigned services for this day.</div>
-            <div v-else class="tracking-list">
-              <article v-for="service in services" :key="`timeline-${service.id}`" class="tracking-item">
-                <strong>{{ service.community?.communityName }} · Unit {{ service.unitNumber }}</strong>
+            <div v-if="services.length === 0" class="trk-empty">
+              No assigned services for this day.
+            </div>
+            <div v-else class="trk-list">
+              <article
+                v-for="service in services"
+                :key="`tl-${service.id}`"
+                class="trk-item trk-item--clickable"
+                :class="{ 'trk-item--active': selectedServiceId === service.id }"
+                @click="focusService(service)"
+              >
+                <div class="trk-item__row">
+                  <span
+                    class="trk-item__badge"
+                    :style="{ background: getServiceColor(service.id) }"
+                  >{{ serviceIndexMap.get(service.id) }}</span>
+                  <strong>{{ service.community?.communityName }} &middot; Unit {{ service.unitNumber }}</strong>
+                </div>
                 <span>Cleaner: {{ service.user?.name || '-' }}</span>
-                <span>Start: {{ formatDateTime(service.startedAt) }}</span>
-                <span>Finish: {{ formatDateTime(service.finishedAt) }}</span>
+                <div class="trk-item__times">
+                  <span class="trk-item__time trk-item__time--start">
+                    ▶ {{ formatDateTime(service.startedAt) }}
+                  </span>
+                  <span class="trk-item__time trk-item__time--finish">
+                    ✓ {{ formatDateTime(service.finishedAt) }}
+                  </span>
+                </div>
               </article>
             </div>
           </section>
+
         </div>
       </div>
     </template>
@@ -392,12 +526,13 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped lang="scss">
-.tracking-wrap {
+.trk-wrap {
   display: grid;
   gap: 1.1rem;
 }
 
-.tracking-header {
+// ── Header ──────────────────────────────────────────────
+.trk-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -405,19 +540,19 @@ onBeforeUnmount(() => {
   width: 100%;
 }
 
-.tracking-header__group {
+.trk-header__group {
   display: grid;
   gap: 0.35rem;
 }
 
-.tracking-date-label {
+.trk-date-label {
   font-size: 0.78rem;
   color: #475569;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
-.tracking-date {
+.trk-date {
   border: 1px solid rgba(100, 116, 139, 0.4);
   border-radius: 0.6rem;
   padding: 0.5rem 0.75rem;
@@ -425,7 +560,8 @@ onBeforeUnmount(() => {
   background: #fff;
 }
 
-.tracking-summary {
+// ── KPI cards ──────────────────────────────────────────
+.trk-summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.75rem;
@@ -438,99 +574,112 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 0.2rem;
   background: #f8fafc;
+
+  span {
+    color: #64748b;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  strong {
+    color: #0f172a;
+    font-size: 1.3rem;
+    line-height: 1;
+  }
 }
 
-.kpi-card span {
-  color: #64748b;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
+.kpi-card--assigned { border-left: 4px solid #3b82f6; }
+.kpi-card--started  { border-left: 4px solid #10b981; }
+.kpi-card--missing  { border-left: 4px solid #ef4444; }
+.kpi-card--finished { border-left: 4px solid #f59e0b; }
 
-.kpi-card strong {
-  color: #0f172a;
-  font-size: 1.3rem;
-  line-height: 1;
-}
-
-.kpi-card--assigned {
-  border-left: 4px solid #3b82f6;
-}
-
-.kpi-card--started {
-  border-left: 4px solid #10b981;
-}
-
-.kpi-card--missing {
-  border-left: 4px solid #ef4444;
-}
-
-.kpi-card--finished {
-  border-left: 4px solid #f59e0b;
-}
-
-.tracking-map-card {
+// ── Map card ───────────────────────────────────────────
+.trk-map-card {
   position: relative;
   border-radius: 1rem;
   overflow: hidden;
   border: 1px solid rgba(100, 116, 139, 0.25);
-  min-height: 420px;
   background: #fff;
 }
 
-.tracking-map-title {
+.trk-map {
+  width: 100%;
+  min-height: 500px;
+}
+
+.trk-map-title {
   position: absolute;
   top: 0.7rem;
   left: 0.7rem;
   z-index: 500;
-  padding: 0.55rem 0.65rem;
+  padding: 0.5rem 0.65rem;
   border-radius: 0.65rem;
   border: 1px solid rgba(100, 116, 139, 0.25);
   background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+
+  h3 {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #0f172a;
+  }
+
+  span {
+    font-size: 0.72rem;
+    color: #64748b;
+  }
 }
 
-.tracking-map-title h3 {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #0f172a;
-}
-
-.tracking-map-title span {
-  font-size: 0.72rem;
-  color: #475569;
-}
-
-.tracking-map {
-  width: 100%;
-  min-height: 420px;
-}
-
-.tracking-legend {
+// ── Legend ─────────────────────────────────────────────
+.trk-legend {
   position: absolute;
   top: 0.7rem;
   right: 0.7rem;
   z-index: 500;
   display: flex;
+  flex-direction: column;
   gap: 0.35rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  max-width: calc(100% - 1.4rem);
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(100, 116, 139, 0.25);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
 }
 
-.tracking-legend-note {
-  position: absolute;
-  top: 2.9rem;
-  right: 0.7rem;
-  z-index: 500;
-  margin: 0;
-  padding: 0.28rem 0.45rem;
-  border-radius: 0.4rem;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid rgba(100, 116, 139, 0.2);
-  color: #475569;
-  font-size: 0.72rem;
+.trk-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.75rem;
+  color: #374151;
+  font-weight: 500;
+
+  svg {
+    flex-shrink: 0;
+  }
 }
 
-.tracking-loading {
+.trk-legend__item--line {
+  gap: 0.5rem;
+}
+
+.trk-legend__line-sample {
+  display: inline-block;
+  width: 24px;
+  height: 2.5px;
+  background: #64748b;
+  border-radius: 2px;
+  background-image: repeating-linear-gradient(
+    to right,
+    #64748b 0,
+    #64748b 6px,
+    transparent 6px,
+    transparent 14px
+  );
+  flex-shrink: 0;
+}
+
+.trk-loading {
   position: absolute;
   inset: 0;
   background: rgba(255, 255, 255, 0.7);
@@ -538,105 +687,193 @@ onBeforeUnmount(() => {
   place-items: center;
 }
 
-:deep(.tracking-marker-tooltip) {
+// ── Tooltip & Popup (global via :deep) ─────────────────
+:deep(.trk-tooltip) {
   background: transparent;
-  border: 0;
+  border: none;
   box-shadow: none;
   padding: 0;
+
+  &::before {
+    display: none;
+  }
 }
 
-:deep(.tracking-marker-tooltip::before) {
-  display: none;
-}
-
-:deep(.tracking-marker-chip) {
+:deep(.trk-tip) {
   display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
-  border-radius: 999px;
-  padding: 0.16rem 0.5rem;
-  font-size: 0.68rem;
-  font-weight: 700;
+  gap: 0.35rem;
+  background: rgba(15, 23, 42, 0.88);
   color: #fff;
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem 0.22rem 0.28rem;
+  font-size: 0.73rem;
+  font-weight: 600;
+  font-family: Inter, system-ui, sans-serif;
   white-space: nowrap;
-  line-height: 1.25;
-  letter-spacing: 0.01em;
+  backdrop-filter: blur(4px);
 }
 
-:deep(.tracking-marker-chip--start) {
-  background: rgba(15, 118, 110, 0.92);
+:deep(.trk-tip__dot) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
 }
 
-:deep(.tracking-marker-chip--finish) {
-  background: rgba(153, 27, 27, 0.92);
+:deep(.trk-tip__text) {
+  line-height: 1;
 }
 
-.tracking-grid {
+:deep(.trk-popup .leaflet-popup-content-wrapper) {
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+:deep(.trk-popup .leaflet-popup-content) {
+  margin: 0;
+}
+
+:deep(.trk-popup .leaflet-popup-tip) {
+  background: #fff;
+}
+
+// ── Bottom grid panels ─────────────────────────────────
+.trk-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
-.tracking-panel {
+.trk-panel {
   border: 1px solid rgba(100, 116, 139, 0.22);
   border-radius: 0.9rem;
   padding: 1rem;
   background: #fff;
+
+  h3 {
+    font-size: 1rem;
+    margin: 0 0 0.6rem;
+    color: #0f172a;
+  }
 }
 
-.tracking-panel h3 {
-  font-size: 1rem;
-  margin: 0 0 0.6rem;
-  color: #0f172a;
-}
-
-.tracking-note {
+.trk-note {
   margin: 0 0 0.6rem;
   color: #64748b;
   font-size: 0.84rem;
 }
 
-.tracking-list {
+.trk-list {
   display: grid;
-  gap: 0.65rem;
-  max-height: 260px;
+  gap: 0.55rem;
+  max-height: 280px;
   overflow: auto;
 }
 
-.tracking-item {
-  display: grid;
-  gap: 0.15rem;
-  padding: 0.75rem;
-  border-radius: 0.65rem;
-  background: #f8fafc;
-  border: 1px solid rgba(100, 116, 139, 0.18);
-}
-
-.tracking-item span {
-  color: #475569;
-  font-size: 0.86rem;
-}
-
-.tracking-item--missing {
-  border-left: 4px solid #ef4444;
-}
-
-.tracking-empty {
+.trk-empty {
   color: #64748b;
   font-size: 0.9rem;
 }
 
+// ── Service item cards ─────────────────────────────────
+.trk-item {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.7rem 0.75rem;
+  border-radius: 0.65rem;
+  background: #f8fafc;
+  border: 1px solid rgba(100, 116, 139, 0.18);
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+
+  span {
+    color: #475569;
+    font-size: 0.84rem;
+  }
+}
+
+.trk-item--clickable {
+  cursor: pointer;
+
+  &:hover {
+    background: #f1f5f9;
+    border-color: rgba(100, 116, 139, 0.35);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+}
+
+.trk-item--active {
+  background: #f0f9ff;
+  border-color: rgba(14, 165, 233, 0.4);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.18);
+}
+
+.trk-item--missing {
+  border-left: 4px solid #ef4444;
+}
+
+.trk-item__row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.1rem;
+
+  strong {
+    font-size: 0.88rem;
+    color: #0f172a;
+    line-height: 1.3;
+  }
+}
+
+.trk-item__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.trk-item__times {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-top: 0.15rem;
+}
+
+.trk-item__time {
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.trk-item__time--start  { color: #059669; }
+.trk-item__time--finish { color: #6b7280; }
+
+// ── Responsive ─────────────────────────────────────────
 @media (max-width: 992px) {
-  .tracking-header {
+  .trk-header {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .tracking-summary {
+  .trk-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .tracking-grid {
+  .trk-grid {
     grid-template-columns: 1fr;
   }
 }
