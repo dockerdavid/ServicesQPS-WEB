@@ -56,6 +56,63 @@ const toCoordinate = (value?: string | null) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const OVERLAP_THRESHOLD_METERS = 2;
+const OVERLAP_SEPARATION_METERS = 16;
+
+const toRadians = (value: number) => (value * Math.PI) / 180;
+
+const distanceInMeters = (pointA: [number, number], pointB: [number, number]) => {
+  const earthRadius = 6371000;
+  const dLat = toRadians(pointB[0] - pointA[0]);
+  const dLng = toRadians(pointB[1] - pointA[1]);
+  const lat1 = toRadians(pointA[0]);
+  const lat2 = toRadians(pointB[0]);
+
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+
+  return 2 * earthRadius * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+const offsetPointByMeters = (
+  point: [number, number],
+  northMeters: number,
+  eastMeters: number,
+): [number, number] => {
+  const latRadians = toRadians(point[0]);
+  const deltaLat = northMeters / 111320;
+  const deltaLng = eastMeters / (111320 * Math.max(Math.cos(latRadians), 0.0001));
+  return [point[0] + deltaLat, point[1] + deltaLng];
+};
+
+const serviceHash = (serviceId: string) =>
+  String(serviceId)
+    .split('')
+    .reduce((acc, current) => acc + current.charCodeAt(0), 0);
+
+const getDisplayPoints = (
+  serviceId: string,
+  startPoint: [number, number],
+  finishPoint: [number, number],
+) => {
+  const distance = distanceInMeters(startPoint, finishPoint);
+  if (distance > OVERLAP_THRESHOLD_METERS) {
+    return { startDisplayPoint: startPoint, finishDisplayPoint: finishPoint, distance };
+  }
+
+  const angle = ((serviceHash(serviceId) % 360) * Math.PI) / 180;
+  const halfSeparation = OVERLAP_SEPARATION_METERS / 2;
+
+  const northOffset = Math.sin(angle) * halfSeparation;
+  const eastOffset = Math.cos(angle) * halfSeparation;
+
+  return {
+    startDisplayPoint: offsetPointByMeters(startPoint, northOffset, eastOffset),
+    finishDisplayPoint: offsetPointByMeters(finishPoint, -northOffset, -eastOffset),
+    distance,
+  };
+};
+
 const isValidTrackPoint = (lat: number | null, lng: number | null) => {
   if (lat === null || lng === null) return false;
   if (lat === 0 && lng === 0) return false;
@@ -90,6 +147,11 @@ const popupHtml = (service: Service, kind: 'start' | 'finish') => {
   `;
 };
 
+const markerLabelHtml = (service: Service, kind: 'start' | 'finish') => {
+  const label = kind === 'start' ? 'Start' : 'Finish';
+  return `<span class="tracking-marker-chip tracking-marker-chip--${kind}">${label} · Service #${service.id}</span>`;
+};
+
 const drawMap = () => {
   if (!map || !markersLayer || !routesLayer) return;
 
@@ -108,35 +170,60 @@ const drawMap = () => {
     const hasFinishPoint = isValidTrackPoint(finishLat, finishLng);
     const startPoint: [number, number] | null = hasStartPoint ? [startLat as number, startLng as number] : null;
     const finishPoint: [number, number] | null = hasFinishPoint ? [finishLat as number, finishLng as number] : null;
+    let startDisplayPoint = startPoint;
+    let finishDisplayPoint = finishPoint;
+    let startFinishDistance = Number.POSITIVE_INFINITY;
 
-    if (startPoint) {
-      const markerStart = L.circleMarker(startPoint, {
+    if (startPoint && finishPoint) {
+      const displayPoints = getDisplayPoints(service.id, startPoint, finishPoint);
+      startDisplayPoint = displayPoints.startDisplayPoint;
+      finishDisplayPoint = displayPoints.finishDisplayPoint;
+      startFinishDistance = displayPoints.distance;
+    }
+
+    if (startDisplayPoint) {
+      const markerStart = L.circleMarker(startDisplayPoint, {
         radius: 7,
         color: '#0f766e',
         fillColor: '#14b8a6',
         fillOpacity: 0.95,
         weight: 2,
-      }).bindPopup(popupHtml(service, 'start'));
+      })
+        .bindPopup(popupHtml(service, 'start'))
+        .bindTooltip(markerLabelHtml(service, 'start'), {
+          permanent: true,
+          direction: 'top',
+          offset: L.point(0, -10),
+          className: 'tracking-marker-tooltip',
+          opacity: 1,
+          interactive: false,
+        });
       markersLayer?.addLayer(markerStart);
-      points.push(startPoint);
+      points.push(startDisplayPoint);
     }
 
-    if (finishPoint) {
-      const markerFinish = L.circleMarker(finishPoint, {
+    if (finishDisplayPoint) {
+      const markerFinish = L.circleMarker(finishDisplayPoint, {
         radius: 7,
         color: '#991b1b',
         fillColor: '#ef4444',
         fillOpacity: 0.95,
         weight: 2,
-      }).bindPopup(popupHtml(service, 'finish'));
+      })
+        .bindPopup(popupHtml(service, 'finish'))
+        .bindTooltip(markerLabelHtml(service, 'finish'), {
+          permanent: true,
+          direction: 'bottom',
+          offset: L.point(0, 10),
+          className: 'tracking-marker-tooltip',
+          opacity: 1,
+          interactive: false,
+        });
       markersLayer?.addLayer(markerFinish);
-      points.push(finishPoint);
+      points.push(finishDisplayPoint);
     }
 
-    if (
-      hasStartPoint &&
-      hasFinishPoint
-    ) {
+    if (hasStartPoint && hasFinishPoint && startFinishDistance > OVERLAP_THRESHOLD_METERS) {
       const route = L.polyline(
         [
           startPoint as [number, number],
@@ -255,13 +342,14 @@ onBeforeUnmount(() => {
         <div class="tracking-map-card">
           <div class="tracking-map-title">
             <h3>Map Overview</h3>
-            <span>Auto-focuses on valid U.S. coordinates for selected day</span>
+            <span>Auto-focuses on valid coordinates for selected day</span>
           </div>
           <div class="tracking-legend">
             <Tag severity="success" value="Arrival marker" />
             <Tag severity="danger" value="Departure marker" />
-            <Tag severity="info" value="Start/Finish route" />
+            <Tag severity="info" value="Straight line (start → finish)" />
           </div>
+          <p class="tracking-legend-note">Route is a visual reference line, not a real GPS path.</p>
           <div ref="mapEl" class="tracking-map"></div>
           <div v-if="isLoading" class="tracking-loading">
             <ProgressSpinner stroke-width="4" />
@@ -428,12 +516,59 @@ onBeforeUnmount(() => {
   max-width: calc(100% - 1.4rem);
 }
 
+.tracking-legend-note {
+  position: absolute;
+  top: 2.9rem;
+  right: 0.7rem;
+  z-index: 500;
+  margin: 0;
+  padding: 0.28rem 0.45rem;
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(100, 116, 139, 0.2);
+  color: #475569;
+  font-size: 0.72rem;
+}
+
 .tracking-loading {
   position: absolute;
   inset: 0;
   background: rgba(255, 255, 255, 0.7);
   display: grid;
   place-items: center;
+}
+
+:deep(.tracking-marker-tooltip) {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+:deep(.tracking-marker-tooltip::before) {
+  display: none;
+}
+
+:deep(.tracking-marker-chip) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  border-radius: 999px;
+  padding: 0.16rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+}
+
+:deep(.tracking-marker-chip--start) {
+  background: rgba(15, 118, 110, 0.92);
+}
+
+:deep(.tracking-marker-chip--finish) {
+  background: rgba(153, 27, 27, 0.92);
 }
 
 .tracking-grid {
