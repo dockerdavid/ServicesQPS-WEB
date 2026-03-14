@@ -1,6 +1,7 @@
 import DefaultLayout from '../layouts/DefaultLayout.vue';
 import AuthView from '../modules/auth/AuthView.vue';
 import NotFoundView from '../modules/shared/views/NotFoundView.vue';
+import SupportView from '../modules/shared/views/SupportView.vue';
 import { createRouter, createWebHashHistory } from 'vue-router';
 import authGuard from './authGuard';
 
@@ -11,6 +12,11 @@ const router = createRouter({
       path: '/auth',
       name: 'auth',
       component: AuthView,
+    },
+    {
+      path: '/support',
+      name: 'support',
+      component: SupportView,
     },
     {
       path: '/',

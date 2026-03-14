@@ -16,6 +16,11 @@
             </div>
 
             <LoadingButton type="submit" label="Sign in" />
+
+            <p class="text-center text-xs text-gray-400">
+                Need help?
+                <RouterLink to="/support" class="text-blue-500 hover:underline">Contact Support</RouterLink>
+            </p>
         </form>
     </div>
 </template>

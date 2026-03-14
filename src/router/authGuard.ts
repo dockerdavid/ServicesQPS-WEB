@@ -13,8 +13,10 @@ const authGuard = (
   const userStore = useUserStore();
   const isAuthenticated = authStore.token;
 
+  const publicPaths = ['/auth', '/support'];
+
   if (!isAuthenticated) {
-    if (to.path !== '/auth') {
+    if (!publicPaths.includes(to.path)) {
       next('/auth');
     } else {
       next();
