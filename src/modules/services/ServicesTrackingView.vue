@@ -390,7 +390,7 @@ const fetchTracking = async () => {
   }
 };
 
-watch(selectedDate, () => { if (activeTab.value === 'cleaners') fetchTracking(); });
+watch(selectedDate, () => { fetchTracking(); fetchQATracking(); });
 
 // ── QA map helpers ────────────────────────────────────────
 const qaPopupHtml = (service: Service, kind: 'start' | 'finish', color: string, index: number) => {
@@ -549,22 +549,20 @@ const fetchQATracking = async () => {
 };
 
 watch(activeTab, async (tab) => {
+  await nextTick();
   if (tab === 'qa') {
-    await ensureQAMap();
-    await fetchQATracking();
+    qaMap?.invalidateSize();
   } else {
-    await nextTick();
     map?.invalidateSize();
   }
 });
 
-watch(selectedDate, async () => {
-  if (activeTab.value === 'qa') await fetchQATracking();
-});
 
 onMounted(async () => {
   await ensureMap();
+  await ensureQAMap();
   await fetchTracking();
+  await fetchQATracking();
 });
 
 onBeforeUnmount(() => {
@@ -605,7 +603,7 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- ═══ CLEANERS TAB ═══ -->
-        <template v-if="activeTab === 'cleaners'">
+        <div v-show="activeTab === 'cleaners'">
 
         <!-- KPI summary row -->
         <div class="trk-summary">
@@ -731,11 +729,11 @@ onBeforeUnmount(() => {
 
         </div>
 
-        </template>
+        </div>
         <!-- ═══ END CLEANERS TAB ═══ -->
 
         <!-- ═══ QA TAB ═══ -->
-        <template v-if="activeTab === 'qa'">
+        <div v-show="activeTab === 'qa'">
 
           <!-- QA KPI row -->
           <div class="trk-summary">
@@ -828,7 +826,7 @@ onBeforeUnmount(() => {
             </section>
           </div>
 
-        </template>
+        </div>
         <!-- ═══ END QA TAB ═══ -->
 
       </div>
