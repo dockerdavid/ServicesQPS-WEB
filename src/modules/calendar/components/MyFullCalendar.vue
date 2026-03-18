@@ -141,38 +141,6 @@
       </template>
     </Dialog>
 
-    <!-- QA Start Confirmation Dialog -->
-    <Dialog
-      v-model:visible="showQAConfirmDialog"
-      modal
-      header="Iniciar Calificación de Servicio"
-      :style="{ width: '420px', maxWidth: '95vw' }"
-      :closable="!isCapturingQAStart"
-    >
-      <div class="flex flex-col gap-3 py-2">
-        <p class="text-sm text-gray-700">
-          Estamos a punto de iniciar la toma de calificación. Se capturará tu
-          <strong>ubicación de inicio</strong> para registrar el punto de inspección.
-        </p>
-        <p class="text-xs text-gray-500">
-          Asegúrate de tener los permisos de ubicación activados y de estar en el
-          lugar correcto antes de continuar.
-        </p>
-      </div>
-      <template #footer>
-        <Button
-          label="Cancelar"
-          severity="secondary"
-          :disabled="isCapturingQAStart"
-          @click="cancelQAStart"
-        />
-        <Button
-          :label="isCapturingQAStart ? 'Capturando ubicación...' : 'Iniciar calificación'"
-          :loading="isCapturingQAStart"
-          @click="confirmQAStart"
-        />
-      </template>
-    </Dialog>
   </div>
 </template>
 
@@ -217,10 +185,6 @@ const reviewComment = ref('');
 
 const isSavingReview = ref(false);
 
-// QA flow
-const showQAConfirmDialog = ref(false);
-const pendingQAService = ref<CalendarInterface | null>(null);
-const isCapturingQAStart = ref(false);
 
 const filterOptions = [
   { label: 'Nombre Cleaner', value: 'cleaner' },
@@ -289,15 +253,12 @@ const handleDeleteFromCalendar = async (serviceId: string) => {
 };
 
 const openServiceModal = async (serviceInfo: CalendarInterface) => {
-  const isQA = userStore.userData?.roleId === '7';
-
-  if (isQA) {
-    // Show QA confirmation first
-    pendingQAService.value = serviceInfo;
-    showQAConfirmDialog.value = true;
-    return;
+  if (userStore.userData?.roleId === '7' && !serviceInfo.qaStartedAt) {
+    // Fire and forget — don't block opening the modal
+    captureLocation()
+      .then(loc => CalendarServices.postQAStart(serviceInfo.id, loc))
+      .catch(() => {});
   }
-
   await _loadReviewModal(serviceInfo);
 };
 
@@ -319,26 +280,6 @@ const _loadReviewModal = async (serviceInfo: CalendarInterface) => {
   showServiceModal.value = true;
 };
 
-const confirmQAStart = async () => {
-  if (!pendingQAService.value) return;
-  isCapturingQAStart.value = true;
-  try {
-    const location = await captureLocation();
-    await CalendarServices.postQAStart(pendingQAService.value.id, location);
-  } catch {
-    // location failed — continue anyway, just won't save start coords
-  } finally {
-    isCapturingQAStart.value = false;
-  }
-  showQAConfirmDialog.value = false;
-  await _loadReviewModal(pendingQAService.value);
-  pendingQAService.value = null;
-};
-
-const cancelQAStart = () => {
-  showQAConfirmDialog.value = false;
-  pendingQAService.value = null;
-};
 
 const closeOnlyServiceModal = () => {
   showServiceModal.value = false;
