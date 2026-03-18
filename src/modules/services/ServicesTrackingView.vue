@@ -552,6 +552,9 @@ watch(activeTab, async (tab) => {
   if (tab === 'qa') {
     await ensureQAMap();
     await fetchQATracking();
+  } else {
+    await nextTick();
+    map?.invalidateSize();
   }
 });
 
