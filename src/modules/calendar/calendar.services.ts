@@ -1,5 +1,6 @@
 import { apiServicesQps } from "../../api/api";
 import type { CalendarInterface } from "../../interfaces/calendar/calendar.interface";
+import type { GeoPayload } from "../../composables/useGeolocation";
 import { useGlobalStateStore } from "../../store/auth.store";
 
 
@@ -40,10 +41,28 @@ export class CalendarServices {
         }
     }
 
+    static async postQAStart(serviceId: string, location: GeoPayload): Promise<any> {
+        try {
+            const { data } = await apiServicesQps.post(`/reviews/qa-start/${serviceId}`, location)
+            return data
+        } catch (error) {
+            return null
+        }
+    }
+
     static async postServiceReview(payload: {
         serviceId: string,
         message: string,
-        reviewItems: { reviewItemId: string, value: boolean }[]
+        reviewItems: { reviewItemId: string, value: boolean }[],
+        latitude?: number,
+        longitude?: number,
+        accuracy?: number,
+        altitude?: number,
+        altitudeAccuracy?: number,
+        heading?: number,
+        speed?: number,
+        capturedAt?: string,
+        meta?: Record<string, any>,
     }): Promise<any> {
         this.store.setIsLoading(true)
         try {
@@ -51,6 +70,18 @@ export class CalendarServices {
             return data
         } catch (error) {
             return null
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
+
+    static async getQADailyTracking(date: string): Promise<any> {
+        this.store.setIsLoading(true)
+        try {
+            const { data } = await apiServicesQps.get(`/reviews/qa-tracking/daily?date=${date}`)
+            return data
+        } catch (error) {
+            throw error
         } finally {
             this.store.setIsLoading(false)
         }

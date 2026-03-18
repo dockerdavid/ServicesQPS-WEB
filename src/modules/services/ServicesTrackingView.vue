@@ -7,7 +7,32 @@ import { Button, Message, ProgressSpinner } from 'primevue';
 
 import BaseLayout from '../../layouts/BaseLayout.vue';
 import { CleanersServices } from './services.services';
+import { CalendarServices } from '../calendar/calendar.services';
 import type { Service, ServicesDailyTracking } from '../../interfaces/services/services.interface';
+
+// ── Active tab ───────────────────────────────────────────
+type TrackingTab = 'cleaners' | 'qa';
+const activeTab = ref<TrackingTab>('cleaners');
+
+// ── QA tracking state ────────────────────────────────────
+const qaTracking = ref<any | null>(null);
+const isLoadingQA = ref(false);
+const requestErrorQA = ref('');
+const selectedQAServiceId = ref<string | null>(null);
+
+let qaMap: L.Map | null = null;
+let qaMarkersLayer: L.LayerGroup | null = null;
+let qaRoutesLayer: L.LayerGroup | null = null;
+const qaMapEl = ref<HTMLElement | null>(null);
+const qaServiceMarkerRefs = new Map<string, { start: L.Marker | null; finish: L.Marker | null }>();
+
+const qaServices = computed(() => qaTracking.value?.services ?? []);
+const qaServiceIndexMap = computed(() => {
+  const m = new Map<string, number>();
+  qaServices.value.forEach((s: Service, i: number) => m.set(s.id, i + 1));
+  return m;
+});
+const qaSummary = computed(() => qaTracking.value?.summary ?? { totalReviewed: 0, finished: 0, notFinished: 0 });
 
 const DEFAULT_CENTER: L.LatLngExpression = [20, -20];
 const DEFAULT_ZOOM = 2;
@@ -365,7 +390,174 @@ const fetchTracking = async () => {
   }
 };
 
-watch(selectedDate, () => fetchTracking());
+watch(selectedDate, () => { if (activeTab.value === 'cleaners') fetchTracking(); });
+
+// ── QA map helpers ────────────────────────────────────────
+const qaPopupHtml = (service: Service, kind: 'start' | 'finish', color: string, index: number) => {
+  const isStart = kind === 'start';
+  const latitude  = isStart ? service.qaStartLatitude  : service.qaFinishLatitude;
+  const longitude = isStart ? service.qaStartLongitude : service.qaFinishLongitude;
+  const accuracy  = isStart ? service.qaStartAccuracy  : service.qaFinishAccuracy;
+  const timestamp = isStart ? service.qaStartedAt      : service.qaFinishedAt;
+
+  return `
+    <div style="min-width:240px;font-family:Inter,system-ui,sans-serif;line-height:1.45;border-radius:6px;overflow:hidden;margin:-1px;">
+      <div style="background:${color};padding:0.55rem 0.75rem;display:flex;align-items:center;gap:0.5rem;">
+        <span style="background:rgba(255,255,255,0.28);border-radius:50%;width:24px;height:24px;min-width:24px;display:inline-flex;align-items:center;justify-content:center;font-size:0.76rem;font-weight:800;color:#fff;">${index}</span>
+        <span style="color:#fff;font-weight:700;font-size:0.9rem;">
+          ${isStart ? '▶&nbsp;QA Start' : '✓&nbsp;QA Finish'} &mdash; ${service.community?.communityName ?? 'Community'}
+        </span>
+      </div>
+      <div style="padding:0.65rem 0.8rem;background:#fff;display:grid;gap:0.28rem;">
+        <div style="font-size:0.83rem;color:#1f2937;display:flex;gap:0.35rem;">
+          <span style="color:#6b7280;font-weight:600;min-width:52px;">Unit</span>${service.unitNumber ?? '-'}
+        </div>
+        <div style="font-size:0.83rem;color:#1f2937;display:flex;gap:0.35rem;">
+          <span style="color:#6b7280;font-weight:600;min-width:52px;">Cleaner</span>${service.user?.name ?? '-'}
+        </div>
+        <div style="font-size:0.83rem;color:#1f2937;display:flex;gap:0.35rem;">
+          <span style="color:#6b7280;font-weight:600;min-width:52px;">Status</span>${service.status?.statusName ?? '-'}
+        </div>
+        <div style="height:1px;background:#f3f4f6;margin:0.3rem 0;"></div>
+        <div style="font-size:0.83rem;color:#1f2937;display:flex;gap:0.35rem;">
+          <span style="color:#6b7280;font-weight:600;min-width:52px;">${isStart ? 'QA Start' : 'QA Finish'}</span>${formatDateTime(timestamp)}
+        </div>
+        <div style="font-size:0.75rem;color:#9ca3af;margin-top:0.1rem;">
+          ${latitude ?? '-'}, ${longitude ?? '-'}${accuracy ? ` &bull; ±${accuracy}m` : ''}
+        </div>
+      </div>
+    </div>`;
+};
+
+const drawQAMap = () => {
+  if (!qaMap || !qaMarkersLayer || !qaRoutesLayer) return;
+  qaMarkersLayer.clearLayers();
+  qaRoutesLayer.clearLayers();
+  qaServiceMarkerRefs.clear();
+
+  const points: L.LatLngExpression[] = [];
+
+  qaServices.value.forEach((service: Service) => {
+    const startLat = toCoordinate(service.qaStartLatitude);
+    const startLng = toCoordinate(service.qaStartLongitude);
+    const finishLat = toCoordinate(service.qaFinishLatitude);
+    const finishLng = toCoordinate(service.qaFinishLongitude);
+
+    const hasStart  = isValidTrackPoint(startLat, startLng);
+    const hasFinish = isValidTrackPoint(finishLat, finishLng);
+    const startPoint: [number, number] | null  = hasStart  ? [startLat!, startLng!]  : null;
+    const finishPoint: [number, number] | null = hasFinish ? [finishLat!, finishLng!] : null;
+
+    const color = getServiceColor(service.id);
+    const index = qaServiceIndexMap.value.get(service.id) ?? 0;
+    const refs: { start: L.Marker | null; finish: L.Marker | null } = { start: null, finish: null };
+
+    let startDisplayPoint = startPoint;
+    let finishDisplayPoint = finishPoint;
+    let distance = Number.POSITIVE_INFINITY;
+
+    if (startPoint && finishPoint) {
+      const dp = getDisplayPoints(service.id, startPoint, finishPoint);
+      startDisplayPoint = dp.startDisplayPoint;
+      finishDisplayPoint = dp.finishDisplayPoint;
+      distance = dp.distance;
+    }
+
+    if (startDisplayPoint) {
+      const m = L.marker(startDisplayPoint, { icon: createStartIcon(color, index) })
+        .bindPopup(qaPopupHtml(service, 'start', color, index), { maxWidth: 290, className: 'trk-popup' })
+        .bindTooltip(tooltipHtml(service, 'start', index, color), { direction: 'top', offset: L.point(0, -42), className: 'trk-tooltip', opacity: 1 });
+      qaMarkersLayer?.addLayer(m);
+      refs.start = m;
+      points.push(startDisplayPoint);
+    }
+
+    if (finishDisplayPoint) {
+      const m = L.marker(finishDisplayPoint, { icon: createFinishIcon(color, index) })
+        .bindPopup(qaPopupHtml(service, 'finish', color, index), { maxWidth: 290, className: 'trk-popup' })
+        .bindTooltip(tooltipHtml(service, 'finish', index, color), { direction: 'bottom', offset: L.point(0, 10), className: 'trk-tooltip', opacity: 1 });
+      qaMarkersLayer?.addLayer(m);
+      refs.finish = m;
+      points.push(finishDisplayPoint);
+    }
+
+    if (hasStart && hasFinish && distance > OVERLAP_THRESHOLD_METERS) {
+      qaRoutesLayer?.addLayer(L.polyline(
+        [startPoint as [number, number], finishPoint as [number, number]],
+        { color, weight: 2.5, opacity: 0.75, dashArray: '6 8' }
+      ));
+    }
+
+    qaServiceMarkerRefs.set(service.id, refs);
+  });
+
+  if (points.length === 0) {
+    qaMap.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+    return;
+  }
+  qaMap.fitBounds(L.latLngBounds(points as L.LatLngBoundsLiteral).pad(0.15), { maxZoom: 14 });
+};
+
+const focusQAService = (service: Service) => {
+  if (!qaMap) return;
+  selectedQAServiceId.value = service.id;
+  const startLat  = toCoordinate(service.qaStartLatitude);
+  const startLng  = toCoordinate(service.qaStartLongitude);
+  const finishLat = toCoordinate(service.qaFinishLatitude);
+  const finishLng = toCoordinate(service.qaFinishLongitude);
+  const hasStart  = isValidTrackPoint(startLat, startLng);
+  const hasFinish = isValidTrackPoint(finishLat, finishLng);
+  const refs = qaServiceMarkerRefs.get(service.id);
+
+  if (hasStart && hasFinish) {
+    qaMap.flyToBounds(L.latLngBounds([[startLat!, startLng!], [finishLat!, finishLng!]]).pad(0.35), { maxZoom: 16, duration: 0.8 });
+  } else if (hasStart) {
+    qaMap.flyTo([startLat!, startLng!], 16, { duration: 0.8 });
+  } else if (hasFinish) {
+    qaMap.flyTo([finishLat!, finishLng!], 16, { duration: 0.8 });
+  } else return;
+
+  setTimeout(() => {
+    if (refs?.start) refs.start.openPopup();
+    else if (refs?.finish) refs.finish.openPopup();
+  }, 900);
+};
+
+const ensureQAMap = async () => {
+  await nextTick();
+  if (!qaMapEl.value || qaMap) return;
+  qaMap = L.map(qaMapEl.value, { zoomControl: true, attributionControl: true, minZoom: 3 }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(qaMap);
+  qaMarkersLayer = L.layerGroup().addTo(qaMap);
+  qaRoutesLayer  = L.layerGroup().addTo(qaMap);
+};
+
+const fetchQATracking = async () => {
+  isLoadingQA.value = true;
+  requestErrorQA.value = '';
+  selectedQAServiceId.value = null;
+  try {
+    qaTracking.value = await CalendarServices.getQADailyTracking(selectedDate.value);
+    drawQAMap();
+  } catch {
+    requestErrorQA.value = 'Unable to load QA tracking for this date.';
+    qaTracking.value = null;
+    drawQAMap();
+  } finally {
+    isLoadingQA.value = false;
+  }
+};
+
+watch(activeTab, async (tab) => {
+  if (tab === 'qa') {
+    await ensureQAMap();
+    await fetchQATracking();
+  }
+});
+
+watch(selectedDate, async () => {
+  if (activeTab.value === 'qa') await fetchQATracking();
+});
 
 onMounted(async () => {
   await ensureMap();
@@ -373,10 +565,8 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-  if (map) {
-    map.remove();
-    map = null;
-  }
+  if (map) { map.remove(); map = null; }
+  if (qaMap) { qaMap.remove(); qaMap = null; }
 });
 </script>
 
@@ -396,6 +586,23 @@ onBeforeUnmount(() => {
 
     <template #card-content>
       <div class="trk-wrap">
+
+        <!-- Tab switcher -->
+        <div class="trk-tabs">
+          <button
+            class="trk-tab"
+            :class="{ 'trk-tab--active': activeTab === 'cleaners' }"
+            @click="activeTab = 'cleaners'"
+          >Cleaners</button>
+          <button
+            class="trk-tab"
+            :class="{ 'trk-tab--active': activeTab === 'qa' }"
+            @click="activeTab = 'qa'"
+          >QA</button>
+        </div>
+
+        <!-- ═══ CLEANERS TAB ═══ -->
+        <template v-if="activeTab === 'cleaners'">
 
         <!-- KPI summary row -->
         <div class="trk-summary">
@@ -520,6 +727,107 @@ onBeforeUnmount(() => {
           </section>
 
         </div>
+
+        </template>
+        <!-- ═══ END CLEANERS TAB ═══ -->
+
+        <!-- ═══ QA TAB ═══ -->
+        <template v-if="activeTab === 'qa'">
+
+          <!-- QA KPI row -->
+          <div class="trk-summary">
+            <article class="kpi-card kpi-card--assigned">
+              <span>Reviewed</span>
+              <strong>{{ qaSummary.totalReviewed }}</strong>
+            </article>
+            <article class="kpi-card kpi-card--finished">
+              <span>With Finish</span>
+              <strong>{{ qaSummary.finished }}</strong>
+            </article>
+            <article class="kpi-card kpi-card--missing">
+              <span>No Finish</span>
+              <strong>{{ qaSummary.notFinished }}</strong>
+            </article>
+          </div>
+
+          <Message v-if="requestErrorQA" severity="error" :closable="false">{{ requestErrorQA }}</Message>
+
+          <!-- QA Map -->
+          <div class="trk-map-card">
+            <div class="trk-map-title">
+              <h3>QA Map Overview</h3>
+              <span>{{ selectedDate }}</span>
+            </div>
+            <div class="trk-legend">
+              <div class="trk-legend__item">
+                <svg width="18" height="22" viewBox="0 0 30 38"><path d="M15 1.5C8.1 1.5 2.5 7.1 2.5 14C2.5 22.5 15 36.5 15 36.5S27.5 22.5 27.5 14C27.5 7.1 21.9 1.5 15 1.5Z" fill="#64748b" stroke="white" stroke-width="2"/><text x="15" y="19" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="12" font-weight="800" font-family="sans-serif">1</text></svg>
+                <span>QA Start</span>
+              </div>
+              <div class="trk-legend__item">
+                <svg width="18" height="22" viewBox="0 0 30 38"><path d="M15 1.5C8.1 1.5 2.5 7.1 2.5 14C2.5 22.5 15 36.5 15 36.5S27.5 22.5 27.5 14C27.5 7.1 21.9 1.5 15 1.5Z" fill="#64748b" stroke="white" stroke-width="2"/><circle cx="15" cy="14" r="7.5" fill="rgba(255,255,255,0.18)" stroke="white" stroke-width="1.5"/><path d="M10 14.3 L13.2 17.5 L20 11" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span>QA Finish</span>
+              </div>
+            </div>
+            <div ref="qaMapEl" class="trk-map"></div>
+            <div v-if="isLoadingQA" class="trk-loading">
+              <ProgressSpinner stroke-width="4" />
+            </div>
+          </div>
+
+          <!-- QA bottom panels -->
+          <div class="trk-grid">
+            <section class="trk-panel">
+              <h3>Servicios Calificados</h3>
+              <div v-if="qaServices.length === 0" class="trk-empty">
+                No hay servicios calificados por QA en esta fecha.
+              </div>
+              <div v-else class="trk-list">
+                <article
+                  v-for="service in qaServices"
+                  :key="`qa-${service.id}`"
+                  class="trk-item trk-item--clickable"
+                  :class="{ 'trk-item--active': selectedQAServiceId === service.id }"
+                  @click="focusQAService(service)"
+                >
+                  <div class="trk-item__row">
+                    <span class="trk-item__badge" :style="{ background: getServiceColor(service.id) }">{{ qaServiceIndexMap.get(service.id) }}</span>
+                    <strong>{{ service.community?.communityName }} &middot; Unit {{ service.unitNumber }}</strong>
+                  </div>
+                  <span>Cleaner: {{ service.user?.name || '-' }}</span>
+                  <span>Status: {{ service.status?.statusName || '-' }}</span>
+                  <div class="trk-item__times">
+                    <span class="trk-item__time trk-item__time--start">▶ QA Start: {{ formatDateTime(service.qaStartedAt) }}</span>
+                    <span class="trk-item__time trk-item__time--finish">✓ QA Finish: {{ formatDateTime(service.qaFinishedAt) }}</span>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section class="trk-panel">
+              <h3>Sin Coordenada de Fin QA</h3>
+              <div v-if="qaServices.filter((s: any) => !s.qaFinishedAt).length === 0" class="trk-empty">
+                Todos los servicios tienen coordenada de fin registrada.
+              </div>
+              <div v-else class="trk-list">
+                <article
+                  v-for="service in qaServices.filter((s: any) => !s.qaFinishedAt)"
+                  :key="`qanf-${service.id}`"
+                  class="trk-item trk-item--missing"
+                >
+                  <div class="trk-item__row">
+                    <span class="trk-item__badge" :style="{ background: getServiceColor(service.id) }">{{ qaServiceIndexMap.get(service.id) }}</span>
+                    <strong>{{ service.community?.communityName }} &middot; Unit {{ service.unitNumber }}</strong>
+                  </div>
+                  <span>Cleaner: {{ service.user?.name || '-' }}</span>
+                  <span class="trk-item__time trk-item__time--start">▶ QA Start: {{ formatDateTime(service.qaStartedAt) }}</span>
+                </article>
+              </div>
+            </section>
+          </div>
+
+        </template>
+        <!-- ═══ END QA TAB ═══ -->
+
       </div>
     </template>
   </BaseLayout>
@@ -529,6 +837,34 @@ onBeforeUnmount(() => {
 .trk-wrap {
   display: grid;
   gap: 1.1rem;
+}
+
+// ── Tabs ────────────────────────────────────────────────
+.trk-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid rgba(100, 116, 139, 0.18);
+  padding-bottom: 0;
+}
+
+.trk-tab {
+  padding: 0.5rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+
+  &:hover { color: #0f172a; }
+}
+
+.trk-tab--active {
+  color: #0f172a;
+  border-bottom-color: #3b82f6;
 }
 
 // ── Header ──────────────────────────────────────────────

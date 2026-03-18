@@ -140,6 +140,39 @@
         <Button label="Guardar" @click="closeServiceModal" :disabled="isSavingReview" class="p-button-secondary" />
       </template>
     </Dialog>
+
+    <!-- QA Start Confirmation Dialog -->
+    <Dialog
+      v-model:visible="showQAConfirmDialog"
+      modal
+      header="Iniciar Calificación de Servicio"
+      :style="{ width: '420px', maxWidth: '95vw' }"
+      :closable="!isCapturingQAStart"
+    >
+      <div class="flex flex-col gap-3 py-2">
+        <p class="text-sm text-gray-700">
+          Estamos a punto de iniciar la toma de calificación. Se capturará tu
+          <strong>ubicación de inicio</strong> para registrar el punto de inspección.
+        </p>
+        <p class="text-xs text-gray-500">
+          Asegúrate de tener los permisos de ubicación activados y de estar en el
+          lugar correcto antes de continuar.
+        </p>
+      </div>
+      <template #footer>
+        <Button
+          label="Cancelar"
+          severity="secondary"
+          :disabled="isCapturingQAStart"
+          @click="cancelQAStart"
+        />
+        <Button
+          :label="isCapturingQAStart ? 'Capturando ubicación...' : 'Iniciar calificación'"
+          :loading="isCapturingQAStart"
+          @click="confirmQAStart"
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -152,7 +185,7 @@ import { useRouter } from 'vue-router';
 import type { CalendarInterface } from '../../../interfaces/calendar/calendar.interface';
 import { CalendarServices } from '../calendar.services';
 import type { EventInput } from '@fullcalendar/core/index.js';
-import tippy from 'tippy.js'; 
+import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import MyInputGroup from '../../shared/components/MyInputGroup.vue';
 import LoadingButton from '../../shared/components/LoadingButton.vue';
@@ -160,6 +193,7 @@ import { useUserStore } from '../../../store/user.store';
 import { Dialog, Button, InputSwitch, Textarea, useToast } from 'primevue';
 import { showToast } from '../../../../src/utils/show-toast';
 import { CleanersServices } from '../../services/services.services';
+import { captureLocation } from '../../../composables/useGeolocation';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -182,6 +216,11 @@ const reviewData = ref<any[]>([]);
 const reviewComment = ref('');
 
 const isSavingReview = ref(false);
+
+// QA flow
+const showQAConfirmDialog = ref(false);
+const pendingQAService = ref<CalendarInterface | null>(null);
+const isCapturingQAStart = ref(false);
 
 const filterOptions = [
   { label: 'Nombre Cleaner', value: 'cleaner' },
@@ -250,26 +289,55 @@ const handleDeleteFromCalendar = async (serviceId: string) => {
 };
 
 const openServiceModal = async (serviceInfo: CalendarInterface) => {
+  const isQA = userStore.userData?.roleId === '7';
+
+  if (isQA) {
+    // Show QA confirmation first
+    pendingQAService.value = serviceInfo;
+    showQAConfirmDialog.value = true;
+    return;
+  }
+
+  await _loadReviewModal(serviceInfo);
+};
+
+const _loadReviewModal = async (serviceInfo: CalendarInterface) => {
   selectedServiceInfo.value = serviceInfo;
-  // Obtener los items de review dinámicamente
   const data = await CalendarServices.getReviewItemsWithClasses();
   const serviceReviews = serviceInfo.reviews || [];
   if (Array.isArray(data)) {
-    // Asegurarse que todos los items tengan un campo 'checked' según la review del servicio
     reviewData.value = data.map((cls: any) => ({
       ...cls,
       reviewItems: cls.reviewItems.map((item: any) => {
         const found = serviceReviews.find((r: any) => r.reviewItemId === item.id);
-        return {
-          ...item,
-          checked: found ? found.value === 1 : false
-        };
+        return { ...item, checked: found ? found.value === 1 : false };
       })
     }));
   } else {
     reviewData.value = [];
   }
   showServiceModal.value = true;
+};
+
+const confirmQAStart = async () => {
+  if (!pendingQAService.value) return;
+  isCapturingQAStart.value = true;
+  try {
+    const location = await captureLocation();
+    await CalendarServices.postQAStart(pendingQAService.value.id, location);
+  } catch {
+    // location failed — continue anyway, just won't save start coords
+  } finally {
+    isCapturingQAStart.value = false;
+  }
+  showQAConfirmDialog.value = false;
+  await _loadReviewModal(pendingQAService.value);
+  pendingQAService.value = null;
+};
+
+const cancelQAStart = () => {
+  showQAConfirmDialog.value = false;
+  pendingQAService.value = null;
 };
 
 const closeOnlyServiceModal = () => {
@@ -286,36 +354,43 @@ const closeOnlyServiceModal = () => {
 
 const closeServiceModal = async () => {
   isSavingReview.value = true;
-  // Preparar payload para el endpoint
   const serviceId = selectedServiceInfo.value?.id || '';
   const message = reviewComment.value;
   const reviewItemsPayload: { reviewItemId: string, value: boolean }[] = [];
   reviewData.value.forEach((cls: any) => {
     cls.reviewItems.forEach((item: any) => {
-      reviewItemsPayload.push({
-        reviewItemId: item.id,
-        value: !!item.checked
-      });
+      reviewItemsPayload.push({ reviewItemId: item.id, value: !!item.checked });
     });
   });
+
   if (serviceId) {
+    const isQA = userStore.userData?.roleId === '7';
+    let finishLocation: any = {};
+    if (isQA) {
+      try {
+        const loc = await captureLocation();
+        finishLocation = loc;
+      } catch {
+        // location failed — submit without finish coords
+      }
+    }
+
     await CalendarServices.postServiceReview({
       serviceId,
       message,
-      reviewItems: reviewItemsPayload
+      reviewItems: reviewItemsPayload,
+      ...finishLocation,
     });
   }
+
   showServiceModal.value = false;
   selectedServiceInfo.value = null;
-  // Resetear el comentario
   reviewComment.value = '';
-  // Resetear los checks
   reviewData.value = reviewData.value.map((cls: any) => ({
     ...cls,
     reviewItems: cls.reviewItems.map((item: any) => ({ ...item, checked: false }))
   }));
   isSavingReview.value = false;
-  // Recargar los servicios y el calendario
   await reloadCalendarEvents();
 };
 
