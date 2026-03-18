@@ -25,6 +25,7 @@ export interface CalendarInterface {
     status:      Status;
     user:        User;
     reviews?:    CalendarReviewItem[];
+    qaStartedAt?: string | null;
 }
 
 export interface Community {
