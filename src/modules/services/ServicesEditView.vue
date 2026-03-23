@@ -6,7 +6,7 @@ import { StatusesServices } from '../statuses/statuses.services';
 import { ExtrasServices } from '../extras/extras.services';
 import { UsersServices } from '../users/users.services';
 import { CleanersServices } from './services.services';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
 import LoadingButton from '../shared/components/LoadingButton.vue';
 import { Breadcrumb, useToast, DatePicker, MultiSelect } from 'primevue';

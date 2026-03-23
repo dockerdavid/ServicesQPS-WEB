@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, watch } from 'vue';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import { DatePicker, MultiSelect, useToast } from 'primevue';
 import CreateLayout from '../../layouts/CreateLayout.vue';
 import MyInputGroup from '../shared/components/MyInputGroup.vue';

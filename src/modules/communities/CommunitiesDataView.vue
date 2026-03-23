@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import moment from "moment";
+import moment from 'moment-timezone';
 import { Calendar, FloatLabel, IconField, InputGroup, InputGroupAddon, InputIcon, InputText } from "primevue";
 import GenericDataView from "../shared/views/GenericDataView.vue";
 import { CommunitiesServices } from "./communities.services";

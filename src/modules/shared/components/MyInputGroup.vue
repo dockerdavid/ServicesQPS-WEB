@@ -39,7 +39,7 @@
 
 <script lang="ts" setup>
 import { DatePicker, IconField, InputIcon, InputText, Select, InputNumber, Password, Textarea } from 'primevue';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import { computed } from 'vue';
 import type { InputNumericMode, InputType } from '../../../interfaces/input-config.interface';
 
@@ -84,12 +84,12 @@ const modelValue = computed({
 
 const dateValue = computed({
     get() {
-        return model.value && moment(model.value, 'YYYY-MM-DD', true).isValid()
-            ? moment(model.value).toDate()
+        return model.value && moment(String(model.value), 'YYYY-MM-DD', true).isValid()
+            ? moment.tz(String(model.value), 'YYYY-MM-DD', 'America/New_York').toDate()
             : null;
     },
     set(value: Date | null) {
-        model.value = value ? moment(value).format('YYYY-MM-DD') : '';
+        model.value = value ? moment.tz(value, 'America/New_York').format('YYYY-MM-DD') : '';
     },
 });
 

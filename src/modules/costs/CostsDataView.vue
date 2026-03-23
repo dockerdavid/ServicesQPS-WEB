@@ -5,7 +5,7 @@ import GenericDataView from "../shared/views/GenericDataView.vue";
 import { CostsServices } from "./costs.services";
 import { useGlobalStateStore } from "../../../src/store/auth.store";
 import { computed, ref } from "vue";
-import moment from "moment";
+import moment from 'moment-timezone';
 import { Calendar, FloatLabel, InputGroup, InputGroupAddon } from "primevue";
 
 const startDate = ref(new Date());

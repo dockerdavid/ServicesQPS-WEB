@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Button, Message, ProgressSpinner } from 'primevue';
@@ -45,7 +45,7 @@ const SERVICE_COLORS = [
   '#4f46e5', '#c026d3', '#15803d', '#b45309', '#1d4ed8',
 ];
 
-const selectedDate = ref(moment().format('YYYY-MM-DD'));
+const selectedDate = ref(moment.tz('America/New_York').format('YYYY-MM-DD'));
 const tracking = ref<ServicesDailyTracking | null>(null);
 const isLoading = ref(false);
 const requestError = ref('');
@@ -151,7 +151,7 @@ const isValidTrackPoint = (lat: number | null, lng: number | null) => {
 
 const formatDateTime = (value?: string | Date | null) => {
   if (!value) return 'N/A';
-  return moment(value).format('MMM D, YYYY HH:mm');
+  return moment.tz(value, 'America/New_York').format('MM/DD/YYYY hh:mm A');
 };
 
 // Start: numbered pin (solid fill)
@@ -665,7 +665,7 @@ onBeforeUnmount(() => {
           <!-- Missing start-checkin -->
           <section class="trk-panel">
             <h3>Missing Start Check-in</h3>
-            <p v-if="selectedDate !== moment().format('YYYY-MM-DD')" class="trk-note">
+            <p v-if="selectedDate !== moment.tz('America/New_York').format('YYYY-MM-DD')" class="trk-note">
               Showing missing starts for {{ selectedDate }}.
             </p>
             <div v-if="noStartedServices.length === 0" class="trk-empty">

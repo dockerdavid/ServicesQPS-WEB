@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useToast } from 'primevue/usetoast';
+import moment from 'moment-timezone';
 import { Column, DataTable, Button, Skeleton, Paginator, Dialog } from "primevue";
 import MyDeleteToast from "../../shared/components/MyDeleteToast.vue";
 import { useGlobalStateStore } from "../../../store/auth.store";
@@ -16,6 +17,17 @@ import MyRejectToast from "./MyRejectToast.vue";
 import { showToast } from "../../../../src/utils/show-toast";
 import { CleanersServices } from "../services.services";
 import ServiceChatPanel from "./ServiceChatPanel.vue";
+
+const DATE_FIELD_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+const formatCellValue = (value: any, field: string): string => {
+    if (!value) return '';
+    const strVal = String(value);
+    if ((field === 'date' || field.endsWith('Date')) && DATE_FIELD_PATTERN.test(strVal)) {
+        return moment.utc(strVal).format('MM/DD/YYYY');
+    }
+    return strVal;
+};
 
 // Función para manejar campos anidados de forma segura
 const getNestedValue = (obj: any, path: string): string => {
@@ -271,7 +283,7 @@ watch(
                 <Column v-for="(header, index) in headers" :key="index" :header="header.name"
                     :style="header.style">
                     <template #body="{ data }">
-                        <span>{{ getNestedValue(data, header.field) }}</span>
+                        <span>{{ formatCellValue(getNestedValue(data, header.field), header.field) }}</span>
                     </template>
                 </Column>
 

@@ -1,5 +1,8 @@
 import 'primeicons/primeicons.css';
 
+import moment from 'moment-timezone';
+moment.tz.setDefault('America/New_York');
+
 import { createApp, markRaw } from 'vue'
 import { createPinia } from 'pinia'
 import { createPersistedState } from 'pinia-plugin-persistedstate'

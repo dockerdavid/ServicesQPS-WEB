@@ -6,7 +6,7 @@ import { Button, Calendar, InputGroup, InputGroupAddon, FloatLabel } from "prime
 import { apiServicesQps } from "../../../src/api/api";
 import { useGlobalStateStore } from "../../../src/store/auth.store";
 import LoadingButton from "../shared/components/LoadingButton.vue";
-import moment from "moment";
+import moment from 'moment-timezone';
 
 
 const fetchServices = async (page: number, rows: number) => {
@@ -26,11 +26,11 @@ const startDate = ref(new Date());
 const endDate = ref(new Date());
 
 const formattedStartDate = computed(() =>
-    startDate.value ? moment(startDate.value).format('YYYY-MM-DD') : ''
+    startDate.value ? moment.tz(startDate.value, 'America/New_York').format('YYYY-MM-DD') : ''
 );
 
 const formattedEndDate = computed(() =>
-    endDate.value ? moment(endDate.value).format('YYYY-MM-DD') : ''
+    endDate.value ? moment.tz(endDate.value, 'America/New_York').format('YYYY-MM-DD') : ''
 );
 
 const { setIsLoading } = useGlobalStateStore();
