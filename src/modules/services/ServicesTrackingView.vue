@@ -142,6 +142,24 @@ const getDisplayPoints = (
   };
 };
 
+// Spread markers that share the same physical location across multiple services
+const separateCloseMarkers = (
+  entries: { id: string; point: [number, number] }[],
+): Map<string, [number, number]> => {
+  const result = new Map<string, [number, number]>();
+  entries.forEach(({ id, point }) => {
+    let adjusted = point;
+    const placed = Array.from(result.values());
+    const tooClose = placed.some(p => distanceInMeters(adjusted, p) <= OVERLAP_THRESHOLD_METERS);
+    if (tooClose) {
+      const angle = ((serviceHash(id) % 360) * Math.PI) / 180;
+      adjusted = offsetPointByMeters(point, Math.sin(angle) * OVERLAP_SEPARATION_METERS, Math.cos(angle) * OVERLAP_SEPARATION_METERS);
+    }
+    result.set(id, adjusted);
+  });
+  return result;
+};
+
 const isValidTrackPoint = (lat: number | null, lng: number | null) => {
   if (lat === null || lng === null) return false;
   if (lat === 0 && lng === 0) return false;
@@ -244,6 +262,11 @@ const drawMap = () => {
 
   const points: L.LatLngExpression[] = [];
 
+  const startEntries = services.value
+    .filter(s => isValidTrackPoint(toCoordinate(s.startLatitude), toCoordinate(s.startLongitude)))
+    .map(s => ({ id: s.id, point: [toCoordinate(s.startLatitude)!, toCoordinate(s.startLongitude)!] as [number, number] }));
+  const adjustedStarts = separateCloseMarkers(startEntries);
+
   services.value.forEach((service) => {
     const startLat = toCoordinate(service.startLatitude);
     const startLng = toCoordinate(service.startLongitude);
@@ -259,13 +282,13 @@ const drawMap = () => {
     const index = serviceIndexMap.value.get(service.id) ?? 0;
     const refs: { start: L.Marker | null; finish: L.Marker | null } = { start: null, finish: null };
 
-    let startDisplayPoint = startPoint;
+    let startDisplayPoint: [number, number] | null = adjustedStarts.get(service.id) ?? startPoint;
     let finishDisplayPoint = finishPoint;
     let distance = Number.POSITIVE_INFINITY;
 
     if (startPoint && finishPoint) {
       const dp = getDisplayPoints(service.id, startPoint, finishPoint);
-      startDisplayPoint = dp.startDisplayPoint;
+      startDisplayPoint = adjustedStarts.get(service.id) ?? dp.startDisplayPoint;
       finishDisplayPoint = dp.finishDisplayPoint;
       distance = dp.distance;
     }
@@ -437,6 +460,12 @@ const drawQAMap = () => {
 
   const points: L.LatLngExpression[] = [];
 
+  // Pre-compute separated start positions to avoid stacking markers on the same location
+  const startEntries = qaServices.value
+    .filter((s: Service) => isValidTrackPoint(toCoordinate(s.qaStartLatitude), toCoordinate(s.qaStartLongitude)))
+    .map((s: Service) => ({ id: s.id, point: [toCoordinate(s.qaStartLatitude)!, toCoordinate(s.qaStartLongitude)!] as [number, number] }));
+  const adjustedStarts = separateCloseMarkers(startEntries);
+
   qaServices.value.forEach((service: Service) => {
     const startLat = toCoordinate(service.qaStartLatitude);
     const startLng = toCoordinate(service.qaStartLongitude);
@@ -452,13 +481,13 @@ const drawQAMap = () => {
     const index = qaServiceIndexMap.value.get(service.id) ?? 0;
     const refs: { start: L.Marker | null; finish: L.Marker | null } = { start: null, finish: null };
 
-    let startDisplayPoint = startPoint;
+    let startDisplayPoint: [number, number] | null = adjustedStarts.get(service.id) ?? startPoint;
     let finishDisplayPoint = finishPoint;
     let distance = Number.POSITIVE_INFINITY;
 
     if (startPoint && finishPoint) {
       const dp = getDisplayPoints(service.id, startPoint, finishPoint);
-      startDisplayPoint = dp.startDisplayPoint;
+      startDisplayPoint = adjustedStarts.get(service.id) ?? dp.startDisplayPoint;
       finishDisplayPoint = dp.finishDisplayPoint;
       distance = dp.distance;
     }
