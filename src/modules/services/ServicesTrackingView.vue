@@ -588,13 +588,15 @@ const fetchQATracking = async () => {
 let qaMapInitializedVisible = false;
 
 watch(activeTab, async (tab) => {
+  console.log('[TAB WATCH] tab changed to:', tab, '| qaMap exists:', !!qaMap, '| services:', qaServices.value.length);
   await nextTick();
   if (tab === 'qa') {
     if (!qaMapInitializedVisible) {
-      // First time tab becomes visible: destroy the 0×0 map and reinitialize
       qaMapInitializedVisible = true;
+      console.log('[TAB WATCH] first QA open, reinitializing map');
       if (qaMap) { qaMap.remove(); qaMap = null; qaMarkersLayer = null; qaRoutesLayer = null; }
       await ensureQAMap();
+      console.log('[TAB WATCH] ensureQAMap done, qaMap=', !!qaMap);
     }
     qaMap?.invalidateSize();
     await nextTick();
