@@ -1015,7 +1015,7 @@ onBeforeUnmount(() => {
 
 .trk-map {
   width: 100%;
-  min-height: 500px;
+  height: 500px;
 }
 
 .trk-map-title {
