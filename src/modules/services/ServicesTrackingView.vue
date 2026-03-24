@@ -453,14 +453,10 @@ const qaPopupHtml = (service: Service, kind: 'start' | 'finish', color: string, 
 };
 
 const drawQAMap = () => {
-  console.log('[QAMap] drawQAMap called, qaMap=', !!qaMap, 'qaMarkersLayer=', !!qaMarkersLayer, 'services=', qaServices.value.length);
   if (!qaMap || !qaMarkersLayer || !qaRoutesLayer) return;
   qaMarkersLayer.clearLayers();
   qaRoutesLayer.clearLayers();
   qaServiceMarkerRefs.clear();
-
-  const mapSize = qaMap.getSize();
-  console.log('[QAMap] map size:', mapSize.x, 'x', mapSize.y);
 
   const points: L.LatLngExpression[] = [];
 
@@ -481,7 +477,6 @@ const drawQAMap = () => {
     const startPoint: [number, number] | null  = hasStart  ? [startLat!, startLng!]  : null;
     const finishPoint: [number, number] | null = hasFinish ? [finishLat!, finishLng!] : null;
 
-    console.log(`[QAMap] service ${service.id}: hasStart=${hasStart}, startLat=${startLat}, startLng=${startLng}, rawLat=${service.qaStartLatitude}, rawLng=${service.qaStartLongitude}`);
 
     const color = getServiceColor(service.id);
     const index = qaServiceIndexMap.value.get(service.id) ?? 0;
@@ -498,7 +493,6 @@ const drawQAMap = () => {
       distance = dp.distance;
     }
 
-    console.log(`[QAMap] service ${service.id}: index=${index}, startDisplayPoint=`, startDisplayPoint);
 
     if (startDisplayPoint) {
       const m = L.marker(startDisplayPoint, { icon: createStartIcon(color, index) })
@@ -585,21 +579,13 @@ const fetchQATracking = async () => {
   }
 };
 
-let qaMapInitializedVisible = false;
-
 watch(activeTab, async (tab) => {
-  console.log('[TAB WATCH] tab changed to:', tab, '| qaMap exists:', !!qaMap, '| services:', qaServices.value.length);
   await nextTick();
+  // Wait for the browser to reflow after v-show toggle before Leaflet reads dimensions
+  await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
   if (tab === 'qa') {
-    if (!qaMapInitializedVisible) {
-      qaMapInitializedVisible = true;
-      console.log('[TAB WATCH] first QA open, reinitializing map');
-      if (qaMap) { qaMap.remove(); qaMap = null; qaMarkersLayer = null; qaRoutesLayer = null; }
-      await ensureQAMap();
-      console.log('[TAB WATCH] ensureQAMap done, qaMap=', !!qaMap);
-    }
+    await ensureQAMap();
     qaMap?.invalidateSize();
-    await nextTick();
     drawQAMap();
   } else {
     map?.invalidateSize();
@@ -610,7 +596,8 @@ watch(activeTab, async (tab) => {
 
 onMounted(async () => {
   await ensureMap();
-  await ensureQAMap();
+  // QA map is NOT initialized here — the tab is hidden (v-show) so Leaflet
+  // would get 0×0 dimensions. ensureQAMap() is called when the tab first opens.
   await fetchTracking();
   await fetchQATracking();
 });
