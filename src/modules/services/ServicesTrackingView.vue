@@ -142,21 +142,38 @@ const getDisplayPoints = (
   };
 };
 
-// Spread markers that share the same physical location across multiple services
+// Group nearby services into clusters and spread them in a circle so every marker is visible
+const CLUSTER_RADIUS_METERS = 30;
+
 const separateCloseMarkers = (
   entries: { id: string; point: [number, number] }[],
 ): Map<string, [number, number]> => {
   const result = new Map<string, [number, number]>();
+  const assigned = new Set<string>();
+
   entries.forEach(({ id, point }) => {
-    let adjusted = point;
-    const placed = Array.from(result.values());
-    const tooClose = placed.some(p => distanceInMeters(adjusted, p) <= OVERLAP_THRESHOLD_METERS);
-    if (tooClose) {
-      const angle = ((serviceHash(id) % 360) * Math.PI) / 180;
-      adjusted = offsetPointByMeters(point, Math.sin(angle) * OVERLAP_SEPARATION_METERS, Math.cos(angle) * OVERLAP_SEPARATION_METERS);
+    if (assigned.has(id)) return;
+    const cluster: { id: string; point: [number, number] }[] = [{ id, point }];
+    assigned.add(id);
+
+    entries.forEach(({ id: id2, point: p2 }) => {
+      if (assigned.has(id2)) return;
+      if (distanceInMeters(point, p2) <= CLUSTER_RADIUS_METERS) {
+        cluster.push({ id: id2, point: p2 });
+        assigned.add(id2);
+      }
+    });
+
+    if (cluster.length === 1) {
+      result.set(id, point);
+    } else {
+      cluster.forEach(({ id: cId }, i) => {
+        const angle = (2 * Math.PI * i) / cluster.length;
+        result.set(cId, offsetPointByMeters(point, Math.sin(angle) * OVERLAP_SEPARATION_METERS, Math.cos(angle) * OVERLAP_SEPARATION_METERS));
+      });
     }
-    result.set(id, adjusted);
   });
+
   return result;
 };
 
@@ -816,7 +833,6 @@ onBeforeUnmount(() => {
               </div>
             </div>
             <div ref="qaMapEl" class="trk-map"></div>
-            <pre style="font-size:11px;background:#f1f5f9;padding:6px;margin-top:4px;border-radius:4px;">DEBUG services={{ qaServices.length }} | <span v-for="s in qaServices" :key="s.id">id={{ s.id }} lat={{ s.qaStartLatitude }} lng={{ s.qaStartLongitude }} | </span></pre>
             <div v-if="isLoadingQA" class="trk-loading">
               <ProgressSpinner stroke-width="4" />
             </div>
