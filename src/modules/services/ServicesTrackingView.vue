@@ -577,10 +577,19 @@ const fetchQATracking = async () => {
   }
 };
 
+let qaMapInitializedVisible = false;
+
 watch(activeTab, async (tab) => {
   await nextTick();
   if (tab === 'qa') {
+    if (!qaMapInitializedVisible) {
+      // First time tab becomes visible: destroy the 0×0 map and reinitialize
+      qaMapInitializedVisible = true;
+      if (qaMap) { qaMap.remove(); qaMap = null; qaMarkersLayer = null; qaRoutesLayer = null; }
+      await ensureQAMap();
+    }
     qaMap?.invalidateSize();
+    await nextTick();
     drawQAMap();
   } else {
     map?.invalidateSize();
