@@ -453,10 +453,14 @@ const qaPopupHtml = (service: Service, kind: 'start' | 'finish', color: string, 
 };
 
 const drawQAMap = () => {
+  console.log('[QAMap] drawQAMap called, qaMap=', !!qaMap, 'qaMarkersLayer=', !!qaMarkersLayer, 'services=', qaServices.value.length);
   if (!qaMap || !qaMarkersLayer || !qaRoutesLayer) return;
   qaMarkersLayer.clearLayers();
   qaRoutesLayer.clearLayers();
   qaServiceMarkerRefs.clear();
+
+  const mapSize = qaMap.getSize();
+  console.log('[QAMap] map size:', mapSize.x, 'x', mapSize.y);
 
   const points: L.LatLngExpression[] = [];
 
@@ -477,6 +481,8 @@ const drawQAMap = () => {
     const startPoint: [number, number] | null  = hasStart  ? [startLat!, startLng!]  : null;
     const finishPoint: [number, number] | null = hasFinish ? [finishLat!, finishLng!] : null;
 
+    console.log(`[QAMap] service ${service.id}: hasStart=${hasStart}, startLat=${startLat}, startLng=${startLng}, rawLat=${service.qaStartLatitude}, rawLng=${service.qaStartLongitude}`);
+
     const color = getServiceColor(service.id);
     const index = qaServiceIndexMap.value.get(service.id) ?? 0;
     const refs: { start: L.Marker | null; finish: L.Marker | null } = { start: null, finish: null };
@@ -491,6 +497,8 @@ const drawQAMap = () => {
       finishDisplayPoint = dp.finishDisplayPoint;
       distance = dp.distance;
     }
+
+    console.log(`[QAMap] service ${service.id}: index=${index}, startDisplayPoint=`, startDisplayPoint);
 
     if (startDisplayPoint) {
       const m = L.marker(startDisplayPoint, { icon: createStartIcon(color, index) })
