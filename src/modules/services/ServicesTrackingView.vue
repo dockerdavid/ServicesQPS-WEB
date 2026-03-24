@@ -552,8 +552,10 @@ watch(activeTab, async (tab) => {
   await nextTick();
   if (tab === 'qa') {
     qaMap?.invalidateSize();
+    drawQAMap();
   } else {
     map?.invalidateSize();
+    drawMap();
   }
 });
 
