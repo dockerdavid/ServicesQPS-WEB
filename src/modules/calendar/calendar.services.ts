@@ -75,10 +75,10 @@ export class CalendarServices {
         }
     }
 
-    static async getQADailyTracking(date: string): Promise<any> {
+    static async getQADailyTracking(): Promise<any> {
         this.store.setIsLoading(true)
         try {
-            const { data } = await apiServicesQps.get(`/reviews/qa-tracking/daily?date=${date}`)
+            const { data } = await apiServicesQps.get(`/reviews/qa-tracking/daily`)
             return data
         } catch (error) {
             throw error

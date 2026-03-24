@@ -537,10 +537,10 @@ const fetchQATracking = async () => {
   requestErrorQA.value = '';
   selectedQAServiceId.value = null;
   try {
-    qaTracking.value = await CalendarServices.getQADailyTracking(selectedDate.value);
+    qaTracking.value = await CalendarServices.getQADailyTracking();
     drawQAMap();
   } catch {
-    requestErrorQA.value = 'Unable to load QA tracking for this date.';
+    requestErrorQA.value = 'Unable to load QA tracking for today.';
     qaTracking.value = null;
     drawQAMap();
   } finally {
@@ -577,11 +577,20 @@ onBeforeUnmount(() => {
 
     <template #header-button>
       <div class="trk-header">
-        <div class="trk-header__group">
-          <label for="tracking-date" class="trk-date-label">Service Date</label>
-          <input id="tracking-date" v-model="selectedDate" type="date" class="trk-date" />
-        </div>
-        <Button label="Refresh" severity="contrast" @click="fetchTracking" />
+        <template v-if="activeTab === 'cleaners'">
+          <div class="trk-header__group">
+            <label for="tracking-date" class="trk-date-label">Service Date</label>
+            <input id="tracking-date" v-model="selectedDate" type="date" class="trk-date" />
+          </div>
+          <Button label="Refresh" severity="contrast" @click="fetchTracking" />
+        </template>
+        <template v-else>
+          <div class="trk-header__group">
+            <span class="trk-date-label">QA Activity</span>
+            <span class="trk-today-badge">Today</span>
+          </div>
+          <Button label="Refresh" severity="contrast" @click="fetchQATracking" />
+        </template>
       </div>
     </template>
 
@@ -757,7 +766,7 @@ onBeforeUnmount(() => {
           <div class="trk-map-card">
             <div class="trk-map-title">
               <h3>QA Map Overview</h3>
-              <span>{{ selectedDate }}</span>
+              <span>Today · {{ moment.tz('America/New_York').format('MM/DD/YYYY') }}</span>
             </div>
             <div class="trk-legend">
               <div class="trk-legend__item">
@@ -780,7 +789,7 @@ onBeforeUnmount(() => {
             <section class="trk-panel">
               <h3>Servicios Calificados</h3>
               <div v-if="qaServices.length === 0" class="trk-empty">
-                No hay servicios calificados por QA en esta fecha.
+                No QA visits recorded today.
               </div>
               <div v-else class="trk-list">
                 <article
@@ -887,6 +896,17 @@ onBeforeUnmount(() => {
   color: #475569;
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+.trk-today-badge {
+  display: inline-block;
+  padding: 0.2rem 0.75rem;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .trk-date {
