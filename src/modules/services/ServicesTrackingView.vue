@@ -816,6 +816,7 @@ onBeforeUnmount(() => {
               </div>
             </div>
             <div ref="qaMapEl" class="trk-map"></div>
+            <pre style="font-size:11px;background:#f1f5f9;padding:6px;margin-top:4px;border-radius:4px;">DEBUG services={{ qaServices.length }} | <span v-for="s in qaServices" :key="s.id">id={{ s.id }} lat={{ s.qaStartLatitude }} lng={{ s.qaStartLongitude }} | </span></pre>
             <div v-if="isLoadingQA" class="trk-loading">
               <ProgressSpinner stroke-width="4" />
             </div>
