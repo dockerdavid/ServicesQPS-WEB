@@ -127,6 +127,7 @@ const updateEntity = async () => {
 
     const dataToUpdate = Object.keys(entityData.value).reduce((acc, key) => {
       const inputConfig = props.inputs.find(input => input.inputId === key);
+      if (!inputConfig) return acc;
       if (inputConfig?.isNotNeccesary && entityData.value[key] === '') {
         return acc;
       }
