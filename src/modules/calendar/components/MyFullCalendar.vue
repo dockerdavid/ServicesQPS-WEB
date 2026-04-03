@@ -505,16 +505,13 @@ function getEventColor(status: string): string {
 }
 
 function formatDate(date: string | Date): string {
-  // Si el string es YYYY-MM-DD, parsea manualmente
-  if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    const [year, month, day] = date.split('-');
-    return `${month}/${day}/${year}`;
-  }
-  // Si es un objeto Date o un string diferente, usa el objeto Date como fallback
-  const d = new Date(date);
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${mm}/${dd}/${d.getFullYear()}`;
+  // Normalizar siempre a YYYY-MM-DD tomando los primeros 10 caracteres
+  // Esto funciona con "YYYY-MM-DD", "YYYY-MM-DDTHH:mm:ssZ" y objetos Date
+  const dateStr = typeof date === 'string'
+    ? date.substring(0, 10)
+    : `${(date as Date).getUTCFullYear()}-${String((date as Date).getUTCMonth() + 1).padStart(2, '0')}-${String((date as Date).getUTCDate()).padStart(2, '0')}`;
+  const [year, month, day] = dateStr.split('-');
+  return `${month}/${day}/${year}`;
 }
 
 onMounted(async () => {
