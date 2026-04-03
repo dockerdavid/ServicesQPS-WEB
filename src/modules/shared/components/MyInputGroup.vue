@@ -14,7 +14,7 @@
                 :required="props.required" :aria-required="props.required" :inputId="props.inputId"
                 :hourFormat="props.hourFormat ? '12' : '24'" :timeOnly="props.timeOnly" />
 
-            <Select :placeholder="props.placeholder" v-if="props.inputType === 'select'" v-model="modelValue"
+            <Select :placeholder="props.placeholder" v-if="props.inputType === 'select'" v-model="selectValue"
                 :required="props.required" :aria-required="props.required" :labelId="props.inputId"
                 :options="props.options" option-label="label" option-value="value" />
 
@@ -26,7 +26,7 @@
                 v-model="modelValue" :required="props.required" :aria-required="props.required" :id="props.inputId"
                 :rows="props.rows" :auto-resize="props.autoResize" :max-height="props.maxHeight" class="w-full" />
 
-            <MultiSelect v-if="props.inputType === 'multiselect'" v-model="modelValue" :options="props.options"
+            <MultiSelect v-if="props.inputType === 'multiselect'" v-model="selectValue" :options="props.options"
                 optionLabel="label" optionValue="value" :placeholder="props.placeholder" :filter="true"
                 :maxSelectedLabels="3" class="w-full md:w-80" />
 
@@ -75,7 +75,16 @@ const model = defineModel<string | number | boolean | null | undefined>();
 
 const modelValue = computed({
     get() {
-        return typeof model.value === 'string' ? model.value : (model.value ?? '');
+        return typeof model.value === 'string' ? model.value : '';
+    },
+    set(value: string) {
+        model.value = value;
+    },
+});
+
+const selectValue = computed({
+    get() {
+        return model.value ?? '';
     },
     set(value: string | number | boolean) {
         model.value = value;
