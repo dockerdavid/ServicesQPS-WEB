@@ -71,13 +71,13 @@ const props = withDefaults(defineProps<InputGroupProps>(), {
 });
 
 
-const model = defineModel<string | number | null | undefined>();
+const model = defineModel<string | number | boolean | null | undefined>();
 
 const modelValue = computed({
     get() {
-        return typeof model.value === 'string' ? model.value : '';
+        return typeof model.value === 'string' ? model.value : (model.value ?? '');
     },
-    set(value: string) {
+    set(value: string | number | boolean) {
         model.value = value;
     },
 });
