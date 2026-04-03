@@ -122,6 +122,13 @@ const lastMessagePreview = (thread: ServiceChatThread) => {
   return thread.lastMessage?.hasAttachment ? 'Attachment' : '';
 };
 
+const formatDate = (value?: string) => {
+  if (!value) return '';
+  const str = value.substring(0, 10);
+  const [year, month, day] = str.split('-');
+  return `${month}/${day}/${year}`;
+};
+
 const formatTime = (value?: string) => {
   if (!value) return '';
   const date = new Date(value);
@@ -428,7 +435,7 @@ watch(
               <p class="chat-hub__item-subtitle">
                 <span v-if="thread.cleanerName">{{ thread.cleanerName }}</span>
                 <span v-if="thread.cleanerName && thread.date"> · </span>
-                <span v-if="thread.date">{{ thread.date }}</span>
+                <span v-if="thread.date">{{ formatDate(thread.date) }}</span>
               </p>
               <p v-if="lastMessagePreview(thread)" class="chat-hub__item-preview">
                 {{ lastMessagePreview(thread) }}
