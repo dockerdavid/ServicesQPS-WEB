@@ -71,8 +71,8 @@ const closeDeleteToast = () => {
 };
 
 const getNestedValue = (obj: any, path: string) => {
-    return path.split('.').reduce((current, key) => 
-        current && current[key] !== undefined ? current[key] : '', 
+    return path.split('.').reduce((current, key) =>
+        current && current[key] !== undefined ? current[key] : '',
         obj
     );
 };

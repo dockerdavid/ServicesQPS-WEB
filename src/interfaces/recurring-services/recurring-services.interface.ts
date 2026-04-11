@@ -12,6 +12,7 @@ export interface RecurringService {
   comment?: string | null;
   userComment?: string | null;
   daysOfWeek: string[];
+  qaHiddenDays?: string[] | null;
   extraIds?: string[] | null;
   startDate: string;
   isActive: boolean | number;
@@ -37,6 +38,7 @@ export interface NewRecurringService {
   userComment?: string | null;
   userId?: string | null;
   daysOfWeek: string[];
+  qaHiddenDays?: string[] | null;
   extraIds?: string[] | null;
   isActive?: boolean;
 }

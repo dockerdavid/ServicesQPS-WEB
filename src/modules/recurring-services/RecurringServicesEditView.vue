@@ -66,6 +66,7 @@ const updatedRecurring = ref<NewRecurringService>({
   userComment: '',
   userId: '',
   daysOfWeek: [],
+  qaHiddenDays: [],
   extraIds: [],
   isActive: true,
 });
@@ -241,6 +242,7 @@ const fillInitialData = (recurring: RecurringService) => {
     userComment: recurring.userComment || '',
     userId: recurring.userId || '',
     daysOfWeek: recurring.daysOfWeek || [],
+    qaHiddenDays: recurring.qaHiddenDays || [],
     extraIds: recurring.extraIds || [],
     isActive: normalizedActive,
   };
@@ -405,6 +407,16 @@ watch(
         <small v-if="isFormSubmitted && updatedRecurring.daysOfWeek.length === 0" class="text-red-500">
           Field required
         </small>
+      </fieldset>
+
+      <fieldset>
+        <label>Can QA See it? <small class="text-gray-400">(days hidden from cleaner/QA reports)</small></label>
+        <div class="days-grid">
+          <label v-for="day in dayOptions" :key="day.value" class="day-option">
+            <input type="checkbox" :value="day.value" v-model="updatedRecurring.qaHiddenDays" />
+            <span>{{ day.label }}</span>
+          </label>
+        </div>
       </fieldset>
 
       <fieldset>

@@ -15,6 +15,15 @@ const searchRecurringService = async (searchWord: any, page: number, rows: numbe
 };
 
 const formatActive = (value: boolean | number) => (value ? 'Yes' : 'No');
+const formatQaHiddenDays = (value: string[] | string | null | undefined) => {
+  if (!value) return 'None (all visible)';
+  const daysArray = Array.isArray(value) ? value : value.split(',');
+  if (daysArray.length === 0) return 'None (all visible)';
+  const map: Record<string, string> = {
+    mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun',
+  };
+  return daysArray.map(day => map[day] || day).join(', ');
+};
 const formatDays = (value: string[] | string | null | undefined) => {
   if (!value) return 'N/A';
   const daysArray = Array.isArray(value) ? value : value.split(',');
@@ -47,6 +56,7 @@ const formatDays = (value: string[] | string | null | undefined) => {
       { field: 'status.statusName', name: 'Status' },
       { field: 'startDate', name: 'Start date' },
       { field: 'isActive', name: 'Active', format: formatActive },
+      { field: 'qaHiddenDays', name: 'Can QA See it?', format: formatQaHiddenDays },
     ]"
     :fetch-data="fetchRecurringServices"
     :delete-data="deleteRecurringService"
