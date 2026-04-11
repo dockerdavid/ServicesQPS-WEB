@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import { Button, Toast } from 'primevue';
 import { useToast } from 'primevue/usetoast';
@@ -150,21 +150,25 @@ const unassignedPool = computed(() =>
     allServices.value.filter(s => !assignedIds.value.has(s.id))
 );
 
-// Filtered pool for search
-const filteredPool = computed({
-    get() {
-        if (!poolSearch.value.trim()) return unassignedPool.value;
-        const q = poolSearch.value.toLowerCase();
-        return unassignedPool.value.filter(s =>
+// VueDraggable needs a mutable ref — keep it in sync with unassignedPool via watch
+const filteredPool = ref<CalendarInterface[]>([]);
+
+watch(
+    [unassignedPool, poolSearch],
+    ([pool, search]) => {
+        if (!search.trim()) {
+            filteredPool.value = [...pool];
+            return;
+        }
+        const q = search.toLowerCase();
+        filteredPool.value = pool.filter(s =>
             (s.community?.communityName || '').toLowerCase().includes(q) ||
             (s.unitNumber || '').toLowerCase().includes(q) ||
             (s.user?.name || '').toLowerCase().includes(q)
         );
     },
-    set(_val) {
-        // VueDraggable requires a setter; actual state is managed by columns
-    },
-});
+    { immediate: true },
+);
 
 const weekLabel = computed(() => {
     const start = moment(selectedWeekOf.value);
