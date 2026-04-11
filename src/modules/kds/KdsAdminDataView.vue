@@ -2,21 +2,43 @@
     <div class="kds-admin p-4">
         <h2 class="text-2xl font-bold mb-4">KDS Admin</h2>
 
-        <!-- Week picker -->
+        <!-- Date range picker -->
         <div class="flex items-center gap-3 mb-6">
-            <label class="font-semibold text-sm">Semana:</label>
-            <input
-                type="date"
-                v-model="selectedWeekOf"
-                class="border rounded px-3 py-1.5 text-sm"
-                @change="loadWeek"
+            <label class="font-semibold text-sm">Rango:</label>
+            <FloatLabel variant="on">
+                <Calendar
+                    inputId="kds-start-date"
+                    v-model="startDate"
+                    dateFormat="mm-dd-yy"
+                    showIcon
+                    iconDisplay="input"
+                    class="w-44"
+                />
+                <label for="kds-start-date">Desde (MM-DD-YYYY)</label>
+            </FloatLabel>
+            <FloatLabel variant="on">
+                <Calendar
+                    inputId="kds-end-date"
+                    v-model="endDate"
+                    dateFormat="mm-dd-yy"
+                    showIcon
+                    iconDisplay="input"
+                    class="w-44"
+                />
+                <label for="kds-end-date">Hasta (MM-DD-YYYY)</label>
+            </FloatLabel>
+            <Button
+                label="Aplicar"
+                severity="secondary"
+                @click="loadRange"
+                :loading="isLoading"
             />
-            <span class="text-sm text-gray-500">{{ weekLabel }}</span>
+            <span class="text-sm text-gray-500">{{ rangeLabel }}</span>
             <Button
                 icon="pi pi-refresh"
                 variant="text"
                 severity="secondary"
-                @click="loadWeek"
+                @click="loadRange"
                 :loading="isLoading"
             />
         </div>
@@ -119,7 +141,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
-import { Button, Toast } from 'primevue';
+import { Button, Toast, Calendar, FloatLabel } from 'primevue';
 import { useToast } from 'primevue/usetoast';
 import moment from 'moment-timezone';
 import { KdsServices, type KdsDay } from './kds.services';
@@ -131,8 +153,10 @@ type KdsColumn = { day: KdsDay; label: string; items: CalendarInterface[] };
 const toast = useToast();
 const isLoading = ref(false);
 
-// Week picker — default to current week's Monday
-const selectedWeekOf = ref(getMonday(new Date()));
+// Default date range: current week (Monday-Sunday)
+const currentWeek = getCurrentWeekRange(new Date());
+const startDate = ref<Date>(currentWeek.start);
+const endDate = ref<Date>(currentWeek.end);
 const allServices = ref<CalendarInterface[]>([]);
 const poolSearch = ref('');
 
@@ -174,25 +198,48 @@ watch(
     { immediate: true },
 );
 
-const weekLabel = computed(() => {
-    const start = moment(selectedWeekOf.value);
-    const end = start.clone().add(6, 'days');
-    return `${start.format('MMM D')} — ${end.format('MMM D, YYYY')}`;
+const rangeLabel = computed(() => {
+    const start = moment(startDate.value).format('MM-DD-YYYY');
+    const end = moment(endDate.value).format('MM-DD-YYYY');
+    return `${start} — ${end}`;
 });
 
-async function loadWeek() {
+async function loadRange() {
+    const rangeStart = moment(startDate.value).startOf('day');
+    const rangeEnd = moment(endDate.value).startOf('day');
+    if (rangeStart.isAfter(rangeEnd)) {
+        showToast(toast, { severity: 'warn', summary: 'El rango de fechas es inválido.' });
+        return;
+    }
+
     isLoading.value = true;
     try {
-        const result = await KdsServices.getWeekServices(selectedWeekOf.value);
-        allServices.value = [...result.assigned, ...result.unassigned];
+        const weekStarts = getWeekStartsBetween(rangeStart, rangeEnd);
+        const weekResponses = await Promise.all(
+            weekStarts.map((weekOf) => KdsServices.getWeekServices(weekOf)),
+        );
 
-        // Rebuild columns from assigned list
+        const servicesById = new Map<string, CalendarInterface>();
+        weekResponses.forEach((response) => {
+            [...response.assigned, ...response.unassigned].forEach((service) => {
+                const current = servicesById.get(service.id);
+                if (!current || (!current.kdsDay && !!service.kdsDay)) {
+                    servicesById.set(service.id, service);
+                }
+            });
+        });
+
+        const inRangeServices = [...servicesById.values()].filter((service) =>
+            isServiceInRange(service.date, rangeStart, rangeEnd),
+        );
+        allServices.value = inRangeServices;
+
         const byDay: Record<KdsDay, CalendarInterface[]> = { monday: [], wednesday: [], friday: [] };
-        result.assigned.forEach(s => {
+        inRangeServices.forEach((s) => {
             if (s.kdsDay) byDay[s.kdsDay].push(s);
         });
-        (['monday', 'wednesday', 'friday'] as KdsDay[]).forEach(day => {
-            byDay[day].sort((a, b) => (a.kdsOrder ?? 0) - (b.kdsOrder ?? 0));
+        (['monday', 'wednesday', 'friday'] as KdsDay[]).forEach((day) => {
+            byDay[day].sort(sortByDateAndOrder);
         });
 
         columns.value[0].items = byDay.monday;
@@ -208,37 +255,43 @@ async function loadWeek() {
 async function persistColumn(day: KdsDay) {
     const col = columns.value.find(c => c.day === day);
     if (!col) return;
-    const saves = col.items.map((s, idx) =>
-        KdsServices.assignService(s.id, day, idx + 1, selectedWeekOf.value)
-    );
+
+    const localAssignment = new Map<string, { order: number; weekOf: string }>();
+    const orderByWeek = new Map<string, number>();
+
+    const saves = col.items.map((service) => {
+        const weekOf = getServiceWeekOf(service.date);
+        const nextOrder = (orderByWeek.get(weekOf) ?? 0) + 1;
+        orderByWeek.set(weekOf, nextOrder);
+        localAssignment.set(service.id, { order: nextOrder, weekOf });
+        return KdsServices.assignService(service.id, day, nextOrder, weekOf);
+    });
+
     try {
         await Promise.all(saves);
         // Update local state kdsDay/kdsOrder
-        col.items.forEach((s, idx) => {
+        col.items.forEach((s) => {
+            const assignment = localAssignment.get(s.id);
+            if (!assignment) return;
             s.kdsDay = day;
-            s.kdsOrder = idx + 1;
-            s.kdsWeekOf = selectedWeekOf.value;
+            s.kdsOrder = assignment.order;
+            s.kdsWeekOf = assignment.weekOf;
         });
     } catch {
         showToast(toast, { severity: 'error', summary: 'Error guardando el orden. Recargando...' });
-        await loadWeek();
+        await loadRange();
     }
 }
 
-function onDropInColumn(evt: any, day: KdsDay) {
-    persistColumn(day);
-    // Also persist the source column if the item came from another column
-    const fromDay = columns.value.find(c => c.day !== day && evt.from !== evt.to);
-    if (fromDay) persistColumn(fromDay.day);
+function onDropInColumn(_evt: any, _day: KdsDay) {
+    columns.value.forEach((col) => {
+        persistColumn(col.day);
+    });
 }
 
 function onDropFromPool(_evt: any) {
-    // When dragged from pool to a column, VueDraggable handles item movement.
-    // We persist all columns to be safe.
-    columns.value.forEach(col => {
-        if (col.items.some(s => !s.kdsDay || s.kdsDay !== col.day)) {
-            persistColumn(col.day);
-        }
+    columns.value.forEach((col) => {
+        persistColumn(col.day);
     });
 }
 
@@ -271,7 +324,7 @@ function getAssignedBadge(id: string): string {
 function formatDate(date: string | Date): string {
     const str = typeof date === 'string' ? date.substring(0, 10) : date.toISOString().substring(0, 10);
     const [y, m, d] = str.split('-');
-    return `${m}/${d}/${y}`;
+    return `${m}-${d}-${y}`;
 }
 
 function statusClass(statusId: string | null): string {
@@ -283,15 +336,68 @@ function statusClass(statusId: string | null): string {
     return map[statusId ?? ''] ?? '';
 }
 
-function getMonday(date: Date): string {
+function getCurrentWeekRange(date: Date): { start: Date; end: Date } {
     const d = new Date(date);
     const day = d.getDay();
     const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    d.setDate(diff);
-    return d.toISOString().split('T')[0];
+    const monday = new Date(d);
+    monday.setDate(diff);
+    monday.setHours(0, 0, 0, 0);
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(0, 0, 0, 0);
+
+    return { start: monday, end: sunday };
 }
 
-onMounted(loadWeek);
+function getWeekStartsBetween(start: moment.Moment, end: moment.Moment): string[] {
+    const result: string[] = [];
+    const cursor = start.clone().startOf('isoWeek');
+    const boundary = end.clone().endOf('day');
+
+    while (cursor.isSameOrBefore(boundary, 'day')) {
+        result.push(cursor.format('YYYY-MM-DD'));
+        cursor.add(1, 'week');
+    }
+
+    return result;
+}
+
+function getServiceWeekOf(date: string | Date): string {
+    const serviceDate = typeof date === 'string' ? date.substring(0, 10) : date.toISOString().substring(0, 10);
+    return moment(serviceDate, 'YYYY-MM-DD').startOf('isoWeek').format('YYYY-MM-DD');
+}
+
+function isServiceInRange(
+    serviceDate: string | Date,
+    start: moment.Moment,
+    end: moment.Moment,
+): boolean {
+    const value = typeof serviceDate === 'string' ? serviceDate.substring(0, 10) : serviceDate.toISOString().substring(0, 10);
+    const target = moment(value, 'YYYY-MM-DD', true);
+    return target.isValid() && target.isBetween(start, end, 'day', '[]');
+}
+
+function sortByDateAndOrder(a: CalendarInterface, b: CalendarInterface): number {
+    const aDate = moment(a.date);
+    const bDate = moment(b.date);
+    if (!aDate.isSame(bDate, 'day')) {
+        return aDate.valueOf() - bDate.valueOf();
+    }
+
+    const aOrder = a.kdsOrder ?? Number.MAX_SAFE_INTEGER;
+    const bOrder = b.kdsOrder ?? Number.MAX_SAFE_INTEGER;
+    if (aOrder !== bOrder) {
+        return aOrder - bOrder;
+    }
+
+    const aSchedule = a.schedule ?? '';
+    const bSchedule = b.schedule ?? '';
+    return aSchedule.localeCompare(bSchedule);
+}
+
+onMounted(loadRange);
 </script>
 
 <style scoped>
