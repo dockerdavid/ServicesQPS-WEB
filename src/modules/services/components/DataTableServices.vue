@@ -11,12 +11,12 @@ import { useRoute } from "vue-router";
 import { useUserStore } from "../../../store/user.store";
 import { useChatNotificationsStore } from "../../../store/chat-notifications.store";
 import {  CleanerServiceAdapterExternal, type EditService, type ExternalService, type Service } from "../../../../src/interfaces/services/services.interface";
-import MyConfirmToast from "./MyCompleteToast.vue";
 import MyAcceptToast from "./MyAcceptToast.vue";
 import MyRejectToast from "./MyRejectToast.vue";
 import { showToast } from "../../../../src/utils/show-toast";
 import { CleanersServices } from "../services.services";
 import ServiceChatPanel from "./ServiceChatPanel.vue";
+import { captureLocation } from "../../../composables/useGeolocation";
 
 const DATE_FIELD_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -159,11 +159,6 @@ const showToastByAction = (item: ExternalService, newStatus: string) => {
             summary = "Reject service?";
             break;
 
-        case "5":
-            group = "complete";
-            summary = "Complete service?";
-            break;
-
         default:
             group = "unknown";
             summary = "Unknown action";
@@ -201,6 +196,34 @@ const handleCleanerDecision = async (newStatus: string, comment?: string) => {
 
 const closeToastByAction = (group: string) => {
     toast.removeGroup(group);
+};
+
+const handleStartService = async (service: ExternalService) => {
+    try {
+        const location = await captureLocation();
+        await CleanersServices.startService(service.id, location);
+        showToast(toast, { summary: 'Service started', severity: 'success' });
+        emit('update');
+    } catch (error: any) {
+        const msg = error?.message?.includes('denied')
+            ? 'Location permission denied. Please allow location access and try again.'
+            : 'Could not capture location. Please try again.';
+        showToast(toast, { summary: msg, severity: 'error' });
+    }
+};
+
+const handleFinishService = async (service: ExternalService) => {
+    try {
+        const location = await captureLocation();
+        await CleanersServices.finishService(service.id, location);
+        showToast(toast, { summary: 'Service finished', severity: 'success' });
+        emit('update');
+    } catch (error: any) {
+        const msg = error?.message?.includes('denied')
+            ? 'Location permission denied. Please allow location access and try again.'
+            : 'Could not capture location. Please try again.';
+        showToast(toast, { summary: msg, severity: 'error' });
+    }
 };
 
 const openChat = (service: Service | ExternalService) => {
@@ -308,8 +331,11 @@ watch(
                             <Button v-if="data.statusId === '2' && canManageService(data)" variant="text" icon="pi pi-times" severity="danger"
                                 label="Reject" @click="showToastByAction(data, '4')" />
 
-                            <Button v-if="data.statusId === '3' && canManageService(data)" variant="text" icon="pi pi-verified" severity="warn"
-                                label="Complete" @click="showToastByAction(data, '5')" />
+                            <Button v-if="data.statusId === '3' && !data.startedAt && canManageService(data)" variant="text" icon="pi pi-play" severity="warn"
+                                label="Start" @click="handleStartService(data)" />
+
+                            <Button v-if="data.statusId === '3' && data.startedAt && !data.finishedAt && canManageService(data)" variant="text" icon="pi pi-flag" severity="success"
+                                label="Finish" @click="handleFinishService(data)" />
                         </div>
                     </template>
                 </Column>
@@ -340,8 +366,6 @@ watch(
         <MyAcceptToast @accept="handleAction('3', 'accept')" @close="closeToastByAction('accept')" />
         <MyRejectToast @reject="(comment) => handleAction('4', 'reject', comment)"
             @close="closeToastByAction('reject')" />
-        <MyConfirmToast @confirm="handleAction('5', 'complete')" @close="closeToastByAction('confirm')" />
-
         <Dialog v-model:visible="isChatDialogOpen" modal header="Service chat" :style="{ width: 'min(720px, 94vw)' }"
             @hide="closeChat">
             <ServiceChatPanel v-if="activeChatService" :service="activeChatService" />

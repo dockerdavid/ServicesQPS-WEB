@@ -36,14 +36,14 @@ const roleRoutes = {
     'users-default',
     'users-create',
     'users-edit',
+    'kds-admin',
+    'kds-admin-default',
     'notFound'
   ],
   qa: [
-    'calendar',
-    'services',
-    'services-default',
-    'services-tracking',
     'chat',
+    'kds-qa',
+    'kds-qa-default',
     'notFound'
   ],
   manager: [

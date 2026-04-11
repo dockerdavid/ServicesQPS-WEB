@@ -6,6 +6,7 @@ import type { Service, Services, ServicesDailyTracking } from "../../interfaces/
 import { useGlobalStateStore } from "../../store/auth.store";
 import genericNullObject from "../../utils/null-data-meta";
 import { CommunitiesServices } from "../communities/communities.services";
+import type { GeoPayload } from "../../composables/useGeolocation";
 
 
 export class CleanersServices {
@@ -142,6 +143,32 @@ export class CleanersServices {
 
         try {
             await apiServicesQps.patch(`/services/${serviceId}`, changedValue);
+        } catch (error: any) {
+            throw new Error(error);
+        } finally {
+            this.store.setIsLoading(false);
+        }
+    }
+
+    static async startService(serviceId: string, location: GeoPayload): Promise<Service> {
+        this.store.setIsLoading(true);
+
+        try {
+            const { data } = await apiServicesQps.post<Service>(`/services/${serviceId}/start`, location);
+            return data;
+        } catch (error: any) {
+            throw new Error(error);
+        } finally {
+            this.store.setIsLoading(false);
+        }
+    }
+
+    static async finishService(serviceId: string, location: GeoPayload): Promise<Service> {
+        this.store.setIsLoading(true);
+
+        try {
+            const { data } = await apiServicesQps.post<Service>(`/services/${serviceId}/finish`, location);
+            return data;
         } catch (error: any) {
             throw new Error(error);
         } finally {

@@ -9,6 +9,7 @@ import { resolveRoleKey } from '../../../router/role-routes';
 const adminRoutes: RouteLink[] = [
   { route: 'dashboard', icon: 'ph:house-line', label: 'dashboard' },
   { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
+  { route: 'kds-admin-default', icon: 'ph:kanban-duotone', label: 'KDS Admin' },
   { route: 'communities-default', icon: 'ph:fediverse-logo-duotone', label: 'communities' },
   { route: 'companies-default', icon: 'ph:briefcase-duotone', label: 'companies' },
   { route: 'costs-default', icon: 'ph:calculator-duotone', label: 'cost' },
@@ -40,9 +41,7 @@ const cheoRoutes: RouteLink[] = [
 ]
 
 const qaRoutes: RouteLink[] = [
-  { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
-  { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
-  { route: 'services-tracking', icon: 'ph:map-trifold-duotone', label: 'tracking map' },
+  { route: 'kds-qa-default', icon: 'ph:squares-four-duotone', label: 'KDS' },
   { route: 'chat', icon: 'ph:chats-circle-duotone', label: 'chat' },
 ]
 

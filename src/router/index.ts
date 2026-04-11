@@ -193,6 +193,22 @@ const router = createRouter({
           ],
         },
         {
+          path: 'kds-admin',
+          name: 'kds-admin',
+          component: () => import('../modules/kds/KdsAdminView.vue'),
+          children: [
+            { path: '', name: 'kds-admin-default', component: () => import('../modules/kds/KdsAdminDataView.vue') },
+          ],
+        },
+        {
+          path: 'kds-qa',
+          name: 'kds-qa',
+          component: () => import('../modules/kds/KdsQaView.vue'),
+          children: [
+            { path: '', name: 'kds-qa-default', component: () => import('../modules/kds/KdsQaDataView.vue') },
+          ],
+        },
+        {
           path: 'chat/:serviceId?',
           name: 'chat',
           component: () => import('../modules/chat/ChatView.vue'),

@@ -26,6 +26,9 @@ export interface CalendarInterface {
     user:        User;
     reviews?:    CalendarReviewItem[];
     qaStartedAt?: string | null;
+    kdsDay?:     'monday' | 'wednesday' | 'friday' | null;
+    kdsOrder?:   number | null;
+    kdsWeekOf?:  string | null;
 }
 
 export interface Community {
