@@ -34,25 +34,27 @@
                         <VueDraggable
                             v-model="col.items"
                             group="services"
-                            item-key="id"
                             class="kds-drop-zone"
                             :animation="150"
                             ghost-class="kds-ghost"
                             @end="(evt) => onDropInColumn(evt, col.day)"
                         >
-                            <template #item="{ element, index }">
-                                <div class="kds-card" :data-id="element.id">
-                                    <div class="kds-card-order">{{ index + 1 }}</div>
-                                    <div class="kds-card-body">
-                                        <p class="font-semibold text-sm truncate">{{ element.community?.communityName || '—' }}</p>
-                                        <p class="text-xs text-gray-500">Unidad {{ element.unitNumber }} · {{ element.unitySize }}</p>
-                                        <p class="text-xs text-gray-600">{{ formatDate(element.date) }} {{ element.schedule ? '· ' + element.schedule : '' }}</p>
-                                        <p class="text-xs text-gray-600 truncate">{{ element.user?.name || 'Sin cleaner' }}</p>
-                                        <span class="status-badge" :class="statusClass(element.statusId)">{{ element.status?.statusName }}</span>
-                                    </div>
-                                    <button class="kds-remove-btn" @click="removeFromKds(element, col.day)" title="Quitar del KDS">×</button>
+                            <div
+                                v-for="(element, index) in col.items"
+                                :key="element.id"
+                                class="kds-card"
+                                :data-id="element.id"
+                            >
+                                <div class="kds-card-order">{{ index + 1 }}</div>
+                                <div class="kds-card-body">
+                                    <p class="font-semibold text-sm truncate">{{ element.community?.communityName || '—' }}</p>
+                                    <p class="text-xs text-gray-500">Unidad {{ element.unitNumber }} · {{ element.unitySize }}</p>
+                                    <p class="text-xs text-gray-600">{{ formatDate(element.date) }} {{ element.schedule ? '· ' + element.schedule : '' }}</p>
+                                    <p class="text-xs text-gray-600 truncate">{{ element.user?.name || 'Sin cleaner' }}</p>
+                                    <span class="status-badge" :class="statusClass(element.statusId)">{{ element.status?.statusName }}</span>
                                 </div>
-                            </template>
+                                <button class="kds-remove-btn" @click="removeFromKds(element, col.day)" title="Quitar del KDS">×</button>
+                            </div>
                         </VueDraggable>
                         <div v-if="col.items.length === 0" class="kds-empty">
                             Arrastra servicios aquí
@@ -78,29 +80,31 @@
                 <VueDraggable
                     v-model="filteredPool"
                     group="services"
-                    item-key="id"
                     class="pool-list"
                     :sort="false"
                     :animation="150"
                     ghost-class="kds-ghost"
                     @end="onDropFromPool"
                 >
-                    <template #item="{ element }">
-                        <div class="pool-card" :data-id="element.id">
-                            <div class="pool-card-body">
-                                <div class="flex justify-between items-start">
-                                    <p class="font-semibold text-sm">{{ element.community?.communityName || '—' }}</p>
-                                    <span v-if="getAssignedBadge(element.id)" class="assigned-badge">
-                                        {{ getAssignedBadge(element.id) }}
-                                    </span>
-                                </div>
-                                <p class="text-xs text-gray-500">Unidad {{ element.unitNumber }} · {{ element.unitySize }}</p>
-                                <p class="text-xs text-gray-600">{{ formatDate(element.date) }} {{ element.schedule ? '· ' + element.schedule : '' }}</p>
-                                <p class="text-xs text-gray-600">{{ element.user?.name || 'Sin cleaner' }}</p>
-                                <span class="status-badge" :class="statusClass(element.statusId)">{{ element.status?.statusName }}</span>
+                    <div
+                        v-for="element in filteredPool"
+                        :key="element.id"
+                        class="pool-card"
+                        :data-id="element.id"
+                    >
+                        <div class="pool-card-body">
+                            <div class="flex justify-between items-start">
+                                <p class="font-semibold text-sm">{{ element.community?.communityName || '—' }}</p>
+                                <span v-if="getAssignedBadge(element.id)" class="assigned-badge">
+                                    {{ getAssignedBadge(element.id) }}
+                                </span>
                             </div>
+                            <p class="text-xs text-gray-500">Unidad {{ element.unitNumber }} · {{ element.unitySize }}</p>
+                            <p class="text-xs text-gray-600">{{ formatDate(element.date) }} {{ element.schedule ? '· ' + element.schedule : '' }}</p>
+                            <p class="text-xs text-gray-600">{{ element.user?.name || 'Sin cleaner' }}</p>
+                            <span class="status-badge" :class="statusClass(element.statusId)">{{ element.status?.statusName }}</span>
                         </div>
-                    </template>
+                    </div>
                 </VueDraggable>
                 <div v-if="filteredPool.length === 0 && !isLoading" class="pool-empty">
                     {{ poolSearch ? 'Sin resultados para la búsqueda.' : 'Todos los servicios están asignados al KDS.' }}
