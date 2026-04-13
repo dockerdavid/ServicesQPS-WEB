@@ -2,23 +2,14 @@
     <div class="kds-admin p-4">
         <h2 class="text-2xl font-bold mb-4">KDS Admin</h2>
 
-        <!-- Week range picker -->
+        <!-- Week picker -->
         <div class="flex items-center gap-3 mb-6">
-            <label class="font-semibold text-sm">Rango semanal:</label>
+            <label class="font-semibold text-sm">Semana:</label>
             <div class="flex flex-col">
-                <label for="kds-start-week" class="text-xs text-gray-500 mb-1">Semana inicial</label>
+                <label for="kds-week" class="text-xs text-gray-500 mb-1">Semana seleccionada</label>
                 <input
-                    id="kds-start-week"
-                    v-model="startWeek"
-                    type="week"
-                    class="border rounded px-3 py-1.5 text-sm w-44"
-                />
-            </div>
-            <div class="flex flex-col">
-                <label for="kds-end-week" class="text-xs text-gray-500 mb-1">Semana final</label>
-                <input
-                    id="kds-end-week"
-                    v-model="endWeek"
+                    id="kds-week"
+                    v-model="selectedWeek"
                     type="week"
                     class="border rounded px-3 py-1.5 text-sm w-44"
                 />
@@ -27,7 +18,7 @@
                 label="Aplicar"
                 severity="secondary"
                 @click="loadRange"
-                :disabled="!startWeek || !endWeek || isLoading"
+                :disabled="!selectedWeek || isLoading"
                 :loading="isLoading"
             />
             <span class="text-sm text-gray-500">{{ rangeLabel }}</span>
@@ -88,7 +79,7 @@
                     <p class="font-semibold text-sm">Servicios en limbo: {{ limboServices.length }}</p>
                     <p class="text-xs">
                         Son pendientes de semanas anteriores no verificados. Aparecen en la lista para reubicarlos.
-                        Al asignarlos se mueven a la semana inicial del rango seleccionado.
+                        Al asignarlos se mueven a la semana seleccionada.
                     </p>
                 </div>
                 <h3 class="font-semibold text-sm uppercase tracking-wide text-gray-500 mb-2">
@@ -160,10 +151,9 @@ type KdsColumn = { day: KdsDay; label: string; items: CalendarInterface[] };
 const toast = useToast();
 const isLoading = ref(false);
 
-// Default week range: current ISO week
+// Default week: current ISO week
 const currentWeek = moment().startOf('isoWeek').format('GGGG-[W]WW');
-const startWeek = ref<string>(currentWeek);
-const endWeek = ref<string>(currentWeek);
+const selectedWeek = ref<string>(currentWeek);
 const allServices = ref<CalendarInterface[]>([]);
 const limboServices = ref<CalendarInterface[]>([]);
 const poolSearch = ref('');
@@ -215,62 +205,34 @@ watch(
 );
 
 const rangeLabel = computed(() => {
-    const start = isoWeekToMoment(startWeek.value);
-    const end = isoWeekToMoment(endWeek.value);
-    if (!start.isValid() || !end.isValid()) {
+    const weekStart = isoWeekToMoment(selectedWeek.value);
+    if (!weekStart.isValid()) {
         return 'Semana inválida';
     }
-    const formattedStart = start.format('MM-DD-YYYY');
-    const formattedEnd = end.clone().endOf('isoWeek').format('MM-DD-YYYY');
+    const formattedStart = weekStart.format('MM-DD-YYYY');
+    const formattedEnd = weekStart.clone().endOf('isoWeek').format('MM-DD-YYYY');
     return `${formattedStart} — ${formattedEnd}`;
 });
 
-watch(startWeek, (value) => {
+watch(selectedWeek, (value) => {
     if (!value || !isoWeekToMoment(value).isValid()) {
-        startWeek.value = currentWeek;
-    }
-});
-
-watch(endWeek, (value) => {
-    if (!value || !isoWeekToMoment(value).isValid()) {
-        endWeek.value = currentWeek;
+        selectedWeek.value = currentWeek;
     }
 });
 
 async function loadRange() {
-    const rangeStart = isoWeekToMoment(startWeek.value);
-    const rangeEnd = isoWeekToMoment(endWeek.value);
-    if (!rangeStart.isValid() || !rangeEnd.isValid()) {
-        showToast(toast, { severity: 'warn', summary: 'Selecciona semanas válidas.' });
-        return;
-    }
-    if (rangeStart.isAfter(rangeEnd)) {
-        showToast(toast, { severity: 'warn', summary: 'El rango semanal es inválido.' });
+    const weekStart = isoWeekToMoment(selectedWeek.value);
+    if (!weekStart.isValid()) {
+        showToast(toast, { severity: 'warn', summary: 'Selecciona una semana válida.' });
         return;
     }
 
     isLoading.value = true;
     try {
-        const weekStarts = getWeekStartsBetween(rangeStart, rangeEnd);
-        const weekResponses = await Promise.all(
-            weekStarts.map((weekOf) => KdsServices.getWeekServices(weekOf)),
-        );
+        const response = await KdsServices.getWeekServices(weekStart.format('YYYY-MM-DD'));
+        limboServices.value = [...response.limbo];
 
-        limboServices.value = [...(weekResponses[0]?.limbo ?? [])];
-
-        const servicesById = new Map<string, CalendarInterface>();
-        weekResponses.forEach((response) => {
-            [...response.assigned, ...response.unassigned].forEach((service) => {
-                const current = servicesById.get(service.id);
-                if (!current || (!current.kdsDay && !!service.kdsDay)) {
-                    servicesById.set(service.id, service);
-                }
-            });
-        });
-
-        const inRangeServices = [...servicesById.values()].filter((service) =>
-            isServiceInRange(service.date, rangeStart, rangeEnd.clone().endOf('isoWeek')),
-        );
+        const inRangeServices = [...response.assigned, ...response.unassigned];
         const mergedServices = new Map<string, CalendarInterface>();
         inRangeServices.forEach((service) => mergedServices.set(service.id, service));
         limboServices.value.forEach((service) => {
@@ -302,10 +264,9 @@ async function persistColumn(day: KdsDay) {
     const col = columns.value.find(c => c.day === day);
     if (!col) return;
 
-    const rangeStart = isoWeekToMoment(startWeek.value);
-    const rangeEnd = isoWeekToMoment(endWeek.value).endOf('isoWeek');
-    if (!rangeStart.isValid() || !rangeEnd.isValid()) {
-        showToast(toast, { severity: 'warn', summary: 'Rango semanal inválido.' });
+    const selectedWeekStart = isoWeekToMoment(selectedWeek.value);
+    if (!selectedWeekStart.isValid()) {
+        showToast(toast, { severity: 'warn', summary: 'Semana inválida.' });
         return;
     }
 
@@ -313,7 +274,7 @@ async function persistColumn(day: KdsDay) {
     const orderByWeek = new Map<string, number>();
 
     const saves = col.items.map((service) => {
-        const weekOf = getAssignmentWeekOf(service, rangeStart, rangeEnd);
+        const weekOf = getAssignmentWeekOf(service, selectedWeekStart);
         const nextOrder = (orderByWeek.get(weekOf) ?? 0) + 1;
         orderByWeek.set(weekOf, nextOrder);
         localAssignment.set(service.id, { order: nextOrder, weekOf });
@@ -397,19 +358,6 @@ function isoWeekToMoment(isoWeek: string): moment.Moment {
     return moment(isoWeek, 'GGGG-[W]WW', true).startOf('isoWeek');
 }
 
-function getWeekStartsBetween(start: moment.Moment, end: moment.Moment): string[] {
-    const result: string[] = [];
-    const cursor = start.clone().startOf('isoWeek');
-    const boundary = end.clone().endOf('day');
-
-    while (cursor.isSameOrBefore(boundary, 'day')) {
-        result.push(cursor.format('YYYY-MM-DD'));
-        cursor.add(1, 'week');
-    }
-
-    return result;
-}
-
 function getServiceEffectiveWeekOf(service: CalendarInterface): string {
     const kdsWeek = service.kdsWeekOf ? moment(service.kdsWeekOf, 'YYYY-MM-DD', true) : null;
     if (kdsWeek?.isValid()) {
@@ -421,15 +369,14 @@ function getServiceEffectiveWeekOf(service: CalendarInterface): string {
 
 function getAssignmentWeekOf(
     service: CalendarInterface,
-    rangeStart: moment.Moment,
-    rangeEnd: moment.Moment,
+    selectedWeekStart: moment.Moment,
 ): string {
     const effectiveWeek = moment(getServiceEffectiveWeekOf(service), 'YYYY-MM-DD', true);
-    if (effectiveWeek.isValid() && effectiveWeek.isBetween(rangeStart, rangeEnd, 'day', '[]')) {
+    if (effectiveWeek.isValid() && effectiveWeek.isSame(selectedWeekStart, 'day')) {
         return effectiveWeek.format('YYYY-MM-DD');
     }
 
-    return rangeStart.clone().startOf('isoWeek').format('YYYY-MM-DD');
+    return selectedWeekStart.clone().startOf('isoWeek').format('YYYY-MM-DD');
 }
 
 function sortPoolServices(a: CalendarInterface, b: CalendarInterface): number {
@@ -446,16 +393,6 @@ function sortPoolServices(a: CalendarInterface, b: CalendarInterface): number {
     }
 
     return (a.schedule ?? '').localeCompare(b.schedule ?? '');
-}
-
-function isServiceInRange(
-    serviceDate: string | Date,
-    start: moment.Moment,
-    end: moment.Moment,
-): boolean {
-    const value = typeof serviceDate === 'string' ? serviceDate.substring(0, 10) : serviceDate.toISOString().substring(0, 10);
-    const target = moment(value, 'YYYY-MM-DD', true);
-    return target.isValid() && target.isBetween(start, end, 'day', '[]');
 }
 
 function sortByDateAndOrder(a: CalendarInterface, b: CalendarInterface): number {
