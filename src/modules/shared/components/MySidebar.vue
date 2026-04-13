@@ -26,6 +26,7 @@ const adminRoutes: RouteLink[] = [
 
 const cleanerRoutes: RouteLink[] = [
   { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
+  { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
 ]
 
 const managerRoutes: RouteLink[] = [
@@ -42,6 +43,7 @@ const cheoRoutes: RouteLink[] = [
 
 const qaRoutes: RouteLink[] = [
   { route: 'kds-qa-default', icon: 'ph:squares-four-duotone', label: 'KDS' },
+  { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
   { route: 'chat', icon: 'ph:chats-circle-duotone', label: 'chat' },
 ]
 
