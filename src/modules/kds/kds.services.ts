@@ -8,6 +8,8 @@ export interface KdsWeekResponse {
     weekOf: string;
     assigned: CalendarInterface[];
     unassigned: CalendarInterface[];
+    limbo: CalendarInterface[];
+    limboCount: number;
 }
 
 export class KdsServices {
@@ -19,7 +21,7 @@ export class KdsServices {
             const { data } = await apiServicesQps.get<KdsWeekResponse>(`/services/kds/week?weekOf=${weekOf}`);
             return data;
         } catch {
-            return { weekOf, assigned: [], unassigned: [] };
+            return { weekOf, assigned: [], unassigned: [], limbo: [], limboCount: 0 };
         } finally {
             this.store.setIsLoading(false);
         }
