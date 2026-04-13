@@ -2,31 +2,27 @@
     <div class="kds-admin p-4">
         <h2 class="text-2xl font-bold mb-4">KDS Admin</h2>
 
-        <!-- Date range picker -->
+        <!-- Week range picker -->
         <div class="flex items-center gap-3 mb-6">
-            <label class="font-semibold text-sm">Rango:</label>
-            <FloatLabel variant="on">
-                <Calendar
-                    inputId="kds-start-date"
-                    v-model="startDate"
-                    dateFormat="mm-dd-yy"
-                    showIcon
-                    iconDisplay="input"
-                    class="w-44"
+            <label class="font-semibold text-sm">Rango semanal:</label>
+            <div class="flex flex-col">
+                <label for="kds-start-week" class="text-xs text-gray-500 mb-1">Semana inicial</label>
+                <input
+                    id="kds-start-week"
+                    v-model="startWeek"
+                    type="week"
+                    class="border rounded px-3 py-1.5 text-sm w-44"
                 />
-                <label for="kds-start-date">Desde (MM-DD-YYYY)</label>
-            </FloatLabel>
-            <FloatLabel variant="on">
-                <Calendar
-                    inputId="kds-end-date"
-                    v-model="endDate"
-                    dateFormat="mm-dd-yy"
-                    showIcon
-                    iconDisplay="input"
-                    class="w-44"
+            </div>
+            <div class="flex flex-col">
+                <label for="kds-end-week" class="text-xs text-gray-500 mb-1">Semana final</label>
+                <input
+                    id="kds-end-week"
+                    v-model="endWeek"
+                    type="week"
+                    class="border rounded px-3 py-1.5 text-sm w-44"
                 />
-                <label for="kds-end-date">Hasta (MM-DD-YYYY)</label>
-            </FloatLabel>
+            </div>
             <Button
                 label="Aplicar"
                 severity="secondary"
@@ -141,7 +137,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { VueDraggable } from 'vue-draggable-plus';
-import { Button, Toast, Calendar, FloatLabel } from 'primevue';
+import { Button, Toast } from 'primevue';
 import { useToast } from 'primevue/usetoast';
 import moment from 'moment-timezone';
 import { KdsServices, type KdsDay } from './kds.services';
@@ -153,10 +149,10 @@ type KdsColumn = { day: KdsDay; label: string; items: CalendarInterface[] };
 const toast = useToast();
 const isLoading = ref(false);
 
-// Default date range: current week (Monday-Sunday)
-const currentWeek = getCurrentWeekRange(new Date());
-const startDate = ref<Date>(currentWeek.start);
-const endDate = ref<Date>(currentWeek.end);
+// Default week range: current ISO week
+const currentWeek = moment().startOf('isoWeek').format('GGGG-[W]WW');
+const startWeek = ref<string>(currentWeek);
+const endWeek = ref<string>(currentWeek);
 const allServices = ref<CalendarInterface[]>([]);
 const poolSearch = ref('');
 
@@ -199,16 +195,37 @@ watch(
 );
 
 const rangeLabel = computed(() => {
-    const start = moment(startDate.value).format('MM-DD-YYYY');
-    const end = moment(endDate.value).format('MM-DD-YYYY');
-    return `${start} — ${end}`;
+    const start = isoWeekToMoment(startWeek.value);
+    const end = isoWeekToMoment(endWeek.value);
+    if (!start.isValid() || !end.isValid()) {
+        return 'Semana inválida';
+    }
+    const formattedStart = start.format('MM-DD-YYYY');
+    const formattedEnd = end.clone().endOf('isoWeek').format('MM-DD-YYYY');
+    return `${formattedStart} — ${formattedEnd}`;
+});
+
+watch(startWeek, (value) => {
+    if (!value || !isoWeekToMoment(value).isValid()) {
+        startWeek.value = currentWeek;
+    }
+});
+
+watch(endWeek, (value) => {
+    if (!value || !isoWeekToMoment(value).isValid()) {
+        endWeek.value = currentWeek;
+    }
 });
 
 async function loadRange() {
-    const rangeStart = moment(startDate.value).startOf('day');
-    const rangeEnd = moment(endDate.value).startOf('day');
+    const rangeStart = isoWeekToMoment(startWeek.value);
+    const rangeEnd = isoWeekToMoment(endWeek.value);
+    if (!rangeStart.isValid() || !rangeEnd.isValid()) {
+        showToast(toast, { severity: 'warn', summary: 'Selecciona semanas válidas.' });
+        return;
+    }
     if (rangeStart.isAfter(rangeEnd)) {
-        showToast(toast, { severity: 'warn', summary: 'El rango de fechas es inválido.' });
+        showToast(toast, { severity: 'warn', summary: 'El rango semanal es inválido.' });
         return;
     }
 
@@ -230,7 +247,7 @@ async function loadRange() {
         });
 
         const inRangeServices = [...servicesById.values()].filter((service) =>
-            isServiceInRange(service.date, rangeStart, rangeEnd),
+            isServiceInRange(service.date, rangeStart, rangeEnd.clone().endOf('isoWeek')),
         );
         allServices.value = inRangeServices;
 
@@ -336,19 +353,8 @@ function statusClass(statusId: string | null): string {
     return map[statusId ?? ''] ?? '';
 }
 
-function getCurrentWeekRange(date: Date): { start: Date; end: Date } {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    const monday = new Date(d);
-    monday.setDate(diff);
-    monday.setHours(0, 0, 0, 0);
-
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    sunday.setHours(0, 0, 0, 0);
-
-    return { start: monday, end: sunday };
+function isoWeekToMoment(isoWeek: string): moment.Moment {
+    return moment(isoWeek, 'GGGG-[W]WW', true).startOf('isoWeek');
 }
 
 function getWeekStartsBetween(start: moment.Moment, end: moment.Moment): string[] {
