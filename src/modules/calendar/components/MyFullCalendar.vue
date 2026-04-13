@@ -185,6 +185,17 @@ const reviewComment = ref('');
 
 const isSavingReview = ref(false);
 
+const isCalendarAdmin = () => {
+  const roleId = userStore.userData?.roleId ?? '';
+  const roleName = userStore.userData?.role?.name?.toLowerCase() ?? '';
+  return roleId === '1' || roleName === 'super_admin';
+};
+
+const isReadOnlyCalendarRole = () => {
+  const roleId = userStore.userData?.roleId ?? '';
+  return roleId === '4' || roleId === '7';
+};
+
 
 const filterOptions = [
   { label: 'Nombre Cleaner', value: 'cleaner' },
@@ -375,9 +386,8 @@ const calendarOptions = ref({
     isInitialLoad.value = false;
   },
   eventClick: (info: any) => {
-    // Verificar si el usuario tiene rol '7' - si es así, no permitir acceso
-    if (userStore.userData?.roleId === '7') {
-      return; // No hacer nada, no redirigir
+    if (isReadOnlyCalendarRole()) {
+      return;
     }
     router.push(`/services/edit/${info.event.id}`);
   },
@@ -401,9 +411,10 @@ const calendarOptions = ref({
     const event = info.event;
     const serviceInfo = allEvents.value.find(ev => ev.id === event.id);
     
-    // Verificar si el usuario puede ver el botón (roles 1 y 7)
-    const canShowButton = userStore.userData?.roleId === '1' || userStore.userData?.roleId === '7';
-    const canDelete = userStore.userData?.roleId === '1';
+    // El detalle del servicio en calendario queda solo para admin.
+    // QA lo maneja exclusivamente desde KDS QA.
+    const canShowButton = isCalendarAdmin();
+    const canDelete = isCalendarAdmin();
     
     const tooltipContent = `
       <div style="font-family: inherit; font-size: 13px;">

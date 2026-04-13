@@ -44,6 +44,7 @@ const roleRoutes = {
     'chat',
     'kds-qa',
     'kds-qa-default',
+    'calendar',
     'notFound'
   ],
   manager: [
@@ -65,6 +66,7 @@ const roleRoutes = {
   cleaner: [
     'services',
     'services-default',
+    'calendar',
     'notFound'
   ],
   cheo: [
