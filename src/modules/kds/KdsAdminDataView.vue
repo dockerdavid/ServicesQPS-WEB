@@ -2,15 +2,33 @@
     <div class="kds-admin p-4">
         <h2 class="text-2xl font-bold mb-4">KDS Admin</h2>
 
-        <!-- Week picker -->
-        <div class="flex items-center gap-3 mb-6">
-            <label class="font-semibold text-sm">Semana:</label>
+        <!-- KDS week + free pool range -->
+        <div class="flex flex-wrap items-end gap-3 mb-6">
             <div class="flex flex-col">
-                <label for="kds-week" class="text-xs text-gray-500 mb-1">Semana seleccionada</label>
+                <label for="kds-week" class="font-semibold text-sm mb-1">Semana KDS</label>
                 <input
                     id="kds-week"
                     v-model="selectedWeek"
                     type="week"
+                    class="border rounded px-3 py-1.5 text-sm w-44"
+                />
+                <span class="text-xs text-gray-500 mt-1">{{ rangeLabel }}</span>
+            </div>
+            <div class="flex flex-col">
+                <label for="pool-start" class="font-semibold text-sm mb-1">Buscar desde</label>
+                <input
+                    id="pool-start"
+                    v-model="poolStartDate"
+                    type="date"
+                    class="border rounded px-3 py-1.5 text-sm w-44"
+                />
+            </div>
+            <div class="flex flex-col">
+                <label for="pool-end" class="font-semibold text-sm mb-1">Buscar hasta</label>
+                <input
+                    id="pool-end"
+                    v-model="poolEndDate"
+                    type="date"
                     class="border rounded px-3 py-1.5 text-sm w-44"
                 />
             </div>
@@ -18,10 +36,9 @@
                 label="Aplicar"
                 severity="secondary"
                 @click="loadRange"
-                :disabled="!selectedWeek || isLoading"
+                :disabled="!selectedWeek || !poolStartDate || !poolEndDate || isLoading"
                 :loading="isLoading"
             />
-            <span class="text-sm text-gray-500">{{ rangeLabel }}</span>
             <Button
                 icon="pi pi-refresh"
                 variant="text"
@@ -73,19 +90,29 @@
                 </div>
             </div>
 
-            <!-- RIGHT: Unassigned pool -->
+            <!-- RIGHT: pool -->
             <div class="lg:w-2/5 flex flex-col gap-2">
-                <div v-if="limboServices.length > 0" class="limbo-alert">
-                    <p class="font-semibold text-sm">Servicios en limbo: {{ limboServices.length }}</p>
-                    <p class="text-xs">
-                        Son pendientes de semanas anteriores no verificados. Aparecen en la lista para reubicarlos.
-                        Al asignarlos se mueven a la semana seleccionada.
-                    </p>
-                </div>
                 <h3 class="font-semibold text-sm uppercase tracking-wide text-gray-500 mb-2">
-                    Servicios de la semana
-                    <span class="text-xs font-normal ml-1">({{ allServices.length }} total · {{ unassignedPool.length }} sin asignar · {{ limboServices.length }} limbo)</span>
+                    Servicios para Asignar
+                    <span class="text-xs font-normal ml-1">({{ poolTotalCount }} total · {{ withoutKdsPool.length }} sin KDS · {{ limboPool.length }} limbo)</span>
                 </h3>
+                <div class="text-xs text-gray-500 -mt-1">{{ poolRangeLabel }}</div>
+                <div class="pool-tabs">
+                    <button
+                        class="pool-tab"
+                        :class="{ 'pool-tab--active': activePoolTab === 'withoutKds' }"
+                        @click="activePoolTab = 'withoutKds'"
+                    >
+                        Sin KDS ({{ withoutKdsPool.length }})
+                    </button>
+                    <button
+                        class="pool-tab"
+                        :class="{ 'pool-tab--active': activePoolTab === 'limbo' }"
+                        @click="activePoolTab = 'limbo'"
+                    >
+                        Limbo ({{ limboPool.length }})
+                    </button>
+                </div>
                 <div class="pool-search mb-2">
                     <input
                         v-model="poolSearch"
@@ -113,7 +140,7 @@
                             <div class="flex justify-between items-start">
                                 <p class="font-semibold text-sm">{{ element.community?.communityName || '—' }}</p>
                                 <div class="flex items-center gap-1.5">
-                                    <span v-if="isLimboService(element.id)" class="limbo-badge">LIMBO</span>
+                                    <span v-if="isLimboService(element)" class="limbo-badge">LIMBO</span>
                                     <span v-if="getAssignedBadge(element.id)" class="assigned-badge">
                                         {{ getAssignedBadge(element.id) }}
                                     </span>
@@ -127,7 +154,7 @@
                     </div>
                 </VueDraggable>
                 <div v-if="filteredPool.length === 0 && !isLoading" class="pool-empty">
-                    {{ poolSearch ? 'Sin resultados para la búsqueda.' : 'Todos los servicios están asignados al KDS.' }}
+                    {{ poolEmptyMessage }}
                 </div>
             </div>
         </div>
@@ -147,16 +174,19 @@ import type { CalendarInterface } from '../../interfaces/calendar/calendar.inter
 import { showToast } from '../../utils/show-toast';
 
 type KdsColumn = { day: KdsDay; label: string; items: CalendarInterface[] };
+type PoolTab = 'limbo' | 'withoutKds';
 
 const toast = useToast();
 const isLoading = ref(false);
 
-// Default week: current ISO week
-const currentWeek = moment().startOf('isoWeek').format('GGGG-[W]WW');
+const currentWeekStart = moment().startOf('isoWeek');
+const currentWeek = currentWeekStart.format('GGGG-[W]WW');
 const selectedWeek = ref<string>(currentWeek);
-const allServices = ref<CalendarInterface[]>([]);
-const limboServices = ref<CalendarInterface[]>([]);
+const poolStartDate = ref<string>(currentWeekStart.format('YYYY-MM-DD'));
+const poolEndDate = ref<string>(currentWeekStart.clone().endOf('isoWeek').format('YYYY-MM-DD'));
+const rangeServices = ref<CalendarInterface[]>([]);
 const poolSearch = ref('');
+const activePoolTab = ref<PoolTab>('withoutKds');
 
 const columns = ref<KdsColumn[]>([
     { day: 'monday', label: 'LUNES', items: [] },
@@ -171,22 +201,20 @@ const assignedIds = computed(() => {
     return ids;
 });
 
-const limboIds = computed(() => {
-    const ids = new Set<string>();
-    limboServices.value.forEach((service) => ids.add(service.id));
-    return ids;
-});
-
-// Unassigned pool (not in any column)
-const unassignedPool = computed(() =>
-    allServices.value.filter(s => !assignedIds.value.has(s.id))
+const selectedWeekStart = computed(() => isoWeekToMoment(selectedWeek.value));
+const limboPool = computed(() =>
+    rangeServices.value.filter((service) => !assignedIds.value.has(service.id) && isServiceLimbo(service)),
 );
+const withoutKdsPool = computed(() =>
+    rangeServices.value.filter((service) => !assignedIds.value.has(service.id) && !isServiceLimbo(service) && !service.kdsDay),
+);
+const poolTotalCount = computed(() => limboPool.value.length + withoutKdsPool.value.length);
+const activePoolItems = computed(() => (activePoolTab.value === 'limbo' ? limboPool.value : withoutKdsPool.value));
 
-// VueDraggable needs a mutable ref — keep it in sync with unassignedPool via watch
 const filteredPool = ref<CalendarInterface[]>([]);
 
 watch(
-    [unassignedPool, poolSearch],
+    [activePoolItems, poolSearch],
     ([pool, search]) => {
         if (!search.trim()) {
             filteredPool.value = [...pool].sort(sortPoolServices);
@@ -214,36 +242,84 @@ const rangeLabel = computed(() => {
     return `${formattedStart} — ${formattedEnd}`;
 });
 
+const poolRangeLabel = computed(() => {
+    const start = moment(poolStartDate.value, 'YYYY-MM-DD', true);
+    const end = moment(poolEndDate.value, 'YYYY-MM-DD', true);
+    if (!start.isValid() || !end.isValid()) {
+        return 'Rango de búsqueda inválido';
+    }
+    return `Búsqueda: ${start.format('MM-DD-YYYY')} — ${end.format('MM-DD-YYYY')}`;
+});
+
+const poolEmptyMessage = computed(() => {
+    if (poolSearch.value.trim()) {
+        return 'Sin resultados para la búsqueda.';
+    }
+    return activePoolTab.value === 'limbo'
+        ? 'No hay servicios en limbo para el rango seleccionado.'
+        : 'No hay servicios sin KDS para el rango seleccionado.';
+});
+
 watch(selectedWeek, (value) => {
     if (!value || !isoWeekToMoment(value).isValid()) {
         selectedWeek.value = currentWeek;
     }
 });
 
+watch(poolStartDate, (value) => {
+    if (!value || !moment(value, 'YYYY-MM-DD', true).isValid()) {
+        poolStartDate.value = currentWeekStart.format('YYYY-MM-DD');
+    }
+});
+
+watch(poolEndDate, (value) => {
+    if (!value || !moment(value, 'YYYY-MM-DD', true).isValid()) {
+        poolEndDate.value = currentWeekStart.clone().endOf('isoWeek').format('YYYY-MM-DD');
+    }
+});
+
 async function loadRange() {
-    const weekStart = isoWeekToMoment(selectedWeek.value);
+    const weekStart = selectedWeekStart.value;
+    const rangeStart = moment(poolStartDate.value, 'YYYY-MM-DD', true).startOf('day');
+    const rangeEnd = moment(poolEndDate.value, 'YYYY-MM-DD', true).endOf('day');
+
     if (!weekStart.isValid()) {
         showToast(toast, { severity: 'warn', summary: 'Selecciona una semana válida.' });
+        return;
+    }
+    if (!rangeStart.isValid() || !rangeEnd.isValid()) {
+        showToast(toast, { severity: 'warn', summary: 'Selecciona un rango de búsqueda válido.' });
+        return;
+    }
+    if (rangeStart.isAfter(rangeEnd)) {
+        showToast(toast, { severity: 'warn', summary: 'El rango de búsqueda es inválido.' });
         return;
     }
 
     isLoading.value = true;
     try {
-        const response = await KdsServices.getWeekServices(weekStart.format('YYYY-MM-DD'));
-        limboServices.value = [...response.limbo];
+        const weekStarts = getWeekStartsBetween(rangeStart, rangeEnd);
+        const selectedWeekKey = weekStart.format('YYYY-MM-DD');
+        if (!weekStarts.includes(selectedWeekKey)) {
+            weekStarts.push(selectedWeekKey);
+        }
 
-        const inRangeServices = [...response.assigned, ...response.unassigned];
-        const mergedServices = new Map<string, CalendarInterface>();
-        inRangeServices.forEach((service) => mergedServices.set(service.id, service));
-        limboServices.value.forEach((service) => {
-            if (!mergedServices.has(service.id)) {
-                mergedServices.set(service.id, service);
-            }
+        const responses = await Promise.all(
+            weekStarts.map((weekOf) => KdsServices.getWeekServices(weekOf)),
+        );
+        const responsesByWeek = new Map<string, (typeof responses)[number]>();
+        responses.forEach((response) => {
+            const key = moment(response.weekOf, 'YYYY-MM-DD', true).startOf('isoWeek').format('YYYY-MM-DD');
+            responsesByWeek.set(key, response);
         });
-        allServices.value = [...mergedServices.values()];
+
+        const selectedWeekResponse = responsesByWeek.get(selectedWeekKey);
+        const selectedWeekServices = selectedWeekResponse
+            ? [...selectedWeekResponse.assigned, ...selectedWeekResponse.unassigned]
+            : [];
 
         const byDay: Record<KdsDay, CalendarInterface[]> = { monday: [], wednesday: [], friday: [] };
-        inRangeServices.forEach((s) => {
+        selectedWeekServices.forEach((s) => {
             if (s.kdsDay) byDay[s.kdsDay].push(s);
         });
         (['monday', 'wednesday', 'friday'] as KdsDay[]).forEach((day) => {
@@ -253,6 +329,24 @@ async function loadRange() {
         columns.value[0].items = byDay.monday;
         columns.value[1].items = byDay.wednesday;
         columns.value[2].items = byDay.friday;
+
+        const servicesById = new Map<string, CalendarInterface>();
+        responses.forEach((response) => {
+            [...response.assigned, ...response.unassigned].forEach((service) => {
+                const current = servicesById.get(service.id);
+                if (!current || (!current.kdsDay && !!service.kdsDay)) {
+                    servicesById.set(service.id, service);
+                }
+            });
+        });
+
+        rangeServices.value = [...servicesById.values()]
+            .filter((service) => isServiceDateInRange(service, rangeStart, rangeEnd))
+            .sort(sortPoolServices);
+
+        if (activePoolTab.value === 'limbo' && limboPool.value.length === 0 && withoutKdsPool.value.length > 0) {
+            activePoolTab.value = 'withoutKds';
+        }
     } catch {
         showToast(toast, { severity: 'error', summary: 'Error cargando la semana.' });
     } finally {
@@ -264,8 +358,8 @@ async function persistColumn(day: KdsDay) {
     const col = columns.value.find(c => c.day === day);
     if (!col) return;
 
-    const selectedWeekStart = isoWeekToMoment(selectedWeek.value);
-    if (!selectedWeekStart.isValid()) {
+    const weekStart = selectedWeekStart.value;
+    if (!weekStart.isValid()) {
         showToast(toast, { severity: 'warn', summary: 'Semana inválida.' });
         return;
     }
@@ -274,7 +368,7 @@ async function persistColumn(day: KdsDay) {
     const orderByWeek = new Map<string, number>();
 
     const saves = col.items.map((service) => {
-        const weekOf = getAssignmentWeekOf(service, selectedWeekStart);
+        const weekOf = getAssignmentWeekOf(weekStart);
         const nextOrder = (orderByWeek.get(weekOf) ?? 0) + 1;
         orderByWeek.set(weekOf, nextOrder);
         localAssignment.set(service.id, { order: nextOrder, weekOf });
@@ -335,8 +429,8 @@ function getAssignedBadge(id: string): string {
     return '';
 }
 
-function isLimboService(id: string): boolean {
-    return limboIds.value.has(id);
+function isLimboService(service: CalendarInterface): boolean {
+    return isServiceLimbo(service);
 }
 
 function formatDate(date: string | Date): string {
@@ -358,6 +452,17 @@ function isoWeekToMoment(isoWeek: string): moment.Moment {
     return moment(isoWeek, 'GGGG-[W]WW', true).startOf('isoWeek');
 }
 
+function getWeekStartsBetween(start: moment.Moment, end: moment.Moment): string[] {
+    const result: string[] = [];
+    const cursor = start.clone().startOf('isoWeek');
+    const boundary = end.clone().endOf('isoWeek');
+    while (cursor.isSameOrBefore(boundary, 'day')) {
+        result.push(cursor.format('YYYY-MM-DD'));
+        cursor.add(1, 'week');
+    }
+    return result;
+}
+
 function getServiceEffectiveWeekOf(service: CalendarInterface): string {
     const kdsWeek = service.kdsWeekOf ? moment(service.kdsWeekOf, 'YYYY-MM-DD', true) : null;
     if (kdsWeek?.isValid()) {
@@ -367,21 +472,24 @@ function getServiceEffectiveWeekOf(service: CalendarInterface): string {
     return moment(service.date).startOf('isoWeek').format('YYYY-MM-DD');
 }
 
-function getAssignmentWeekOf(
-    service: CalendarInterface,
-    selectedWeekStart: moment.Moment,
-): string {
-    const effectiveWeek = moment(getServiceEffectiveWeekOf(service), 'YYYY-MM-DD', true);
-    if (effectiveWeek.isValid() && effectiveWeek.isSame(selectedWeekStart, 'day')) {
-        return effectiveWeek.format('YYYY-MM-DD');
-    }
-
+function getAssignmentWeekOf(selectedWeekStart: moment.Moment): string {
     return selectedWeekStart.clone().startOf('isoWeek').format('YYYY-MM-DD');
 }
 
+function isServiceLimbo(service: CalendarInterface): boolean {
+    const effectiveWeek = moment(getServiceEffectiveWeekOf(service), 'YYYY-MM-DD', true);
+    const weekStart = selectedWeekStart.value;
+    return effectiveWeek.isValid() && weekStart.isValid() && effectiveWeek.isBefore(weekStart, 'day');
+}
+
+function isServiceDateInRange(service: CalendarInterface, start: moment.Moment, end: moment.Moment): boolean {
+    const serviceDate = moment(service.date);
+    return serviceDate.isValid() && serviceDate.isBetween(start, end, 'day', '[]');
+}
+
 function sortPoolServices(a: CalendarInterface, b: CalendarInterface): number {
-    const aLimbo = isLimboService(a.id) ? 1 : 0;
-    const bLimbo = isLimboService(b.id) ? 1 : 0;
+    const aLimbo = isServiceLimbo(a) ? 1 : 0;
+    const bLimbo = isServiceLimbo(b) ? 1 : 0;
     if (aLimbo !== bLimbo) {
         return bLimbo - aLimbo;
     }
@@ -541,12 +649,26 @@ onMounted(loadRange);
     padding: 2rem 0;
 }
 
-.limbo-alert {
-    border: 1px solid #fecaca;
-    background: #fef2f2;
-    color: #7f1d1d;
-    border-radius: 8px;
-    padding: 10px 12px;
+.pool-tabs {
+    display: flex;
+    gap: 8px;
+}
+
+.pool-tab {
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+
+.pool-tab--active {
+    border-color: #3b82f6;
+    background: #dbeafe;
+    color: #1d4ed8;
 }
 
 .limbo-badge {
