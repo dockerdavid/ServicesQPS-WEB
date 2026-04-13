@@ -2,15 +2,10 @@
     <div class="kds-qa p-4">
         <h2 class="text-2xl font-bold mb-4">KDS</h2>
 
-        <!-- Week picker -->
+        <!-- Current week (read-only for QA) -->
         <div class="flex items-center gap-3 mb-6">
             <label class="font-semibold text-sm">Semana:</label>
-            <input
-                type="date"
-                v-model="selectedWeekOf"
-                class="border rounded px-3 py-1.5 text-sm"
-                @change="loadWeek"
-            />
+            <span class="text-sm font-semibold">{{ currentWeekOf }}</span>
             <span class="text-sm text-gray-500">{{ weekLabel }}</span>
             <Button
                 icon="pi pi-refresh"
@@ -94,7 +89,7 @@ const hoveredId = ref<string | null>(null);
 const modalVisible = ref(false);
 const selectedService = ref<CalendarInterface | null>(null);
 
-const selectedWeekOf = ref(getMonday(new Date()));
+const currentWeekOf = computed(() => moment().startOf('isoWeek').format('YYYY-MM-DD'));
 
 const columns = ref<KdsColumn[]>([
     { day: 'monday', label: 'LUNES', items: [] },
@@ -105,7 +100,7 @@ const columns = ref<KdsColumn[]>([
 const totalAssigned = computed(() => columns.value.reduce((sum, col) => sum + col.items.length, 0));
 
 const weekLabel = computed(() => {
-    const start = moment(selectedWeekOf.value);
+    const start = moment(currentWeekOf.value);
     const end = start.clone().add(6, 'days');
     return `${start.format('MMM D')} — ${end.format('MMM D, YYYY')}`;
 });
@@ -113,7 +108,7 @@ const weekLabel = computed(() => {
 async function loadWeek() {
     isLoading.value = true;
     try {
-        const result = await KdsServices.getWeekServices(selectedWeekOf.value);
+        const result = await KdsServices.getWeekServices(currentWeekOf.value);
 
         const byDay: Record<KdsDay, CalendarInterface[]> = { monday: [], wednesday: [], friday: [] };
         result.assigned.forEach(s => {
@@ -155,14 +150,6 @@ function statusClass(statusId: string | null): string {
         '6': 'status--finished',
     };
     return map[statusId ?? ''] ?? '';
-}
-
-function getMonday(date: Date): string {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    d.setDate(diff);
-    return d.toISOString().split('T')[0];
 }
 
 onMounted(loadWeek);
