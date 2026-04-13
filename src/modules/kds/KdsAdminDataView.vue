@@ -27,6 +27,7 @@
                 label="Aplicar"
                 severity="secondary"
                 @click="loadRange"
+                :disabled="!startWeek || !endWeek || isLoading"
                 :loading="isLoading"
             />
             <span class="text-sm text-gray-500">{{ rangeLabel }}</span>
@@ -83,9 +84,16 @@
 
             <!-- RIGHT: Unassigned pool -->
             <div class="lg:w-2/5 flex flex-col gap-2">
+                <div v-if="limboServices.length > 0" class="limbo-alert">
+                    <p class="font-semibold text-sm">Servicios en limbo: {{ limboServices.length }}</p>
+                    <p class="text-xs">
+                        Son pendientes de semanas anteriores no verificados. Aparecen en la lista para reubicarlos.
+                        Al asignarlos se mueven a la semana inicial del rango seleccionado.
+                    </p>
+                </div>
                 <h3 class="font-semibold text-sm uppercase tracking-wide text-gray-500 mb-2">
                     Servicios de la semana
-                    <span class="text-xs font-normal ml-1">({{ allServices.length }} total · {{ unassignedPool.length }} sin asignar)</span>
+                    <span class="text-xs font-normal ml-1">({{ allServices.length }} total · {{ unassignedPool.length }} sin asignar · {{ limboServices.length }} limbo)</span>
                 </h3>
                 <div class="pool-search mb-2">
                     <input
@@ -113,9 +121,12 @@
                         <div class="pool-card-body">
                             <div class="flex justify-between items-start">
                                 <p class="font-semibold text-sm">{{ element.community?.communityName || '—' }}</p>
-                                <span v-if="getAssignedBadge(element.id)" class="assigned-badge">
-                                    {{ getAssignedBadge(element.id) }}
-                                </span>
+                                <div class="flex items-center gap-1.5">
+                                    <span v-if="isLimboService(element.id)" class="limbo-badge">LIMBO</span>
+                                    <span v-if="getAssignedBadge(element.id)" class="assigned-badge">
+                                        {{ getAssignedBadge(element.id) }}
+                                    </span>
+                                </div>
                             </div>
                             <p class="text-xs text-gray-500">Unidad {{ element.unitNumber }} · {{ element.unitySize }}</p>
                             <p class="text-xs text-gray-600">{{ formatDate(element.date) }} {{ element.schedule ? '· ' + element.schedule : '' }}</p>
@@ -154,6 +165,7 @@ const currentWeek = moment().startOf('isoWeek').format('GGGG-[W]WW');
 const startWeek = ref<string>(currentWeek);
 const endWeek = ref<string>(currentWeek);
 const allServices = ref<CalendarInterface[]>([]);
+const limboServices = ref<CalendarInterface[]>([]);
 const poolSearch = ref('');
 
 const columns = ref<KdsColumn[]>([
@@ -169,6 +181,12 @@ const assignedIds = computed(() => {
     return ids;
 });
 
+const limboIds = computed(() => {
+    const ids = new Set<string>();
+    limboServices.value.forEach((service) => ids.add(service.id));
+    return ids;
+});
+
 // Unassigned pool (not in any column)
 const unassignedPool = computed(() =>
     allServices.value.filter(s => !assignedIds.value.has(s.id))
@@ -181,15 +199,17 @@ watch(
     [unassignedPool, poolSearch],
     ([pool, search]) => {
         if (!search.trim()) {
-            filteredPool.value = [...pool];
+            filteredPool.value = [...pool].sort(sortPoolServices);
             return;
         }
         const q = search.toLowerCase();
-        filteredPool.value = pool.filter(s =>
-            (s.community?.communityName || '').toLowerCase().includes(q) ||
-            (s.unitNumber || '').toLowerCase().includes(q) ||
-            (s.user?.name || '').toLowerCase().includes(q)
-        );
+        filteredPool.value = pool
+            .filter(s =>
+                (s.community?.communityName || '').toLowerCase().includes(q) ||
+                (s.unitNumber || '').toLowerCase().includes(q) ||
+                (s.user?.name || '').toLowerCase().includes(q),
+            )
+            .sort(sortPoolServices);
     },
     { immediate: true },
 );
@@ -236,6 +256,8 @@ async function loadRange() {
             weekStarts.map((weekOf) => KdsServices.getWeekServices(weekOf)),
         );
 
+        limboServices.value = [...(weekResponses[0]?.limbo ?? [])];
+
         const servicesById = new Map<string, CalendarInterface>();
         weekResponses.forEach((response) => {
             [...response.assigned, ...response.unassigned].forEach((service) => {
@@ -249,7 +271,14 @@ async function loadRange() {
         const inRangeServices = [...servicesById.values()].filter((service) =>
             isServiceInRange(service.date, rangeStart, rangeEnd.clone().endOf('isoWeek')),
         );
-        allServices.value = inRangeServices;
+        const mergedServices = new Map<string, CalendarInterface>();
+        inRangeServices.forEach((service) => mergedServices.set(service.id, service));
+        limboServices.value.forEach((service) => {
+            if (!mergedServices.has(service.id)) {
+                mergedServices.set(service.id, service);
+            }
+        });
+        allServices.value = [...mergedServices.values()];
 
         const byDay: Record<KdsDay, CalendarInterface[]> = { monday: [], wednesday: [], friday: [] };
         inRangeServices.forEach((s) => {
@@ -273,11 +302,18 @@ async function persistColumn(day: KdsDay) {
     const col = columns.value.find(c => c.day === day);
     if (!col) return;
 
+    const rangeStart = isoWeekToMoment(startWeek.value);
+    const rangeEnd = isoWeekToMoment(endWeek.value).endOf('isoWeek');
+    if (!rangeStart.isValid() || !rangeEnd.isValid()) {
+        showToast(toast, { severity: 'warn', summary: 'Rango semanal inválido.' });
+        return;
+    }
+
     const localAssignment = new Map<string, { order: number; weekOf: string }>();
     const orderByWeek = new Map<string, number>();
 
     const saves = col.items.map((service) => {
-        const weekOf = getServiceWeekOf(service.date);
+        const weekOf = getAssignmentWeekOf(service, rangeStart, rangeEnd);
         const nextOrder = (orderByWeek.get(weekOf) ?? 0) + 1;
         orderByWeek.set(weekOf, nextOrder);
         localAssignment.set(service.id, { order: nextOrder, weekOf });
@@ -338,6 +374,10 @@ function getAssignedBadge(id: string): string {
     return '';
 }
 
+function isLimboService(id: string): boolean {
+    return limboIds.value.has(id);
+}
+
 function formatDate(date: string | Date): string {
     const str = typeof date === 'string' ? date.substring(0, 10) : date.toISOString().substring(0, 10);
     const [y, m, d] = str.split('-');
@@ -370,9 +410,42 @@ function getWeekStartsBetween(start: moment.Moment, end: moment.Moment): string[
     return result;
 }
 
-function getServiceWeekOf(date: string | Date): string {
-    const serviceDate = typeof date === 'string' ? date.substring(0, 10) : date.toISOString().substring(0, 10);
-    return moment(serviceDate, 'YYYY-MM-DD').startOf('isoWeek').format('YYYY-MM-DD');
+function getServiceEffectiveWeekOf(service: CalendarInterface): string {
+    const kdsWeek = service.kdsWeekOf ? moment(service.kdsWeekOf, 'YYYY-MM-DD', true) : null;
+    if (kdsWeek?.isValid()) {
+        return kdsWeek.startOf('isoWeek').format('YYYY-MM-DD');
+    }
+
+    return moment(service.date).startOf('isoWeek').format('YYYY-MM-DD');
+}
+
+function getAssignmentWeekOf(
+    service: CalendarInterface,
+    rangeStart: moment.Moment,
+    rangeEnd: moment.Moment,
+): string {
+    const effectiveWeek = moment(getServiceEffectiveWeekOf(service), 'YYYY-MM-DD', true);
+    if (effectiveWeek.isValid() && effectiveWeek.isBetween(rangeStart, rangeEnd, 'day', '[]')) {
+        return effectiveWeek.format('YYYY-MM-DD');
+    }
+
+    return rangeStart.clone().startOf('isoWeek').format('YYYY-MM-DD');
+}
+
+function sortPoolServices(a: CalendarInterface, b: CalendarInterface): number {
+    const aLimbo = isLimboService(a.id) ? 1 : 0;
+    const bLimbo = isLimboService(b.id) ? 1 : 0;
+    if (aLimbo !== bLimbo) {
+        return bLimbo - aLimbo;
+    }
+
+    const aDate = moment(a.date);
+    const bDate = moment(b.date);
+    if (!aDate.isSame(bDate, 'day')) {
+        return aDate.valueOf() - bDate.valueOf();
+    }
+
+    return (a.schedule ?? '').localeCompare(b.schedule ?? '');
 }
 
 function isServiceInRange(
@@ -529,6 +602,24 @@ onMounted(loadRange);
     color: #94a3b8;
     font-size: 0.8rem;
     padding: 2rem 0;
+}
+
+.limbo-alert {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #7f1d1d;
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.limbo-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 1px 6px;
+    border-radius: 10px;
+    white-space: nowrap;
 }
 
 .assigned-badge {
