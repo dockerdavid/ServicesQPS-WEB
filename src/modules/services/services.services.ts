@@ -98,6 +98,42 @@ export class CleanersServices {
         }
     }
 
+    static async getServicesByCommunityDateRange(communityId: string, startDate: string, endDate: string): Promise<Service[]> {
+        this.store.setIsLoading(true);
+        const params = `startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+
+        try {
+            const { data } = await apiServicesQps.get<Service[]>(
+                `/services/community/${communityId}/range?${params}`
+            );
+            return data;
+        } catch (error: any) {
+            throw new Error(error);
+        } finally {
+            this.store.setIsLoading(false);
+        }
+    }
+
+    static async deleteServicesByCommunityDateRange(
+        communityId: string,
+        startDate: string,
+        endDate: string
+    ): Promise<{ deletedCount: number }> {
+        this.store.setIsLoading(true);
+        const params = `startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
+
+        try {
+            const { data } = await apiServicesQps.delete<{ deletedCount: number }>(
+                `/services/community/${communityId}/range?${params}`
+            );
+            return data;
+        } catch (error: any) {
+            throw new Error(error);
+        } finally {
+            this.store.setIsLoading(false);
+        }
+    }
+
     static async searchService(searchWord: string, page: number = 1, take: number = 10): Promise<Services> {
         this.store.setIsLoading(true)
         try {
