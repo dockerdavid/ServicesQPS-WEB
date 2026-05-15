@@ -6,7 +6,7 @@ import { CompaniesServices } from '../companies/companies.services';
 import { CleanersServices } from '../services/services.services';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import type { InputConfig } from '../../interfaces/input-config.interface';
-import { Button, Calendar, Column, DataTable, Dialog, MultiSelect, useToast } from 'primevue';
+import { Button, Calendar, Column, DataTable, Dialog, InputSwitch, MultiSelect, useToast } from 'primevue';
 import { ref, computed } from 'vue';
 import type { User } from '../../interfaces/users/users.interface';
 import type { Service } from '../../interfaces/services/services.interface';
@@ -16,6 +16,7 @@ interface EntityData {
   communityName: string;
   companyId: string;
   userId: string[];
+  showInReports: boolean;
 }
 
 interface UpdateCommunityData {
@@ -23,6 +24,7 @@ interface UpdateCommunityData {
   companyId: string;
   managerUserId: string | null;
   supervisorUserId: string | null;
+  showInReports: boolean;
 }
 
 const route = useRoute();
@@ -39,7 +41,8 @@ const showDeleteDialog = ref(false);
 const entityData = ref<EntityData>({
   communityName: '',
   companyId: '',
-  userId: []
+  userId: [],
+  showInReports: true
 });
 
 // Computed property para formatear los nombres de usuarios con sus roles
@@ -109,7 +112,8 @@ const loadData = async (id: string) => {
   entityData.value = {
     communityName: communityResult.communityName,
     companyId: communityResult.company.id,
-    userId: selectedUserIds
+    userId: selectedUserIds,
+    showInReports: communityResult.showInReports ?? true
   };
 
   return {
@@ -284,6 +288,7 @@ const updateEntity = async (id: string, data: any) => {
   const updateData = {
     communityName: data.communityName,
     companyId: data.companyId,
+    showInReports: entityData.value.showInReports,
     id: id,
     managerUserId: manager?.id || null,
     supervisorUserId: supervisor?.id || null
@@ -341,6 +346,16 @@ const updateEntity = async (id: string, data: any) => {
               </span>
             </div>
           </div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <label for="showInReports">Debe visualizar reportes</label>
+        <div class="report-visibility-control">
+          <InputSwitch
+            inputId="showInReports"
+            v-model="entityData.showInReports"
+          />
+          <span class="report-visibility-value">{{ entityData.showInReports ? 'Sí' : 'No' }}</span>
         </div>
       </fieldset>
       <fieldset class="community-services-panel">
@@ -468,6 +483,17 @@ const updateEntity = async (id: string, data: any) => {
   border: 1px solid var(--p-surface-200);
   border-radius: 8px;
   padding: 1rem;
+}
+
+.report-visibility-control {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.report-visibility-value {
+  color: var(--p-surface-700);
+  font-weight: 700;
 }
 
 .range-header {

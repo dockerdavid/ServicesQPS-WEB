@@ -9,6 +9,7 @@ export interface Communities {
 export interface Community {
     id: string;
     communityName: string;
+    showInReports: boolean;
     createdAt: Date;
     updatedAt: Date;
     managerUser: User | null;
@@ -18,6 +19,7 @@ export interface Community {
 
 export interface NewCommunity {
     communityName: string;
+    showInReports: boolean;
     managerUserId: string | null;
     supervisorUserId: string | null;
     companyId: string;
