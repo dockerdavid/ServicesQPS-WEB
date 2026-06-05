@@ -20,6 +20,7 @@ const inputs: InputConfig[] = [
   { label: 'Price', inputId: 'price', inputType: 'numeric' },
   { label: 'Commission', inputId: 'commission', inputType: 'numeric' },
   { label: 'Community', inputId: 'communityId', inputType: 'select', options: [] },
+  { label: 'Mostrar en móvil', inputId: 'showInMobile', inputType: 'switch' },
 ];
 
 const keyValueMap = {
@@ -55,5 +56,6 @@ const updateEntity = async (id: string, data: NewType) => {
       price: 0,
       commission: '',
       communityId: '',
+      showInMobile: true,
     }" :key-value-map="keyValueMap" />
 </template>

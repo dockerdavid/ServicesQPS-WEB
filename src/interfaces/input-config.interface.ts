@@ -1,4 +1,4 @@
-export type InputType = 'input' | 'select' | 'datepicker' | "numeric" | "multiselect" | "password" | "textarea";
+export type InputType = 'input' | 'select' | 'datepicker' | "numeric" | "multiselect" | "password" | "textarea" | "switch";
 export type InputNumericMode = 'currency' | 'decimal';
 
 
@@ -20,4 +20,5 @@ export interface InputConfig {
     required?:boolean;
     isNotNeccesary?:boolean;
     placeholder?: string;
+    defaultValue?: string | boolean | number | null;
 }

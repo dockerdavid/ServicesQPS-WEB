@@ -193,7 +193,7 @@ const getAllUsers = async () => {
 
 const getTypesByCommunity = async (communityId: string) => {
     if (communityId) {
-        const types = await TypesServices.getTypesByCommunity(communityId);
+        const types = await TypesServices.getAllTypesByCommunity(communityId);
         typesByCommunity.value = types;
     }
 };

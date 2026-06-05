@@ -30,6 +30,11 @@
                 optionLabel="label" optionValue="value" :placeholder="props.placeholder" :filter="true"
                 :maxSelectedLabels="3" class="w-full md:w-80" />
 
+            <div v-if="props.inputType === 'switch'" class="switch-control">
+                <InputSwitch v-model="switchValue" :inputId="props.inputId" />
+                <span class="switch-value">{{ switchValue ? 'Sí' : 'No' }}</span>
+            </div>
+
             <InputIcon :placeholder="props.placeholder" v-if="props.inputType !== 'select' && props.icon"
                 :class="`pi pi-${props.icon}`" />
         </IconField>
@@ -38,7 +43,7 @@
 </template>
 
 <script lang="ts" setup>
-import { DatePicker, IconField, InputIcon, InputText, Select, InputNumber, Password, Textarea } from 'primevue';
+import { DatePicker, IconField, InputIcon, InputText, Select, InputNumber, Password, Textarea, InputSwitch } from 'primevue';
 import moment from 'moment-timezone';
 import { computed } from 'vue';
 import type { InputNumericMode, InputType } from '../../../interfaces/input-config.interface';
@@ -115,6 +120,15 @@ const numericValue = computed({
     },
 });
 
+const switchValue = computed({
+    get() {
+        return model.value === true || model.value === 1 || model.value === '1';
+    },
+    set(value: boolean) {
+        model.value = value;
+    },
+});
+
 const hasValue = computed(() => {
     const value = model.value;
 
@@ -134,6 +148,10 @@ const hasValue = computed(() => {
         return value !== null && value !== undefined && value !== '';
     }
 
+    if (props.inputType === 'switch') {
+        return value !== null && value !== undefined;
+    }
+
     if (typeof value === 'string') {
         return value.trim().length > 0;
     }
@@ -141,3 +159,16 @@ const hasValue = computed(() => {
     return value !== null && value !== undefined;
 });
 </script>
+
+<style scoped>
+.switch-control {
+    align-items: center;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.switch-value {
+    color: var(--p-surface-700);
+    font-weight: 700;
+}
+</style>

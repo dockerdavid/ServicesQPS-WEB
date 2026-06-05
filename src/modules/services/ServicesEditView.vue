@@ -131,7 +131,7 @@ const unitSizeOptions = [
 
 const getTypesByCommunity = async () => {
   if (updatedService.value.communityId) {
-    const types = await TypesServices.getTypesByCommunity(updatedService.value.communityId);
+    const types = await TypesServices.getAllTypesByCommunity(updatedService.value.communityId);
     typesByCommunity.value = types;
   }
 };

@@ -60,7 +60,7 @@ const fillInitialData = (source: Record<string, any>, target: Record<string, any
       const sourceKey = props.keyValueMap[input.inputId] || input.inputId;
       target[input.inputId] = getNestedValue(source, sourceKey);
     } else {
-      target[input.inputId] = source[input.inputId] || '';
+      target[input.inputId] = source[input.inputId] ?? '';
     }
   });
 
