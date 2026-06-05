@@ -38,7 +38,7 @@ const selectOptions = ref<Record<string, Array<{ label: string; value: any }>>>(
 
 
 props.inputs.forEach((input) => {
-  entityData.value[input.inputId] = '';
+  entityData.value[input.inputId] = input.defaultValue ?? '';
 });
 
 
@@ -116,7 +116,7 @@ const createEntity = async (leave: boolean) => {
     if (leave) router.back()
 
     props.inputs.forEach((input) => {
-      entityData.value[input.inputId] = '';
+      entityData.value[input.inputId] = input.defaultValue ?? '';
     });
   } catch (error) {
     showToast(toast, { severity: 'error', summary: 'Error creating', detail: "Wasn't created" });
@@ -127,7 +127,7 @@ const createEntity = async (leave: boolean) => {
 
 const clearForm = () => {
   props.inputs.forEach((input) => {
-    entityData.value[input.inputId] = '';
+    entityData.value[input.inputId] = input.defaultValue ?? '';
   });
 
   isFormSubmitted.value = false;

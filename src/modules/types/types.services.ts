@@ -41,6 +41,20 @@ export class TypesServices {
         } finally {
             this.store.setIsLoading(false)
         }
+    }
+
+    static async getAllTypesByCommunity(communityId:string): Promise<TypeByCommunity[]> {
+
+        this.store.setIsLoading(true)
+
+        try {
+            const { data } = await apiServicesQps.get(`/types/by-community/${communityId}/all`)
+            return data
+        } catch (error) {
+            return []
+        } finally {
+            this.store.setIsLoading(false)
+        }
     } 
 
     static async createType(newType: NewType) {
@@ -104,4 +118,3 @@ export class TypesServices {
         }
     }
 }
-

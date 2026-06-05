@@ -26,6 +26,7 @@ const searchType = async (searchWord: any, page: number, rows: number) => {
         { field: 'price', name: 'Price' },
         { field: 'community.communityName', name: 'Community' },
         { field: 'commission', name: 'Commission' },
+        { field: 'showInMobile', name: 'Mobile', format: (value) => value ? 'Sí' : 'No' },
     ]"  :fetch-data="fetchTypes" :delete-data="deleteType"
         :search-data="searchType"  />
 </template>

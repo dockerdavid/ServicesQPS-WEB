@@ -19,6 +19,7 @@ const inputs: InputConfig[] = [
     { label: 'Price', inputId: 'price', inputType: 'numeric' },
     { label: 'Community', inputId: 'communityId', inputType: 'select' },
     { label: 'Commission', inputId: 'commission', inputType: 'numeric' },
+    { label: 'Mostrar en móvil', inputId: 'showInMobile', inputType: 'switch', defaultValue: true },
 ]
 
 const loadOptions = async () => {

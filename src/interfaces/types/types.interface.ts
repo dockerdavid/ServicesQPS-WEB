@@ -11,6 +11,7 @@ export interface Type {
     cleaningType: string;
     price: number;
     commission: string;
+    showInMobile: boolean;
     communityId: string;
     createdAt: Date;
     updatedAt: Date;
@@ -29,6 +30,7 @@ export interface NewType {
     cleaningType: string;
     price: number;
     commission: string;
+    showInMobile?: boolean;
     communityId: string;
 }
 
@@ -40,6 +42,7 @@ export class TypesAdapter {
             cleaningType: externalType.cleaningType,
             price: `$${externalType.price.toFixed(2)}`,
             commission: `$${externalType.commission}`,
+            showInMobile: externalType.showInMobile,
             communityId: externalType.communityId,
             createdAt: externalType.createdAt,
             updatedAt: externalType.updatedAt,
