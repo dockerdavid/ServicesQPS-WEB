@@ -52,7 +52,7 @@
             <!-- LEFT: KDS columns -->
             <div class="lg:w-3/5 flex flex-col gap-2">
                 <h3 class="font-semibold text-sm uppercase tracking-wide text-gray-500 mb-2">KDS — Vista QA</h3>
-                <div class="grid grid-cols-3 gap-3">
+                <div class="grid grid-cols-3 xl:grid-cols-5 gap-3">
                     <div v-for="col in columns" :key="col.day" class="kds-column">
                         <div class="kds-column-header" :class="`kds-col--${col.day}`">
                             {{ col.label }}
@@ -169,7 +169,7 @@ import { VueDraggable } from 'vue-draggable-plus';
 import { Button, Toast } from 'primevue';
 import { useToast } from 'primevue/usetoast';
 import moment from 'moment-timezone';
-import { KdsServices, type KdsDay } from './kds.services';
+import { KdsServices, KDS_DAYS, KDS_DAY_LABELS, type KdsDay } from './kds.services';
 import type { CalendarInterface } from '../../interfaces/calendar/calendar.interface';
 import { showToast } from '../../utils/show-toast';
 
@@ -188,11 +188,9 @@ const rangeServices = ref<CalendarInterface[]>([]);
 const poolSearch = ref('');
 const activePoolTab = ref<PoolTab>('withoutKds');
 
-const columns = ref<KdsColumn[]>([
-    { day: 'monday', label: 'LUNES', items: [] },
-    { day: 'wednesday', label: 'MIÉRCOLES', items: [] },
-    { day: 'friday', label: 'VIERNES', items: [] },
-]);
+const columns = ref<KdsColumn[]>(
+    KDS_DAYS.map((day) => ({ day, label: KDS_DAY_LABELS[day], items: [] })),
+);
 
 // All IDs currently in KDS columns
 const assignedIds = computed(() => {
@@ -318,17 +316,17 @@ async function loadRange() {
             ? [...selectedWeekResponse.assigned, ...selectedWeekResponse.unassigned]
             : [];
 
-        const byDay: Record<KdsDay, CalendarInterface[]> = { monday: [], wednesday: [], friday: [] };
+        const byDay: Record<KdsDay, CalendarInterface[]> = { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [] };
         selectedWeekServices.forEach((s) => {
-            if (s.kdsDay) byDay[s.kdsDay].push(s);
+            if (s.kdsDay && byDay[s.kdsDay]) byDay[s.kdsDay].push(s);
         });
-        (['monday', 'wednesday', 'friday'] as KdsDay[]).forEach((day) => {
+        KDS_DAYS.forEach((day) => {
             byDay[day].sort(sortByDateAndOrder);
         });
 
-        columns.value[0].items = byDay.monday;
-        columns.value[1].items = byDay.wednesday;
-        columns.value[2].items = byDay.friday;
+        columns.value.forEach((col) => {
+            col.items = byDay[col.day];
+        });
 
         const servicesById = new Map<string, CalendarInterface>();
         responses.forEach((response) => {
@@ -422,7 +420,7 @@ function getAssignedBadge(id: string): string {
     for (const col of columns.value) {
         const idx = col.items.findIndex(s => s.id === id);
         if (idx !== -1) {
-            const labelMap: Record<KdsDay, string> = { monday: 'LUN', wednesday: 'MIÉ', friday: 'VIE' };
+            const labelMap: Record<KdsDay, string> = { monday: 'LUN', tuesday: 'MAR', wednesday: 'MIÉ', thursday: 'JUE', friday: 'VIE' };
             return `${labelMap[col.day]} #${idx + 1}`;
         }
     }
@@ -542,7 +540,9 @@ onMounted(loadRange);
 }
 
 .kds-col--monday    { background: #2563eb; }
+.kds-col--tuesday   { background: #d97706; }
 .kds-col--wednesday { background: #7c3aed; }
+.kds-col--thursday  { background: #db2777; }
 .kds-col--friday    { background: #059669; }
 
 .kds-drop-zone {

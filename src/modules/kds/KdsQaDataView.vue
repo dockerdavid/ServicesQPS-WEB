@@ -16,8 +16,32 @@
             />
         </div>
 
+        <!-- Pending services to accept -->
+        <div v-if="pendingServices.length > 0" class="pending-panel mb-6">
+            <h3 class="font-semibold text-sm uppercase tracking-wide text-amber-700 mb-2">
+                Pendientes por aceptar ({{ pendingServices.length }})
+            </h3>
+            <div class="pending-list">
+                <div v-for="service in pendingServices" :key="service.id" class="pending-card">
+                    <div class="kds-card-body">
+                        <p class="font-semibold text-sm truncate">{{ service.community?.communityName || '—' }}</p>
+                        <p class="text-xs text-gray-500">Unidad {{ service.unitNumber }} · {{ service.unitySize }}</p>
+                        <p class="text-xs text-gray-600">{{ formatDate(service.date) }} {{ service.schedule ? '· ' + service.schedule : '' }}</p>
+                    </div>
+                    <Button
+                        label="Aceptar"
+                        icon="pi pi-check"
+                        size="small"
+                        severity="warn"
+                        :loading="acceptingId === service.id"
+                        @click="acceptPending(service)"
+                    />
+                </div>
+            </div>
+        </div>
+
         <!-- KDS read-only columns -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
             <div v-for="col in columns" :key="col.day" class="kds-column">
                 <div class="kds-column-header" :class="`kds-col--${col.day}`">
                     {{ col.label }}
@@ -76,26 +100,28 @@ import { ref, computed, onMounted } from 'vue';
 import { Button, Toast } from 'primevue';
 import { useToast } from 'primevue/usetoast';
 import moment from 'moment-timezone';
-import { KdsServices, type KdsDay } from './kds.services';
+import { KdsServices, KDS_DAYS, KDS_DAY_LABELS, type KdsDay } from './kds.services';
 import ServiceReviewModal from './components/ServiceReviewModal.vue';
 import type { CalendarInterface } from '../../interfaces/calendar/calendar.interface';
 import { showToast } from '../../utils/show-toast';
+import { useUserStore } from '../../store/user.store';
 
 type KdsColumn = { day: KdsDay; label: string; items: CalendarInterface[] };
 
 const toast = useToast();
+const userStore = useUserStore();
 const isLoading = ref(false);
 const hoveredId = ref<string | null>(null);
 const modalVisible = ref(false);
 const selectedService = ref<CalendarInterface | null>(null);
+const pendingServices = ref<CalendarInterface[]>([]);
+const acceptingId = ref<string | null>(null);
 
 const currentWeekOf = computed(() => moment().startOf('isoWeek').format('YYYY-MM-DD'));
 
-const columns = ref<KdsColumn[]>([
-    { day: 'monday', label: 'LUNES', items: [] },
-    { day: 'wednesday', label: 'MIÉRCOLES', items: [] },
-    { day: 'friday', label: 'VIERNES', items: [] },
-]);
+const columns = ref<KdsColumn[]>(
+    KDS_DAYS.map((day) => ({ day, label: KDS_DAY_LABELS[day], items: [] })),
+);
 
 const totalAssigned = computed(() => columns.value.reduce((sum, col) => sum + col.items.length, 0));
 
@@ -110,21 +136,44 @@ async function loadWeek() {
     try {
         const result = await KdsServices.getWeekServices(currentWeekOf.value);
 
-        const byDay: Record<KdsDay, CalendarInterface[]> = { monday: [], wednesday: [], friday: [] };
+        const byDay: Record<KdsDay, CalendarInterface[]> = { monday: [], tuesday: [], wednesday: [], thursday: [], friday: [] };
         result.assigned.forEach(s => {
-            if (s.kdsDay) byDay[s.kdsDay].push(s);
+            if (s.kdsDay && byDay[s.kdsDay]) byDay[s.kdsDay].push(s);
         });
-        (['monday', 'wednesday', 'friday'] as KdsDay[]).forEach(day => {
+        KDS_DAYS.forEach(day => {
             byDay[day].sort((a, b) => (a.kdsOrder ?? 0) - (b.kdsOrder ?? 0));
         });
 
-        columns.value[0].items = byDay.monday;
-        columns.value[1].items = byDay.wednesday;
-        columns.value[2].items = byDay.friday;
+        columns.value.forEach((col) => {
+            col.items = byDay[col.day];
+        });
     } catch {
         showToast(toast, { severity: 'error', summary: 'Error cargando la semana.' });
     } finally {
         isLoading.value = false;
+    }
+}
+
+async function loadPending() {
+    const userId = userStore.userData?.id;
+    if (!userId) return;
+    try {
+        pendingServices.value = await KdsServices.getPendingServicesForUser(userId);
+    } catch {
+        pendingServices.value = [];
+    }
+}
+
+async function acceptPending(service: CalendarInterface) {
+    acceptingId.value = service.id;
+    try {
+        await KdsServices.acceptService(service.id);
+        showToast(toast, { severity: 'success', summary: 'Servicio aceptado.' });
+        await Promise.all([loadPending(), loadWeek()]);
+    } catch {
+        showToast(toast, { severity: 'error', summary: 'Error al aceptar el servicio.' });
+    } finally {
+        acceptingId.value = null;
     }
 }
 
@@ -152,7 +201,10 @@ function statusClass(statusId: string | null): string {
     return map[statusId ?? ''] ?? '';
 }
 
-onMounted(loadWeek);
+onMounted(() => {
+    loadWeek();
+    loadPending();
+});
 </script>
 
 <style scoped>
@@ -172,8 +224,35 @@ onMounted(loadWeek);
 }
 
 .kds-col--monday    { background: #2563eb; }
+.kds-col--tuesday   { background: #d97706; }
 .kds-col--wednesday { background: #7c3aed; }
+.kds-col--thursday  { background: #db2777; }
 .kds-col--friday    { background: #059669; }
+
+.pending-panel {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.pending-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pending-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    padding: 8px 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    min-width: 260px;
+}
 
 .kds-column-body {
     display: flex;
