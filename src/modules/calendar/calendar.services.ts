@@ -41,6 +41,10 @@ export class CalendarServices {
         }
     }
 
+    static async toggleQaFlag(serviceId: string, qaFlagged: boolean): Promise<void> {
+        await apiServicesQps.patch(`/services/${serviceId}/qa-flag`, { qaFlagged });
+    }
+
     static async postQAStart(serviceId: string, location: GeoPayload): Promise<any> {
         try {
             const { data } = await apiServicesQps.post(`/reviews/qa-start/${serviceId}`, location)

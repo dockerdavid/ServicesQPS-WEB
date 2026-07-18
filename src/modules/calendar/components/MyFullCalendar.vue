@@ -252,6 +252,21 @@ const getCurrentViewDate = () => {
   return api?.getDate() ?? new Date();
 };
 
+const handleToggleQaFlag = async (serviceInfo: CalendarInterface) => {
+  try {
+    const newValue = !serviceInfo.qaFlagged;
+    await CalendarServices.toggleQaFlag(serviceInfo.id, newValue);
+    showToast(toast, {
+      severity: 'success',
+      detail: newValue ? 'Unidad marcada para QA' : 'Marca de QA removida',
+    });
+    const currentDate = getCurrentViewDate();
+    await reloadCalendarEvents(currentDate.getFullYear(), currentDate.getMonth() + 1);
+  } catch (error) {
+    showToast(toast, { severity: 'error', summary: 'No se pudo actualizar la marca de QA' });
+  }
+};
+
 const handleDeleteFromCalendar = async (serviceId: string) => {
   try {
     await CleanersServices.deleteService(serviceId);
@@ -355,11 +370,13 @@ function toYYYYMMDD(date: any): string {
   return `${year}-${month}-${day}`;
 }
 
+const QA_FLAG_COLOR = '#f97316';
+
 const eventToCalendarEvent = (event: CalendarInterface): EventInput => ({
   id: event.id,
   start: toYYYYMMDD(event.date),
   allDay: true,
-  color: getEventColor(event.status?.statusName),
+  color: event.qaFlagged ? QA_FLAG_COLOR : getEventColor(event.status?.statusName),
   extendedProps: {
     userName: event.user?.name || 'N/A',
     communityName: event.community?.communityName || 'N/A',
@@ -367,6 +384,7 @@ const eventToCalendarEvent = (event: CalendarInterface): EventInput => ({
     type: event.type?.cleaningType || 'N/A',
     unitNumber: event.unitNumber || 'N/A',
     date: toYYYYMMDD(event.date),
+    qaFlagged: !!event.qaFlagged,
   },
 });
 
@@ -443,6 +461,20 @@ const calendarOptions = ref({
             >
               Ver Detalles
             </button>
+            <button
+              id="service-qa-flag-btn-${event.id}"
+              style="
+                background-color: ${serviceInfo.qaFlagged ? '#6b7280' : '#f97316'};
+                color: white;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+              "
+            >
+              ${serviceInfo.qaFlagged ? 'Quitar marca QA' : 'Marcar para QA'}
+            </button>
             ${canDelete ? `
               <button 
                 id="service-delete-btn-${event.id}" 
@@ -482,6 +514,14 @@ const calendarOptions = ref({
               button.addEventListener('click', (eventClick) => {
                 eventClick.stopPropagation();
                 openServiceModal(serviceInfo);
+                instance.hide();
+              });
+            }
+            const qaFlagButton = document.getElementById(`service-qa-flag-btn-${event.id}`);
+            if (qaFlagButton) {
+              qaFlagButton.addEventListener('click', async (eventClick) => {
+                eventClick.stopPropagation();
+                await handleToggleQaFlag(serviceInfo);
                 instance.hide();
               });
             }
