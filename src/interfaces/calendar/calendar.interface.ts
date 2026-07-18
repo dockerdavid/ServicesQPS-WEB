@@ -29,6 +29,7 @@ export interface CalendarInterface {
     kdsDay?:     'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | null;
     kdsOrder?:   number | null;
     kdsWeekOf?:  string | null;
+    qaFlagged?:  boolean;
 }
 
 export interface Community {
