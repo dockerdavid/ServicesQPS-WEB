@@ -52,6 +52,7 @@
                         v-for="(service, index) in col.items"
                         :key="service.id"
                         class="kds-card"
+                        :class="{ 'kds-card--qa-flagged': service.qaFlagged }"
                         @mouseenter="hoveredId = service.id"
                         @mouseleave="hoveredId = null"
                     >
@@ -282,6 +283,11 @@ onMounted(() => {
 
 .kds-card:hover {
     box-shadow: 0 3px 8px rgba(0,0,0,.12);
+}
+
+.kds-card--qa-flagged {
+    border-left: 4px solid #f97316;
+    background: #fff7ed;
 }
 
 .kds-card-order {

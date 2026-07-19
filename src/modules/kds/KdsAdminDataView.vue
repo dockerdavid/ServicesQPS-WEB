@@ -70,6 +70,7 @@
                                 v-for="(element, index) in col.items"
                                 :key="element.id"
                                 class="kds-card"
+                                :class="{ 'kds-card--qa-flagged': element.qaFlagged }"
                                 :data-id="element.id"
                             >
                                 <div class="kds-card-order">{{ index + 1 }}</div>
@@ -134,6 +135,7 @@
                         v-for="element in filteredPool"
                         :key="element.id"
                         class="pool-card"
+                        :class="{ 'kds-card--qa-flagged': element.qaFlagged }"
                         :data-id="element.id"
                     >
                         <div class="pool-card-body">
@@ -382,6 +384,7 @@ async function persistColumn(day: KdsDay) {
             s.kdsDay = day;
             s.kdsOrder = assignment.order;
             s.kdsWeekOf = assignment.weekOf;
+            s.qaFlagged = true;
         });
     } catch {
         showToast(toast, { severity: 'error', summary: 'Error guardando el orden. Recargando...' });
@@ -408,6 +411,7 @@ async function removeFromKds(service: CalendarInterface, day: KdsDay) {
     service.kdsDay = null;
     service.kdsOrder = null;
     service.kdsWeekOf = null;
+    service.qaFlagged = false;
     try {
         await KdsServices.unassignService(service.id);
         await persistColumn(day); // re-number remaining
@@ -573,6 +577,11 @@ onMounted(loadRange);
 
 .kds-card:hover {
     box-shadow: 0 3px 8px rgba(0,0,0,.12);
+}
+
+.kds-card--qa-flagged {
+    border-left: 4px solid #f97316;
+    background: #fff7ed;
 }
 
 .kds-card-order {
