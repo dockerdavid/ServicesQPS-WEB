@@ -372,11 +372,16 @@ function toYYYYMMDD(date: any): string {
 
 const QA_FLAG_COLOR = '#f97316';
 
+const isQaPendingFlag = (event: CalendarInterface): boolean => {
+  const statusName = event.status?.statusName?.toLowerCase().trim() ?? '';
+  return !!event.qaFlagged && statusName !== 'finished';
+};
+
 const eventToCalendarEvent = (event: CalendarInterface): EventInput => ({
   id: event.id,
   start: toYYYYMMDD(event.date),
   allDay: true,
-  color: event.qaFlagged ? QA_FLAG_COLOR : getEventColor(event.status?.statusName),
+  color: isQaPendingFlag(event) ? QA_FLAG_COLOR : getEventColor(event.status?.statusName),
   extendedProps: {
     userName: event.user?.name || 'N/A',
     communityName: event.community?.communityName || 'N/A',
