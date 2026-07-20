@@ -161,6 +161,7 @@ import { useUserStore } from '../../../store/user.store';
 import { Dialog, Button, InputSwitch, Textarea, useToast } from 'primevue';
 import { showToast } from '../../../../src/utils/show-toast';
 import { CleanersServices } from '../../services/services.services';
+import { KdsServices, KDS_DAYS, type KdsDay } from '../../kds/kds.services';
 import { captureLocation } from '../../../composables/useGeolocation';
 
 const router = useRouter();
@@ -252,18 +253,36 @@ const getCurrentViewDate = () => {
   return api?.getDate() ?? new Date();
 };
 
-const handleToggleQaFlag = async (serviceInfo: CalendarInterface) => {
+const QA_DAY_SHORT_LABELS: Record<KdsDay, string> = {
+  monday: 'LUN',
+  tuesday: 'MAR',
+  wednesday: 'MIÉ',
+  thursday: 'JUE',
+  friday: 'VIE',
+};
+
+const handleAssignQaDay = async (serviceInfo: CalendarInterface, day: KdsDay) => {
   try {
-    const newValue = !serviceInfo.qaFlagged;
-    await CalendarServices.toggleQaFlag(serviceInfo.id, newValue);
+    await KdsServices.assignServiceToDay(serviceInfo.id, day);
     showToast(toast, {
       severity: 'success',
-      detail: newValue ? 'Unidad marcada para QA' : 'Marca de QA removida',
+      detail: `Unidad marcada para QA el ${QA_DAY_SHORT_LABELS[day]}`,
     });
     const currentDate = getCurrentViewDate();
     await reloadCalendarEvents(currentDate.getFullYear(), currentDate.getMonth() + 1);
   } catch (error) {
-    showToast(toast, { severity: 'error', summary: 'No se pudo actualizar la marca de QA' });
+    showToast(toast, { severity: 'error', summary: 'No se pudo marcar la unidad para QA' });
+  }
+};
+
+const handleUnassignQa = async (serviceInfo: CalendarInterface) => {
+  try {
+    await KdsServices.unassignService(serviceInfo.id);
+    showToast(toast, { severity: 'success', detail: 'Marca de QA removida' });
+    const currentDate = getCurrentViewDate();
+    await reloadCalendarEvents(currentDate.getFullYear(), currentDate.getMonth() + 1);
+  } catch (error) {
+    showToast(toast, { severity: 'error', summary: 'No se pudo quitar la marca de QA' });
   }
 };
 
@@ -466,20 +485,43 @@ const calendarOptions = ref({
             >
               Ver Detalles
             </button>
-            <button
-              id="service-qa-flag-btn-${event.id}"
-              style="
-                background-color: ${serviceInfo.qaFlagged ? '#6b7280' : '#f97316'};
-                color: white;
-                border: none;
-                padding: 5px 10px;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 12px;
-              "
-            >
-              ${serviceInfo.qaFlagged ? 'Quitar marca QA' : 'Marcar para QA'}
-            </button>
+            ${serviceInfo.qaFlagged ? `
+              <button
+                id="service-qa-flag-btn-${event.id}"
+                style="
+                  background-color: #6b7280;
+                  color: white;
+                  border: none;
+                  padding: 5px 10px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  font-size: 12px;
+                "
+              >
+                Quitar marca QA${serviceInfo.kdsDay ? ` (${QA_DAY_SHORT_LABELS[serviceInfo.kdsDay]})` : ''}
+              </button>
+            ` : `
+              <span style="display: inline-flex; align-items: center; gap: 4px;">
+                <span style="font-size: 11px; color: #9a3412; font-weight: 600;">QA:</span>
+                ${KDS_DAYS.map((day) => `
+                  <button
+                    id="service-qa-day-btn-${event.id}-${day}"
+                    style="
+                      background-color: #f97316;
+                      color: white;
+                      border: none;
+                      padding: 5px 7px;
+                      border-radius: 4px;
+                      cursor: pointer;
+                      font-size: 11px;
+                      font-weight: 600;
+                    "
+                  >
+                    ${QA_DAY_SHORT_LABELS[day]}
+                  </button>
+                `).join('')}
+              </span>
+            `}
             ${canDelete ? `
               <button 
                 id="service-delete-btn-${event.id}" 
@@ -526,10 +568,20 @@ const calendarOptions = ref({
             if (qaFlagButton) {
               qaFlagButton.addEventListener('click', async (eventClick) => {
                 eventClick.stopPropagation();
-                await handleToggleQaFlag(serviceInfo);
+                await handleUnassignQa(serviceInfo);
                 instance.hide();
               });
             }
+            KDS_DAYS.forEach((day) => {
+              const dayButton = document.getElementById(`service-qa-day-btn-${event.id}-${day}`);
+              if (dayButton) {
+                dayButton.addEventListener('click', async (eventClick) => {
+                  eventClick.stopPropagation();
+                  await handleAssignQaDay(serviceInfo, day);
+                  instance.hide();
+                });
+              }
+            });
             if (canDelete) {
               const deleteButton = document.getElementById(`service-delete-btn-${event.id}`);
               if (deleteButton) {

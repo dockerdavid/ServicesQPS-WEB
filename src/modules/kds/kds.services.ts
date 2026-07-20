@@ -46,6 +46,11 @@ export class KdsServices {
         await apiServicesQps.patch(`/services/${id}/kds`, { kdsDay, kdsOrder, kdsWeekOf });
     }
 
+    static async assignServiceToDay(id: string, kdsDay: KdsDay): Promise<void> {
+        // Order and week are auto-computed by the API (end of that day's queue, current week)
+        await apiServicesQps.patch(`/services/${id}/kds`, { kdsDay });
+    }
+
     static async unassignService(id: string): Promise<void> {
         await apiServicesQps.patch(`/services/${id}/kds`, { kdsDay: null, kdsOrder: null, kdsWeekOf: null });
     }
