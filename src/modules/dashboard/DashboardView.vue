@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { CleanersServices } from "../services/services.services";
+import { UsersServices } from "../users/users.services";
 import GenericDataView from "../shared/views/GenericDataView.vue";
-import { Button, Calendar, InputGroup, InputGroupAddon, FloatLabel } from "primevue";
+import { Button, Calendar, InputGroup, InputGroupAddon, FloatLabel, Select } from "primevue";
 import { apiServicesQps } from "../../../src/api/api";
 import { useGlobalStateStore } from "../../../src/store/auth.store";
 import LoadingButton from "../shared/components/LoadingButton.vue";
@@ -107,6 +108,47 @@ const getCleanerReport = async () => {
     }
 }
 
+const selectedCleanerId = ref<string | null>(null);
+const cleanerOptions = ref<{ label: string; value: string }[]>([]);
+
+const loadCleanerOptions = async () => {
+    try {
+        const { data } = await UsersServices.getUsers(1, 500, false, true);
+        cleanerOptions.value = data
+            .filter((user: any) => user.role?.id === '4' || user.role?.id === '7' || user.roleId === '4' || user.roleId === '7')
+            .map((user: any) => ({ label: user.name, value: user.id }));
+    } catch {
+        cleanerOptions.value = [];
+    }
+};
+
+onMounted(loadCleanerOptions);
+
+const getIndividualCleanerReport = async () => {
+    if (!selectedCleanerId.value) return;
+    setIsLoading(true);
+    try {
+        const { data } = await apiServicesQps.get(`/reports/reporte-cleaner-individual?userId=${selectedCleanerId.value}&startDate=${formattedStartDate.value}&endDate=${formattedEndDate.value}`, {
+            responseType: 'blob'
+        });
+
+        const cleanerName = cleanerOptions.value.find(option => option.value === selectedCleanerId.value)?.label ?? 'cleaner';
+        const url = window.URL.createObjectURL(new Blob([data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `reporte-${cleanerName.replace(/\s+/g, '_')}-${formattedStartDate.value}-${formattedEndDate.value}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error("Error al obtener el reporte:", error);
+    } finally {
+        setIsLoading(false);
+    }
+}
+
 const getCleanerReportZip = async () => {
     setIsLoading(true);
     try {
@@ -185,10 +227,25 @@ const getCleanerReportZip = async () => {
                     </div>
                 </div>
 
-                <div class="flex flex-wrap justify-end gap-3">
+                <div class="flex flex-wrap justify-end items-center gap-3">
                     <LoadingButton label="Export general reports" @click="getGeneralReport" />
                     <LoadingButton label="Export cleaner reports" @click="getCleanerReport" />
                     <LoadingButton label="Export cleaner reports (zip)" @click="getCleanerReportZip" />
+                    <Select
+                        v-model="selectedCleanerId"
+                        :options="cleanerOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        filter
+                        showClear
+                        placeholder="Cleaner / QA"
+                        class="min-w-[12rem]"
+                    />
+                    <LoadingButton
+                        label="Export individual report"
+                        :disabled="!selectedCleanerId"
+                        @click="getIndividualCleanerReport"
+                    />
                 </div>
             </div>
         </template>
