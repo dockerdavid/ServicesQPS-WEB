@@ -410,7 +410,7 @@ watch(
       </fieldset>
 
       <fieldset>
-        <label>Can QA See it? <small class="text-gray-400">(days hidden from cleaner/QA reports)</small></label>
+        <label>Hide from reports <small class="text-gray-400">(checked days will NOT appear in cleaner/QA reports)</small></label>
         <div class="days-grid">
           <label v-for="day in dayOptions" :key="day.value" class="day-option">
             <input type="checkbox" :value="day.value" v-model="updatedRecurring.qaHiddenDays" />
