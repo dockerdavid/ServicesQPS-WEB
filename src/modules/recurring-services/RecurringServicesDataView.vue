@@ -56,7 +56,7 @@ const formatDays = (value: string[] | string | null | undefined) => {
       { field: 'status.statusName', name: 'Status' },
       { field: 'startDate', name: 'Start date' },
       { field: 'isActive', name: 'Active', format: formatActive },
-      { field: 'qaHiddenDays', name: 'Can QA See it?', format: formatQaHiddenDays },
+      { field: 'qaHiddenDays', name: 'Hidden from reports', format: formatQaHiddenDays },
     ]"
     :fetch-data="fetchRecurringServices"
     :delete-data="deleteRecurringService"

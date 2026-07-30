@@ -113,10 +113,20 @@ const cleanerOptions = ref<{ label: string; value: string }[]>([]);
 
 const loadCleanerOptions = async () => {
     try {
-        const { data } = await UsersServices.getUsers(1, 500, false, true);
-        cleanerOptions.value = data
-            .filter((user: any) => user.role?.id === '4' || user.role?.id === '7' || user.roleId === '4' || user.roleId === '7')
-            .map((user: any) => ({ label: user.name, value: user.id }));
+        const collected: { label: string; value: string }[] = [];
+        let page = 1;
+        let hasNextPage = true;
+        while (hasNextPage && page <= 10) {
+            const { data, meta } = await UsersServices.getUsers(page, 150, false, true);
+            collected.push(
+                ...data
+                    .filter((user: any) => user.role?.id === '4' || user.role?.id === '7' || user.roleId === '4' || user.roleId === '7')
+                    .map((user: any) => ({ label: user.name, value: user.id })),
+            );
+            hasNextPage = !!(meta as any)?.hasNextPage;
+            page += 1;
+        }
+        cleanerOptions.value = collected.sort((a, b) => a.label.localeCompare(b.label));
     } catch {
         cleanerOptions.value = [];
     }
