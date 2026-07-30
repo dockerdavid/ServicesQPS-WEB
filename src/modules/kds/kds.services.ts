@@ -60,7 +60,16 @@ export class KdsServices {
         return data?.data ?? [];
     }
 
+    static async getApprovedServicesForUser(userId: string): Promise<CalendarInterface[]> {
+        const { data } = await apiServicesQps.get(`/services/by-user/${userId}/3?take=50&page=1`);
+        return data?.data ?? [];
+    }
+
     static async acceptService(id: string): Promise<void> {
         await apiServicesQps.patch(`/services/${id}`, { statusId: '3' });
+    }
+
+    static async completeService(id: string): Promise<void> {
+        await apiServicesQps.patch(`/services/${id}`, { statusId: '5' });
     }
 }

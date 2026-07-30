@@ -40,6 +40,30 @@
             </div>
         </div>
 
+        <!-- Accepted services to complete -->
+        <div v-if="approvedServices.length > 0" class="complete-panel mb-6">
+            <h3 class="font-semibold text-sm uppercase tracking-wide text-green-700 mb-2">
+                Mis servicios aceptados — por completar ({{ approvedServices.length }})
+            </h3>
+            <div class="pending-list">
+                <div v-for="service in approvedServices" :key="service.id" class="complete-card">
+                    <div class="kds-card-body">
+                        <p class="font-semibold text-sm truncate">{{ service.community?.communityName || '—' }}</p>
+                        <p class="text-xs text-gray-500">Unidad {{ service.unitNumber }} · {{ service.unitySize }}</p>
+                        <p class="text-xs text-gray-600">{{ formatDate(service.date) }} {{ service.schedule ? '· ' + service.schedule : '' }}</p>
+                    </div>
+                    <Button
+                        label="Completar"
+                        icon="pi pi-check-circle"
+                        size="small"
+                        severity="success"
+                        :loading="completingId === service.id"
+                        @click="completeApproved(service)"
+                    />
+                </div>
+            </div>
+        </div>
+
         <!-- KDS read-only columns -->
         <div class="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
             <div v-for="col in columns" :key="col.day" class="kds-column">
@@ -116,7 +140,9 @@ const hoveredId = ref<string | null>(null);
 const modalVisible = ref(false);
 const selectedService = ref<CalendarInterface | null>(null);
 const pendingServices = ref<CalendarInterface[]>([]);
+const approvedServices = ref<CalendarInterface[]>([]);
 const acceptingId = ref<string | null>(null);
+const completingId = ref<string | null>(null);
 
 const currentWeekOf = computed(() => moment().startOf('isoWeek').format('YYYY-MM-DD'));
 
@@ -159,9 +185,28 @@ async function loadPending() {
     const userId = userStore.userData?.id;
     if (!userId) return;
     try {
-        pendingServices.value = await KdsServices.getPendingServicesForUser(userId);
+        const [pending, approved] = await Promise.all([
+            KdsServices.getPendingServicesForUser(userId),
+            KdsServices.getApprovedServicesForUser(userId),
+        ]);
+        pendingServices.value = pending;
+        approvedServices.value = approved;
     } catch {
         pendingServices.value = [];
+        approvedServices.value = [];
+    }
+}
+
+async function completeApproved(service: CalendarInterface) {
+    completingId.value = service.id;
+    try {
+        await KdsServices.completeService(service.id);
+        showToast(toast, { severity: 'success', summary: 'Servicio completado.' });
+        await Promise.all([loadPending(), loadWeek()]);
+    } catch {
+        showToast(toast, { severity: 'error', summary: 'Error al completar el servicio.' });
+    } finally {
+        completingId.value = null;
     }
 }
 
@@ -249,6 +294,25 @@ onMounted(() => {
     gap: 12px;
     background: white;
     border: 1px solid #fde68a;
+    border-radius: 6px;
+    padding: 8px 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    min-width: 260px;
+}
+
+.complete-panel {
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.complete-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: white;
+    border: 1px solid #bbf7d0;
     border-radius: 6px;
     padding: 8px 10px;
     box-shadow: 0 1px 3px rgba(0,0,0,.06);
