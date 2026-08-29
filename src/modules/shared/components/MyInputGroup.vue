@@ -18,8 +18,7 @@
             <Select :placeholder="props.placeholder" v-if="props.inputType === 'select'" v-model="selectValue"
                 :required="props.required" :aria-required="props.required" :inputId="props.inputId"
                 :options="props.options ?? []" option-label="label" option-value="value"
-                :empty-message="emptyOptionsMessage"
-                @click.capture="guardRapidToggle" />
+                :empty-message="emptyOptionsMessage" />
 
             <InputNumber :required="props.required" :aria-required="props.required" :useGrouping="false"
                 :placeholder="props.placeholder" :mode="props.inputNumericMode" currency="USD"
@@ -32,8 +31,7 @@
             <MultiSelect v-if="props.inputType === 'multiselect'" v-model="selectValue" :options="props.options ?? []"
                 optionLabel="label" optionValue="value" :placeholder="props.placeholder" :filter="true"
                 :maxSelectedLabels="3" class="w-full md:w-80"
-                :empty-message="emptyOptionsMessage"
-                @click.capture="guardRapidToggle" />
+                :empty-message="emptyOptionsMessage" />
 
             <div v-if="props.inputType === 'switch'" class="switch-control">
                 <InputSwitch v-model="switchValue" :inputId="props.inputId" />
@@ -93,11 +91,6 @@ const emptyOptionsMessage = computed(() =>
 );
 
 /**
- * PrimeVue's Select toggles open/closed on every click, so an accidental
- * double-click opens and instantly closes the panel and the user sees nothing.
- * Swallow any second click that lands within RAPID_CLICK_MS so the panel stays open.
- */
-/**
  * PrimeVue renders the Select trigger as a <span role="combobox">, which is not a
  * labelable element, so a native <label for> does nothing. Focus it by hand.
  */
@@ -107,18 +100,6 @@ const focusSelectFromLabel = () => {
     }
     const el = document.getElementById(props.inputId) as HTMLElement | null;
     el?.focus();
-};
-
-const RAPID_CLICK_MS = 400;
-let lastToggleAt = 0;
-const guardRapidToggle = (event: MouseEvent) => {
-    const now = Date.now();
-    if (now - lastToggleAt < RAPID_CLICK_MS) {
-        event.stopImmediatePropagation();
-        event.preventDefault();
-        return;
-    }
-    lastToggleAt = now;
 };
 
 
