@@ -77,6 +77,7 @@ const statuses = ref<Statuses>(genericNullObject);
 const extras = ref<Extras>(genericNullObject);
 const cleaners = ref<Users>(genericNullObject);
 const hasLoadedOptions = ref(false);
+const isLoadingOptions = ref(false);
 
 const communityOptions = computed(() => {
   return communities.value.data.map((community) => {
@@ -129,10 +130,26 @@ const unitSizeOptions = [
   { label: '5 Bedroom', value: '5 Bedroom' },
 ];
 
+const isLoadingTypes = ref(false);
+
 const getTypesByCommunity = async () => {
-  if (updatedService.value.communityId) {
-    const types = await TypesServices.getAllTypesByCommunity(updatedService.value.communityId);
-    typesByCommunity.value = types;
+  const communityId = updatedService.value.communityId;
+  if (!communityId) {
+    typesByCommunity.value = [];
+    return;
+  }
+  isLoadingTypes.value = true;
+  try {
+    typesByCommunity.value = await TypesServices.getAllTypesByCommunity(communityId);
+  } catch (error) {
+    typesByCommunity.value = [];
+    showToast(toast, {
+      severity: 'error',
+      summary: 'No se pudieron cargar los tipos de servicio',
+      detail: 'Revisa tu conexion e intenta de nuevo.',
+    });
+  } finally {
+    isLoadingTypes.value = false;
   }
 };
 
@@ -203,20 +220,45 @@ const loadInitialData = async () => {
   if (!authStore.token) {
     return;
   }
-  const [allCommunities, allStatuses, allExtras, allUsers, initialData] = await Promise.all([
-    getAllCommunities(),
-    getAllStatuses(),
-    getAllExtras(),
-    getAllUsers(),
-    CleanersServices.getServiceById(entityId),
-  ]);
 
-  communities.value = allCommunities;
-  statuses.value = allStatuses;
-  extras.value = allExtras;
-  cleaners.value = allUsers;
-  fillInitialData(initialData);
-  hasLoadedOptions.value = true;
+  isLoadingOptions.value = true;
+  try {
+    const [allCommunities, allStatuses, allExtras, allUsers, initialData] = await Promise.all([
+      getAllCommunities(),
+      getAllStatuses(),
+      getAllExtras(),
+      getAllUsers(),
+      CleanersServices.getServiceById(entityId),
+    ]);
+
+    communities.value = allCommunities;
+    statuses.value = allStatuses;
+    extras.value = allExtras;
+    cleaners.value = allUsers;
+    fillInitialData(initialData);
+
+    // Load the type list up front so the "Type" dropdown is never empty
+    // on first open just because its request had not started yet.
+    await getTypesByCommunity();
+
+    hasLoadedOptions.value = true;
+
+    if (!communities.value.data.length || !statuses.value.data.length) {
+      showToast(toast, {
+        severity: 'warn',
+        summary: 'Algunas listas no cargaron',
+        detail: 'Recarga la pagina para volver a intentarlo.',
+      });
+    }
+  } catch (error) {
+    showToast(toast, {
+      severity: 'error',
+      summary: 'No se pudo cargar el formulario',
+      detail: 'Revisa tu conexion y recarga la pagina.',
+    });
+  } finally {
+    isLoadingOptions.value = false;
+  }
 };
 
 const getAllCommunities = async () => {
@@ -387,15 +429,16 @@ watch(
 
     <!-- Campo: Comunidad -->
     <MyInputGroup v-model="updatedService.communityId" label="Community" inputType="select" inputId="community"
-      :options="communityOptions" :is-form-submitted="isFormSubmitted" />
+      :loading="isLoadingOptions" :options="communityOptions" :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Tipo de servicio -->
     <MyInputGroup v-model="updatedService.typeId" label="Type" inputType="select" inputId="type" :options="typeOptions"
+      :loading="isLoadingTypes" empty-message="Esta comunidad no tiene tipos configurados"
       :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Estado -->
     <MyInputGroup v-model="updatedService.statusId" label="Status" inputType="select" inputId="status"
-      :options="statusOptions" :is-form-submitted="isFormSubmitted" />
+      :loading="isLoadingOptions" :options="statusOptions" :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Extras -->
     <fieldset>
@@ -406,7 +449,7 @@ watch(
 
     <!-- Campo: Limpiador / QA -->
     <MyInputGroup v-if="userStore.userData?.roleId === '1'" v-model="updatedService.userId" label="Cleaner / QA"
-      inputType="select" inputId="cleaner" :required="false" :options="cleanerOptions"
+      inputType="select" inputId="cleaner" :required="false" :loading="isLoadingOptions" :options="cleanerOptions"
       :is-form-submitted="isFormSubmitted" />
 
     <!-- Campo: Comentario -->
