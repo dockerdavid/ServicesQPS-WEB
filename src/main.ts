@@ -11,6 +11,7 @@ import PrimeVue from 'primevue/config';
 import { MyCustomPreset } from './assets/primevue_presets';
 import ToastService from 'primevue/toastservice';
 import Tooltip from 'primevue/tooltip';
+import { installSelectClickGuard } from './utils/select-click-guard';
 
 import App from './App.vue';
 import router from './router';
@@ -62,5 +63,7 @@ app.use(pinia)
   )
   .use(ToastService);
   app.directive('tooltip', Tooltip)
+
+installSelectClickGuard();
 
 app.mount('#app');
