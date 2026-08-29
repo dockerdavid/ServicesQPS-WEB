@@ -355,7 +355,7 @@ onBeforeUnmount(() => {
                 </div>
             </header>
 
-            <RouterView />
+            <RouterView :key="$route.path" />
             <MyChatToast :service-id="chatToastServiceId" @open="handleChatToastOpen" @close="closeChatToast" />
         </main>
     </div>

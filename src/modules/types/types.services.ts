@@ -43,15 +43,15 @@ export class TypesServices {
         }
     }
 
+    /** Throws on failure on purpose: callers must surface the error instead of
+     *  silently rendering an empty "Type" dropdown. */
     static async getAllTypesByCommunity(communityId:string): Promise<TypeByCommunity[]> {
 
         this.store.setIsLoading(true)
 
         try {
             const { data } = await apiServicesQps.get(`/types/by-community/${communityId}/all`)
-            return data
-        } catch (error) {
-            return []
+            return Array.isArray(data) ? data : []
         } finally {
             this.store.setIsLoading(false)
         }

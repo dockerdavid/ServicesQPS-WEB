@@ -1,6 +1,7 @@
 <template>
     <fieldset>
-        <label :for="props.inputId">{{ props.label }} <span class="text-red-500">{{ props.required ? '*' : '' }}</span>
+        <label :for="props.inputId" @click="focusSelectFromLabel">{{ props.label }} <span
+                class="text-red-500">{{ props.required ? '*' : '' }}</span>
         </label>
         <IconField>
             <InputText :aria-required="true" :placeholder="props.placeholder" v-if="props.inputType === 'input'"
@@ -15,8 +16,10 @@
                 :hourFormat="props.hourFormat ? '12' : '24'" :timeOnly="props.timeOnly" />
 
             <Select :placeholder="props.placeholder" v-if="props.inputType === 'select'" v-model="selectValue"
-                :required="props.required" :aria-required="props.required" :labelId="props.inputId"
-                :options="props.options" option-label="label" option-value="value" />
+                :required="props.required" :aria-required="props.required" :inputId="props.inputId"
+                :options="props.options ?? []" option-label="label" option-value="value"
+                :empty-message="emptyOptionsMessage"
+                @click.capture="guardRapidToggle" />
 
             <InputNumber :required="props.required" :aria-required="props.required" :useGrouping="false"
                 :placeholder="props.placeholder" :mode="props.inputNumericMode" currency="USD"
@@ -26,9 +29,11 @@
                 v-model="modelValue" :required="props.required" :aria-required="props.required" :id="props.inputId"
                 :rows="props.rows" :auto-resize="props.autoResize" :max-height="props.maxHeight" class="w-full" />
 
-            <MultiSelect v-if="props.inputType === 'multiselect'" v-model="selectValue" :options="props.options"
+            <MultiSelect v-if="props.inputType === 'multiselect'" v-model="selectValue" :options="props.options ?? []"
                 optionLabel="label" optionValue="value" :placeholder="props.placeholder" :filter="true"
-                :maxSelectedLabels="3" class="w-full md:w-80" />
+                :maxSelectedLabels="3" class="w-full md:w-80"
+                :empty-message="emptyOptionsMessage"
+                @click.capture="guardRapidToggle" />
 
             <div v-if="props.inputType === 'switch'" class="switch-control">
                 <InputSwitch v-model="switchValue" :inputId="props.inputId" />
@@ -64,6 +69,12 @@ interface InputGroupProps {
     rows?: number;
     autoResize?: boolean;
     maxHeight?: string;
+    /** While true the dropdown still opens, but shows "Cargando..." instead of a blank panel.
+     *  NOTE: never forward this to PrimeVue's own `loading` prop - that one makes the
+     *  Select refuse to open at all, which is the exact bug we are fixing. */
+    loading?: boolean;
+    /** Message shown when the option list is empty (and not loading). */
+    emptyMessage?: string;
 }
 
 
@@ -73,7 +84,42 @@ const props = withDefaults(defineProps<InputGroupProps>(), {
     rows: 3,
     autoResize: true,
     maxHeight: '200px',
+    loading: false,
+    emptyMessage: 'Sin opciones disponibles',
 });
+
+const emptyOptionsMessage = computed(() =>
+    props.loading ? 'Cargando...' : props.emptyMessage,
+);
+
+/**
+ * PrimeVue's Select toggles open/closed on every click, so an accidental
+ * double-click opens and instantly closes the panel and the user sees nothing.
+ * Swallow any second click that lands within RAPID_CLICK_MS so the panel stays open.
+ */
+/**
+ * PrimeVue renders the Select trigger as a <span role="combobox">, which is not a
+ * labelable element, so a native <label for> does nothing. Focus it by hand.
+ */
+const focusSelectFromLabel = () => {
+    if (props.inputType !== 'select' && props.inputType !== 'multiselect') {
+        return;
+    }
+    const el = document.getElementById(props.inputId) as HTMLElement | null;
+    el?.focus();
+};
+
+const RAPID_CLICK_MS = 400;
+let lastToggleAt = 0;
+const guardRapidToggle = (event: MouseEvent) => {
+    const now = Date.now();
+    if (now - lastToggleAt < RAPID_CLICK_MS) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        return;
+    }
+    lastToggleAt = now;
+};
 
 
 const model = defineModel<string | number | boolean | null | undefined>();

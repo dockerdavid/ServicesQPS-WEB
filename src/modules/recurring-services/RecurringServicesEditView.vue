@@ -191,10 +191,25 @@ const getAllUsers = async () => {
   };
 };
 
+const isLoadingTypes = ref(false);
+
 const getTypesByCommunity = async (communityId: string) => {
-  if (communityId) {
-    const types = await TypesServices.getAllTypesByCommunity(communityId);
-    typesByCommunity.value = types;
+  if (!communityId) {
+    typesByCommunity.value = [];
+    return;
+  }
+  isLoadingTypes.value = true;
+  try {
+    typesByCommunity.value = await TypesServices.getAllTypesByCommunity(communityId);
+  } catch (error) {
+    typesByCommunity.value = [];
+    showToast(toast, {
+      severity: 'error',
+      summary: 'No se pudieron cargar los tipos de servicio',
+      detail: 'Revisa tu conexion e intenta de nuevo.',
+    });
+  } finally {
+    isLoadingTypes.value = false;
   }
 };
 
@@ -383,6 +398,8 @@ watch(
         label="Type"
         inputId="typeId"
         inputType="select"
+        :loading="isLoadingTypes"
+        empty-message="Esta comunidad no tiene tipos configurados"
         :options="typesByCommunity.map((t) => ({ label: `${t.cleaningType} (${t.description})`, value: t.id }))"
         :is-form-submitted="isFormSubmitted"
       />
