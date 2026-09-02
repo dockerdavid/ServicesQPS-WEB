@@ -45,7 +45,28 @@ const headers = [
             ].join('');
         }
     },
-    { field: 'company.companyName', name: 'Company', style: 'width: 25%' }
+    { field: 'company.companyName', name: 'Company', style: 'width: 20%' },
+    {
+        field: 'latitude',
+        name: 'Ubicación',
+        style: 'width: 15%',
+        // Se ve de un vistazo a que complex les falta coordenada: sin ella el
+        // SMS que recibe el cleaner al aceptar sale sin mapa.
+        format: (_value: any, row: any) => {
+            const lat = Number(row.latitude);
+            const lng = Number(row.longitude);
+            const tiene = Number.isFinite(lat) && Number.isFinite(lng)
+                && row.latitude !== null && row.longitude !== null
+                && !(lat === 0 && lng === 0);
+
+            if (!tiene) {
+                return '<span class="text-gray-400">📍 Sin ubicación</span>';
+            }
+
+            const link = `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
+            return `<a href="${link}" target="_blank" rel="noopener noreferrer" class="text-blue-600">📍 Ver mapa</a>`;
+        }
+    }
 ];
 
 </script>

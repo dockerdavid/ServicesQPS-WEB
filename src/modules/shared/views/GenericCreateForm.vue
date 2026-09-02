@@ -144,6 +144,8 @@ const clearForm = () => {
         :options="selectOptions[input.inputId]" :input-numeric-mode="input.inputNumericMode" :time-only="input.timeOnly"
         :hour-format="input.hourFormat" :is-form-submitted="isFormSubmitted" />
 
+      <slot name="additional-fields" :entity-data="entityData"></slot>
+
       <div v-if="inputs.length % 2 !== 0"></div>
 
       <div class="flex">
