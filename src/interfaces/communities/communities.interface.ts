@@ -10,6 +10,9 @@ export interface Community {
     id: string;
     communityName: string;
     showInReports: boolean;
+    /** TypeORM devuelve las columnas decimal como string. */
+    latitude: string | null;
+    longitude: string | null;
     createdAt: Date;
     updatedAt: Date;
     managerUser: User | null;
@@ -20,6 +23,8 @@ export interface Community {
 export interface NewCommunity {
     communityName: string;
     showInReports: boolean;
+    latitude?: number | null;
+    longitude?: number | null;
     managerUserId: string | null;
     supervisorUserId: string | null;
     companyId: string;

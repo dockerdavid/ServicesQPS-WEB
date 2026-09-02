@@ -6,6 +6,7 @@ import { UsersServices } from '../users/users.services';
 import type { NewCommunity } from '../../interfaces/communities/communities.interface';
 import type { InputConfig } from 'src/interfaces/input-config.interface';
 import GenericCreateForm from '../shared/views/GenericCreateForm.vue';
+import MyMapPicker from '../shared/components/MyMapPicker.vue';
 
 const breadcrumbRoutes = [
   { label: 'Comunidades', to: { name: 'communities-default' } },
@@ -44,5 +45,12 @@ const createEntity = async (data: NewCommunity) => {
     :inputs="inputs"
     :create-entity="createEntity"
     :load-options="loadOptions"
-  />
+  >
+    <template #additional-fields="{ entityData }">
+      <MyMapPicker
+        v-model:latitude="entityData.latitude"
+        v-model:longitude="entityData.longitude"
+      />
+    </template>
+  </GenericCreateForm>
 </template>

@@ -11,12 +11,15 @@ import { ref, computed } from 'vue';
 import type { User } from '../../interfaces/users/users.interface';
 import type { Service } from '../../interfaces/services/services.interface';
 import { showToast } from '../../utils/show-toast';
+import MyMapPicker from '../shared/components/MyMapPicker.vue';
 
 interface EntityData {
   communityName: string;
   companyId: string;
   userId: string[];
   showInReports: boolean;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface UpdateCommunityData {
@@ -25,6 +28,8 @@ interface UpdateCommunityData {
   managerUserId: string | null;
   supervisorUserId: string | null;
   showInReports: boolean;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 const route = useRoute();
@@ -42,7 +47,9 @@ const entityData = ref<EntityData>({
   communityName: '',
   companyId: '',
   userId: [],
-  showInReports: true
+  showInReports: true,
+  latitude: null,
+  longitude: null
 });
 
 // Computed property para formatear los nombres de usuarios con sus roles
@@ -113,7 +120,14 @@ const loadData = async (id: string) => {
     communityName: communityResult.communityName,
     companyId: communityResult.company.id,
     userId: selectedUserIds,
-    showInReports: communityResult.showInReports ?? true
+    showInReports: communityResult.showInReports ?? true,
+    // El API las manda como string (columna decimal); el mapa trabaja con number.
+    latitude: communityResult.latitude !== null && communityResult.latitude !== undefined
+      ? Number(communityResult.latitude)
+      : null,
+    longitude: communityResult.longitude !== null && communityResult.longitude !== undefined
+      ? Number(communityResult.longitude)
+      : null
   };
 
   return {
@@ -291,7 +305,9 @@ const updateEntity = async (id: string, data: any) => {
     showInReports: entityData.value.showInReports,
     id: id,
     managerUserId: manager?.id || null,
-    supervisorUserId: supervisor?.id || null
+    supervisorUserId: supervisor?.id || null,
+    latitude: entityData.value.latitude ?? null,
+    longitude: entityData.value.longitude ?? null
   };
   try {
     await CommunitiesServices.updateCommunity(id, updateData);
@@ -348,6 +364,11 @@ const updateEntity = async (id: string, data: any) => {
           </div>
         </div>
       </fieldset>
+      <MyMapPicker
+        v-model:latitude="entityData.latitude"
+        v-model:longitude="entityData.longitude"
+      />
+
       <fieldset>
         <label for="showInReports">Debe visualizar reportes</label>
         <div class="report-visibility-control">
