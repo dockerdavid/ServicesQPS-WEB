@@ -17,6 +17,7 @@ const inputs:InputConfig[] = [
   { inputId: 'communityName', label: 'Nombre de la comunidad', inputType: 'input',  },
   { inputId: 'managerUserId', label: 'Manager', inputType: 'select',  },
   { inputId: 'companyId', label: 'Compañía', inputType: 'select', },
+  { inputId: 'isActive', label: 'Comunidad activa', inputType: 'switch', required: false, defaultValue: true },
 ];
 
 const loadOptions = async () => {

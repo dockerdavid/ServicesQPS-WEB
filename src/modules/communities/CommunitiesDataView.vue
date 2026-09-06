@@ -6,7 +6,9 @@ import GenericDataView from "../shared/views/GenericDataView.vue";
 import { CommunitiesServices } from "./communities.services";
 
 const fetchCommunities = async (page: number, rows: number) => {
-    return await CommunitiesServices.getCommunities(page, rows);
+    // true = incluir las desactivadas: en administracion hay que verlas para
+    // poder reactivarlas.
+    return await CommunitiesServices.getCommunities(page, rows, true);
 };
 
 const deleteCommunity = async (id: string) => {
@@ -45,7 +47,15 @@ const headers = [
             ].join('');
         }
     },
-    { field: 'company.companyName', name: 'Company', style: 'width: 20%' },
+    { field: 'company.companyName', name: 'Company', style: 'width: 15%' },
+    {
+        field: 'isActive',
+        name: 'Estado',
+        style: 'width: 10%',
+        format: (_value: any, row: any) => row.isActive === false
+            ? '<span class="text-gray-400">⏸️ Inactiva</span>'
+            : '<span class="text-green-600">✅ Activa</span>'
+    },
     {
         field: 'latitude',
         name: 'Ubicación',
