@@ -2,7 +2,7 @@
   <fieldset class="map-picker">
     <label>
       Ubicación del complex
-      <small class="map-picker__hint">se le envía por SMS al cleaner cuando acepta el servicio</small>
+      <small class="map-picker__hint">la cleaner la usa en la App para llegar, una vez acepta el servicio</small>
     </label>
 
     <!-- Buscar por nombre/dirección -->
@@ -64,12 +64,15 @@
         <Button label="Quitar ubicación" severity="danger" text size="small" @click="limpiar" />
       </div>
       <div class="map-picker__sms">
-        <span class="map-picker__sms-title">Así le llegará al cleaner:</span>
-        <code>…in apartment number 2-401<br />Map: {{ linkMapa }}</code>
+        <span class="map-picker__sms-title">Cómo lo usa la cleaner:</span>
+        <span class="map-picker__sms-text">
+          En la App, al aceptar el servicio de este complex le aparece el botón
+          <strong>«Cómo llegar»</strong>, que le abre la ruta hasta este punto.
+        </span>
       </div>
     </div>
     <p v-else class="map-picker__none">
-      Sin ubicación. El SMS saldrá igual que hoy, solo que sin el mapa.
+      Sin ubicación. A la cleaner no le aparecerá el botón «Cómo llegar» en la App.
     </p>
   </fieldset>
 </template>
@@ -363,6 +366,13 @@ onBeforeUnmount(() => {
   letter-spacing: 0.06em;
   color: #15803d;
   margin-bottom: 4px;
+}
+
+.map-picker__sms-text {
+    display: block;
+    font-size: 0.78rem;
+    color: #334155;
+    line-height: 1.35;
 }
 
 .map-picker__sms code {

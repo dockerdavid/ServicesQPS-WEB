@@ -36,7 +36,7 @@ const headers = [
     { 
         field: 'managerUser', 
         name: 'Manager/Supervisor', 
-        style: 'width: 20%',
+        style: 'width: 18%',
         format: (value: any, row: any) => {
             const manager = row.managerUser;
             const supervisor = row.supervisorUser;
@@ -47,7 +47,7 @@ const headers = [
             ].join('');
         }
     },
-    { field: 'company.companyName', name: 'Company', style: 'width: 15%' },
+    { field: 'company.companyName', name: 'Company', style: 'width: 12%' },
     {
         field: 'vendorUser',
         name: 'Vendedor',
