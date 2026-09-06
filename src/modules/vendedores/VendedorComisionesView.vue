@@ -15,8 +15,9 @@
         <label class="font-semibold text-sm mb-1">Hasta</label>
         <Calendar v-model="hasta" dateFormat="mm-dd-yy" class="w-44" />
       </div>
-      <Button label="Ver" icon="pi pi-search" :loading="cargando" @click="cargar" />
+      <Button class="boton-filtro" label="Ver" icon="pi pi-search" :loading="cargando" @click="cargar" />
       <Button
+        class="boton-filtro"
         label="Semana pasada"
         severity="secondary"
         outlined
@@ -51,7 +52,7 @@
 
     <!-- Detalle por complex -->
     <div v-if="reporte && reporte.periodo.complexes.length" class="tabla">
-      <DataTable :value="reporte.periodo.complexes" stripedRows>
+      <DataTable :value="reporte.periodo.complexes" stripedRows scrollable>
         <Column field="communityName" header="Complex" />
         <Column header="Base del complex">
           <template #body="{ data }">{{ moneda(data.base) }}</template>
@@ -183,6 +184,14 @@ onMounted(cargar);
   border: 1px solid var(--border-soft, #e2e8f0);
   border-radius: 12px;
   padding: 8px;
+  /* En celular la tabla no cabe: que se pueda desplazar en vez de cortarse. */
+  overflow-x: auto;
+}
+
+/* Los campos de fecha llevan etiqueta encima; sin esto los botones quedan
+   pegados arriba y se ven desalineados. */
+.boton-filtro {
+  align-self: flex-end;
 }
 
 .nota {
