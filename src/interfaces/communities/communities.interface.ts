@@ -10,6 +10,8 @@ export interface Community {
     id: string;
     communityName: string;
     showInReports: boolean;
+    /** Las comunidades inactivas no aparecen al crear servicios. */
+    isActive: boolean;
     /** TypeORM devuelve las columnas decimal como string. */
     latitude: string | null;
     longitude: string | null;
@@ -23,6 +25,7 @@ export interface Community {
 export interface NewCommunity {
     communityName: string;
     showInReports: boolean;
+    isActive?: boolean;
     latitude?: number | null;
     longitude?: number | null;
     managerUserId: string | null;

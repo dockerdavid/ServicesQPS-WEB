@@ -6,9 +6,14 @@ import genericNullObject from "../../utils/null-data-meta";
 export class CommunitiesServices {
     static userStore = useUserStore();
 
-    static async getCommunities(page: number = 1, take: number = 10): Promise<Communities> {
+    /** Por defecto el API devuelve solo comunidades ACTIVAS. `includeInactive`
+     *  se usa en el listado de administracion y en las pantallas de edicion,
+     *  donde hay que poder ver (y conservar) una comunidad ya desactivada. */
+    static async getCommunities(page: number = 1, take: number = 10, includeInactive = false): Promise<Communities> {
         try {
-            const { data } = await apiServicesQps.get<Communities>(`/communities?page=${page}&take=${take}`)
+            const params = new URLSearchParams({ page: String(page), take: String(take) });
+            if (includeInactive) params.set('includeInactive', 'true');
+            const { data } = await apiServicesQps.get<Communities>(`/communities?${params}`)
             return data
         } catch (error: any) {
             return {

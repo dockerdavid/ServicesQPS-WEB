@@ -267,7 +267,9 @@ const getAllCommunities = async () => {
   let hasNextPage = true;
   
   while (hasNextPage) {
-    const response = await CommunitiesServices.getCommunities(currentPage, 50);
+    // includeInactive: si el servicio apunta a una comunidad ya desactivada,
+    // igual tiene que aparecer en el selector para no perder el valor.
+    const response = await CommunitiesServices.getCommunities(currentPage, 50, true);
     allCommunities = [...allCommunities, ...response.data];
     hasNextPage = response.meta.hasNextPage;
     currentPage++;

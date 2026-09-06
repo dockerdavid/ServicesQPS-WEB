@@ -29,7 +29,7 @@ const keyValueMap = {
 
 const loadData = async (id: string) => {
   const [communitiesResult, typeResult] = await Promise.all([
-    CommunitiesServices.getCommunities(),
+    CommunitiesServices.getCommunities(1, 10, true),
     TypesServices.getTypeById(id),
   ]);
 

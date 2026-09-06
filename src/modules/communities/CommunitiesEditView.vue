@@ -18,6 +18,7 @@ interface EntityData {
   companyId: string;
   userId: string[];
   showInReports: boolean;
+  isActive: boolean;
   latitude: number | null;
   longitude: number | null;
 }
@@ -28,6 +29,7 @@ interface UpdateCommunityData {
   managerUserId: string | null;
   supervisorUserId: string | null;
   showInReports: boolean;
+  isActive: boolean;
   latitude: number | null;
   longitude: number | null;
 }
@@ -48,6 +50,7 @@ const entityData = ref<EntityData>({
   companyId: '',
   userId: [],
   showInReports: true,
+  isActive: true,
   latitude: null,
   longitude: null
 });
@@ -121,6 +124,7 @@ const loadData = async (id: string) => {
     companyId: communityResult.company.id,
     userId: selectedUserIds,
     showInReports: communityResult.showInReports ?? true,
+    isActive: communityResult.isActive ?? true,
     // El API las manda como string (columna decimal); el mapa trabaja con number.
     latitude: communityResult.latitude !== null && communityResult.latitude !== undefined
       ? Number(communityResult.latitude)
@@ -303,6 +307,7 @@ const updateEntity = async (id: string, data: any) => {
     communityName: data.communityName,
     companyId: data.companyId,
     showInReports: entityData.value.showInReports,
+    isActive: entityData.value.isActive,
     id: id,
     managerUserId: manager?.id || null,
     supervisorUserId: supervisor?.id || null,
@@ -368,6 +373,16 @@ const updateEntity = async (id: string, data: any) => {
         v-model:latitude="entityData.latitude"
         v-model:longitude="entityData.longitude"
       />
+
+      <fieldset>
+        <label for="isActive">Comunidad activa
+          <small class="text-gray-400">(las inactivas no aparecen al crear servicios)</small>
+        </label>
+        <div class="report-visibility-control">
+          <InputSwitch inputId="isActive" v-model="entityData.isActive" />
+          <span class="report-visibility-value">{{ entityData.isActive ? 'Activa' : 'Inactiva' }}</span>
+        </div>
+      </fieldset>
 
       <fieldset>
         <label for="showInReports">Debe visualizar reportes</label>
