@@ -69,6 +69,10 @@ const roleRoutes = {
     'calendar',
     'notFound'
   ],
+  vendedor: [
+    'vendedor-comisiones',
+    'notFound'
+  ],
   cheo: [
     'dashboard',
     'calendar',
@@ -93,6 +97,7 @@ const roleIdToKey: Record<string, RoleKey> = {
   '5': 'cheo',
   '6': 'supervisor',
   '7': 'qa',
+  '8': 'vendedor',
 };
 
 export const resolveRoleKey = (

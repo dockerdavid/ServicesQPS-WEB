@@ -193,6 +193,16 @@ const router = createRouter({
           ],
         },
         {
+          path: 'vendedor',
+          children: [
+            {
+              path: '',
+              name: 'vendedor-comisiones',
+              component: () => import('../modules/vendedores/VendedorComisionesView.vue'),
+            },
+          ],
+        },
+        {
           path: 'kds-admin',
           name: 'kds-admin',
           component: () => import('../modules/kds/KdsAdminView.vue'),

@@ -41,6 +41,10 @@ const cheoRoutes: RouteLink[] = [
   { route: 'recurring-costs-default', icon: 'ph:repeat-duotone', label: 'recurring costs' },
 ]
 
+const vendedorRoutes: RouteLink[] = [
+  { route: 'vendedor-comisiones', icon: 'ph:chart-line-up-duotone', label: 'mis comisiones' },
+]
+
 const qaRoutes: RouteLink[] = [
   { route: 'kds-qa-default', icon: 'ph:squares-four-duotone', label: 'KDS' },
   { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
@@ -68,6 +72,8 @@ const routes = computed(() => {
       return cheoRoutes;
     case "qa":
       return qaRoutes;
+    case "vendedor":
+      return vendedorRoutes;
     case "supervisor":
       return managerRoutes;
     default:

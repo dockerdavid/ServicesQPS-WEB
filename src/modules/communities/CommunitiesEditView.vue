@@ -6,7 +6,7 @@ import { CompaniesServices } from '../companies/companies.services';
 import { CleanersServices } from '../services/services.services';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import type { InputConfig } from '../../interfaces/input-config.interface';
-import { Button, Calendar, Column, DataTable, Dialog, InputSwitch, MultiSelect, useToast } from 'primevue';
+import { Button, Calendar, Column, DataTable, Dialog, InputSwitch, MultiSelect, Select, useToast } from 'primevue';
 import { ref, computed } from 'vue';
 import type { User } from '../../interfaces/users/users.interface';
 import type { Service } from '../../interfaces/services/services.interface';
@@ -19,6 +19,7 @@ interface EntityData {
   userId: string[];
   showInReports: boolean;
   isActive: boolean;
+  vendorUserId: string | null;
   latitude: number | null;
   longitude: number | null;
 }
@@ -30,6 +31,7 @@ interface UpdateCommunityData {
   supervisorUserId: string | null;
   showInReports: boolean;
   isActive: boolean;
+  vendorUserId: string | null;
   latitude: number | null;
   longitude: number | null;
 }
@@ -38,6 +40,7 @@ const route = useRoute();
 const toast = useToast();
 const currentCommunityId = route.params.id as string;
 const managers = ref<{ data: User[] }>({ data: [] });
+const vendedores = ref<User[]>([]);
 const rangeStartDate = ref<Date | null>(null);
 const rangeEndDate = ref<Date | null>(null);
 const rangeServices = ref<Service[]>([]);
@@ -51,6 +54,7 @@ const entityData = ref<EntityData>({
   userId: [],
   showInReports: true,
   isActive: true,
+  vendorUserId: null,
   latitude: null,
   longitude: null
 });
@@ -112,6 +116,8 @@ const loadData = async (id: string) => {
   );
 
   managers.value.data = filteredUsers;
+  // Rol 8 = Vendedor asociado
+  vendedores.value = usersResult.data.filter(user => user.role.id === "8");
 
   // Obtener los IDs del manager y supervisor actuales desde la estructura correcta
   const selectedUserIds = [
@@ -125,6 +131,7 @@ const loadData = async (id: string) => {
     userId: selectedUserIds,
     showInReports: communityResult.showInReports ?? true,
     isActive: communityResult.isActive ?? true,
+    vendorUserId: communityResult.vendorUser?.id ?? communityResult.vendorUserId ?? null,
     // El API las manda como string (columna decimal); el mapa trabaja con number.
     latitude: communityResult.latitude !== null && communityResult.latitude !== undefined
       ? Number(communityResult.latitude)
@@ -308,6 +315,7 @@ const updateEntity = async (id: string, data: any) => {
     companyId: data.companyId,
     showInReports: entityData.value.showInReports,
     isActive: entityData.value.isActive,
+    vendorUserId: entityData.value.vendorUserId || null,
     id: id,
     managerUserId: manager?.id || null,
     supervisorUserId: supervisor?.id || null,
@@ -373,6 +381,22 @@ const updateEntity = async (id: string, data: any) => {
         v-model:latitude="entityData.latitude"
         v-model:longitude="entityData.longitude"
       />
+
+      <fieldset>
+        <label for="vendorUserId">Vendedor asociado
+          <small class="text-gray-400">(cobra comisión por este complex)</small>
+        </label>
+        <Select
+          inputId="vendorUserId"
+          v-model="entityData.vendorUserId"
+          :options="vendedores"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Sin vendedor asociado"
+          showClear
+          class="w-full md:w-80"
+        />
+      </fieldset>
 
       <fieldset>
         <label for="isActive">Comunidad activa
