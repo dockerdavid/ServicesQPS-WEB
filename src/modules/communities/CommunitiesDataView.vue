@@ -32,11 +32,11 @@ const formattedEndDate = computed(() =>
 );
 
 const headers = [
-    { field: 'communityName', name: 'Community name', style: 'width: 25%' },
+    { field: 'communityName', name: 'Community name', style: 'width: 20%' },
     { 
         field: 'managerUser', 
         name: 'Manager/Supervisor', 
-        style: 'width: 25%',
+        style: 'width: 20%',
         format: (value: any, row: any) => {
             const manager = row.managerUser;
             const supervisor = row.supervisorUser;
@@ -48,6 +48,14 @@ const headers = [
         }
     },
     { field: 'company.companyName', name: 'Company', style: 'width: 15%' },
+    {
+        field: 'vendorUser',
+        name: 'Vendedor',
+        style: 'width: 12%',
+        format: (_value: any, row: any) => row.vendorUser?.name
+            ? `<span class="text-blue-600">💼 ${row.vendorUser.name}</span>`
+            : '<span class="text-gray-400">—</span>'
+    },
     {
         field: 'isActive',
         name: 'Estado',

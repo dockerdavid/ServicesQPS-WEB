@@ -17,6 +17,7 @@ const inputs:InputConfig[] = [
   { inputId: 'communityName', label: 'Nombre de la comunidad', inputType: 'input',  },
   { inputId: 'managerUserId', label: 'Manager', inputType: 'select',  },
   { inputId: 'companyId', label: 'Compañía', inputType: 'select', },
+  { inputId: 'vendorUserId', label: 'Vendedor asociado', inputType: 'select', required: false },
   { inputId: 'isActive', label: 'Comunidad activa', inputType: 'switch', required: false, defaultValue: true },
 ];
 
@@ -31,6 +32,10 @@ const loadOptions = async () => {
       .filter(user => user.roleId === '3' || user.roleId === '6')
       .map((user) => ({ label: user.name, value: user.id })),
     companyId: companies.data.map((company) => ({ label: company.companyName, value: company.id })),
+    // Rol 8 = Vendedor asociado. Cobra comisión por los complex que trae.
+    vendorUserId: users.data
+      .filter(user => user.roleId === '8')
+      .map((user) => ({ label: user.name, value: user.id })),
   };
 };
 
