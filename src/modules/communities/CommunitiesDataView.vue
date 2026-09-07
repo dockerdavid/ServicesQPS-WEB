@@ -52,8 +52,10 @@ const headers = [
         field: 'vendorUser',
         name: 'Vendedor',
         style: 'width: 12%',
+        // El nombre de la cuenta trae "(Vendedor)" al final; en una columna que
+        // ya se llama Vendedor sobra, y ocupa ancho que hace falta.
         format: (_value: any, row: any) => row.vendorUser?.name
-            ? `<span class="text-blue-600">💼 ${row.vendorUser.name}</span>`
+            ? `<span class="text-blue-600">💼 ${row.vendorUser.name.replace(/\s*\(Vendedor\)\s*$/i, '')}</span>`
             : '<span class="text-gray-400">—</span>'
     },
     {
@@ -78,7 +80,7 @@ const headers = [
                 && !(lat === 0 && lng === 0);
 
             if (!tiene) {
-                return '<span class="text-gray-400">📍 Sin ubicación</span>';
+                return '<span class="text-gray-400">📍 Sin cargar</span>';
             }
 
             const link = `https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
