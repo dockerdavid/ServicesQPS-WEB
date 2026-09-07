@@ -109,7 +109,7 @@ const handleExport = async (id: string) => {
                 :totalRecords="totalRecords" @page="onPageChange"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 :rowsPerPageOptions="[5, 10, 20, 50]" currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                responsiveLayout="scroll">
+                scrollable>
                 <Column v-for="header in headers" :key="header.field" :field="header.field" :header="header.name"
                     :style="header.style">
                     <template #body="{ data: rowData }">
