@@ -4,6 +4,29 @@ import NotFoundView from '../modules/shared/views/NotFoundView.vue';
 import SupportView from '../modules/shared/views/SupportView.vue';
 import { createRouter, createWebHashHistory } from 'vue-router';
 import authGuard from './authGuard';
+import { resolveRoleRoutes } from './role-routes';
+import { useUserStore } from '../store/user.store';
+
+/**
+ * A donde mandar la raiz. Antes apuntaba fijo a /dashboard, que solo pueden ver
+ * algunos roles: al vendedor lo rebotaba el guard a notFound apenas entraba o
+ * refrescaba, sin manera de salir de ahi. Ahora cada rol aterriza en su primera
+ * pantalla permitida. El store esta persistido, asi que el rol sobrevive al
+ * refresco; si aun asi no se puede resolver, queda el dashboard de siempre.
+ */
+const inicioSegunRol = () => {
+  try {
+    const userData = useUserStore().userData;
+    const permitidas = resolveRoleRoutes(userData?.role?.name, userData?.roleId)
+      .filter((name) => name !== 'notFound');
+
+    if (permitidas.length > 0) return { name: permitidas[0] };
+  } catch {
+    // el store todavia no existe (arranque en frio): cae al valor por defecto
+  }
+
+  return '/dashboard';
+};
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
@@ -21,7 +44,7 @@ const router = createRouter({
     {
       path: '/',
       component: DefaultLayout,
-      redirect: '/dashboard',
+      redirect: inicioSegunRol,
       children: [
         {
           path: 'dashboard',
