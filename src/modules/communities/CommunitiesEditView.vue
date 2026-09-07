@@ -104,9 +104,13 @@ const keyValueMap = {
 };
 
 const loadData = async (id: string) => {
-  const [companiesResult, usersResult, communityResult] = await Promise.all([
+  // Los vendedores se piden aparte y filtrados por el API: el tope de `take`
+  // es 150, asi que al pasar de 150 usuarios los mas nuevos quedaban fuera de
+  // la pagina y el desplegable salia vacio.
+  const [companiesResult, usersResult, vendedoresResult, communityResult] = await Promise.all([
     CompaniesServices.getCompanies(),
     UsersServices.getUsers(undefined, 150),
+    UsersServices.getUsers(undefined, 150, false, true, '8'),
     CommunitiesServices.getCommunityById(id),
   ]);
 
@@ -117,7 +121,7 @@ const loadData = async (id: string) => {
 
   managers.value.data = filteredUsers;
   // Rol 8 = Vendedor asociado
-  vendedores.value = usersResult.data.filter(user => user.role.id === "8");
+  vendedores.value = vendedoresResult.data;
 
   // Obtener los IDs del manager y supervisor actuales desde la estructura correcta
   const selectedUserIds = [
