@@ -34,6 +34,11 @@ export default defineConfig(async ({ mode }) => {
     },
     build: {
       target: 'es2019',
+      // No borrar los chunks de la version anterior durante el despliegue.
+      // Los usuarios que tienen la SPA abierta aun pueden solicitarlos al
+      // navegar a una seccion lazy-loaded. Los nombres llevan hash, por lo que
+      // conservarlos no mezcla versiones ni afecta el cache de la nueva.
+      emptyOutDir: false,
       cssCodeSplit: true,
       sourcemap: false,
       chunkSizeWarningLimit: 1200,
