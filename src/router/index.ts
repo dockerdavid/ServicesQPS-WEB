@@ -324,4 +324,21 @@ const router = createRouter({
 
 router.beforeEach(authGuard);
 
+// Respaldo para fallos de imports dinamicos que algunos Safari no reportan con
+// `vite:preloadError`. Una sola recarga por destino evita cualquier bucle.
+router.onError((error, to) => {
+  const message = error instanceof Error ? error.message : String(error);
+  const isChunkError = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Load failed/i.test(message);
+  if (!isChunkError) return;
+
+  const reloadKey = `chunk-reload:${to.fullPath}`;
+  const lastReload = Number(sessionStorage.getItem(reloadKey) ?? 0);
+  if (Date.now() - lastReload < 30_000) return;
+
+  sessionStorage.setItem(reloadKey, Date.now().toString());
+  const url = new URL(window.location.href);
+  url.searchParams.set('_appv', Date.now().toString());
+  window.location.replace(url.toString());
+});
+
 export default router;

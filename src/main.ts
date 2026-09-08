@@ -20,6 +20,18 @@ import './assets/main.css';
 
 import { Icon } from '@iconify/vue';
 
+/**
+ * Si una pestaña quedo abierta durante un despliegue y solicita un chunk viejo,
+ * Vite emite este evento. Recargamos con un query unico para obtener index.html
+ * y el manifiesto de chunks nuevos incluso en navegadores moviles agresivos.
+ */
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+  const url = new URL(window.location.href);
+  url.searchParams.set('_appv', Date.now().toString());
+  window.location.replace(url.toString());
+});
+
 const pinia = createPinia();
 
 pinia.use(({ store }) => {
