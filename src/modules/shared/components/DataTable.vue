@@ -23,6 +23,7 @@ interface TableI {
     totalRecords: number;
     editRoute: string;
     lockEdit?: boolean;
+    hideDelete?: boolean;
     showExportButton?: boolean;
     exportStartDate?: string;
     exportEndDate?: string;
@@ -131,7 +132,7 @@ const handleExport = async (id: string) => {
                                 @click="redirectToEdit(data.id)" />
                             <Button v-if="props.showExportButton" variant="text" icon="pi pi-file-export" severity="info" label="Export"
                                 @click="handleExport(data.id)" />
-                            <Button variant="text" icon="pi pi-trash" severity="danger" label="Delete"
+                            <Button v-if="!props.hideDelete" variant="text" icon="pi pi-trash" severity="danger" label="Delete"
                                 @click="showDeleteToast(data)" />
                         </div>
                     </template>

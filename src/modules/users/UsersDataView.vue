@@ -14,10 +14,6 @@ const fetchUsers = async (page: number, rows: number) => {
     return await UsersServices.getUsers(page, rows);
 };
 
-const deleteUser = async (id: string) => {
-    return await UsersServices.deleteUser(id);
-};
-
 const searchUser = async (searchWord: string, page: number, rows: number) => {
     return await UsersServices.searchUser(searchWord, page, rows);
 };
@@ -58,7 +54,8 @@ const handleIsActiveChange = (row: User, newValue: boolean) => {
             { field: 'isActive', name: 'Active', slotName: 'isActive' },
         ]"
         :fetch-data="fetchUsers"
-        :delete-data="deleteUser"
+        :delete-data="UsersServices.deleteUser"
+        :hide-delete="true"
         :search-data="searchUser"
     >
         <template #isActive="{ row }">

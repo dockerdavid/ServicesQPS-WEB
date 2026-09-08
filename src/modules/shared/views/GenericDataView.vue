@@ -21,6 +21,7 @@ interface Props {
     deleteData: (id: string) => Promise<void>;
     searchData: (data: string, page: number, rows: number) => Promise<any>;
     lockEdit?: boolean;
+    hideDelete?: boolean;
     lockCreateNew?: boolean;
     dontShowBreadCrumb?: boolean;
     useServicesTable?: boolean;
@@ -170,7 +171,7 @@ onMounted(async () => {
         <template #card-content>
 
             <DataTable v-if="!props.useServicesTable" :data="dataList.data" :headers="headers" :onDelete="onDelete"
-                :lockEdit="lockEdit" @page-change="handlePageChange" :total-records="dataList.meta.totalCount"
+                :lockEdit="lockEdit" :hide-delete="hideDelete" @page-change="handlePageChange" :total-records="dataList.meta.totalCount"
                 :edit-route="editRoute" :show-export-button="props.showExportButton"
                 :export-start-date="props.exportStartDate" :export-end-date="props.exportEndDate">
                 <template #isActive="slotProps">

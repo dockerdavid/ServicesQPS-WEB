@@ -25,15 +25,15 @@ const loadOptions = async () => {
   // Los vendedores se piden aparte y filtrados por el API: el tope de `take`
   // es 150, asi que al pasar de 150 usuarios los mas nuevos quedaban fuera de
   // la pagina y el desplegable salia vacio.
-  const [companies, users, vendedores] = await Promise.all([
+  const [companies, managers, supervisors, vendedores] = await Promise.all([
     CompaniesServices.getCompanies(),
-    UsersServices.getUsers(undefined, 150),
+    UsersServices.getUsers(undefined, 150, false, true, '3'),
+    UsersServices.getUsers(undefined, 150, false, true, '6'),
     UsersServices.getUsers(undefined, 150, false, true, '8'),
   ]);
 
   return {
-    managerUserId: users.data
-      .filter(user => user.roleId === '3' || user.roleId === '6')
+    managerUserId: [...managers.data, ...supervisors.data]
       .map((user) => ({ label: user.name, value: user.id })),
     companyId: companies.data.map((company) => ({ label: company.companyName, value: company.id })),
     // Rol 8 = Vendedor asociado. Cobra comisión por los complex que trae.
