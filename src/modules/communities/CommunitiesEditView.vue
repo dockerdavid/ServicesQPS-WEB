@@ -107,17 +107,28 @@ const loadData = async (id: string) => {
   // Los vendedores se piden aparte y filtrados por el API: el tope de `take`
   // es 150, asi que al pasar de 150 usuarios los mas nuevos quedaban fuera de
   // la pagina y el desplegable salia vacio.
-  const [companiesResult, usersResult, vendedoresResult, communityResult] = await Promise.all([
+  const [companiesResult, managersResult, supervisorsResult, vendedoresResult, communityResult] = await Promise.all([
     CompaniesServices.getCompanies(),
-    UsersServices.getUsers(undefined, 150),
+    UsersServices.getUsers(undefined, 150, false, true, '3'),
+    UsersServices.getUsers(undefined, 150, false, true, '6'),
     UsersServices.getUsers(undefined, 150, false, true, '8'),
     CommunitiesServices.getCommunityById(id),
   ]);
 
-  // Filtrar usuarios con roleId 3 (Manager) o 6 (Supervisor)
-  const filteredUsers = usersResult.data.filter(user => 
-    user.role.id === "3" || user.role.id === "6"
-  );
+  // Las opciones activas se consultan por rol en el API para no depender de la
+  // primera pagina global. Conservamos el asignado aunque haya sido inactivado,
+  // para que editar el complex no borre accidentalmente su relacion historica.
+  const filteredUsers = [...managersResult.data, ...supervisorsResult.data];
+  for (const assigned of [communityResult.managerUser, communityResult.supervisorUser]) {
+    if (assigned && !filteredUsers.some((user) => user.id === assigned.id)) {
+      filteredUsers.push({
+        ...assigned,
+        roleId: assigned.role.id,
+        isActive: false,
+        createdAt: new Date(0),
+      });
+    }
+  }
 
   managers.value.data = filteredUsers;
   // Rol 8 = Vendedor asociado
