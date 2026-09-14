@@ -39,6 +39,22 @@ const statusId = ref<string | null>(null);
 const socket = ref<Socket | null>(null);
 const messagesContainer = ref<HTMLElement | null>(null);
 const fileInput = ref<HTMLInputElement | null>(null);
+const convertedAttachmentUrls = ref<Record<string, string>>({});
+
+const isHeicFile = (name?: string | null, mime?: string | null) => {
+  return /\.hei[cf]$/i.test(name ?? '') || /^image\/hei[cf]$/i.test(mime ?? '');
+};
+
+const convertHeicBlob = async (blob: Blob) => {
+  const { default: heic2any } = await import('heic2any');
+  const result = await heic2any({ blob, toType: 'image/jpeg', quality: 0.9 });
+  return Array.isArray(result) ? result[0] : result;
+};
+
+const clearConvertedAttachmentUrls = () => {
+  Object.values(convertedAttachmentUrls.value).forEach(URL.revokeObjectURL);
+  convertedAttachmentUrls.value = {};
+};
 
 const serviceTitle = computed(() => {
   const communityName = props.service?.community?.communityName || 'Service';
@@ -184,7 +200,7 @@ const handleFileSelected = async (event: Event) => {
     return;
   }
 
-  if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+  if (!file.type.startsWith('image/') && !file.type.startsWith('video/') && !isHeicFile(file.name, file.type)) {
     showToast(toast, { severity: 'warn', summary: 'Only images and videos are allowed.' });
     return;
   }
@@ -196,10 +212,20 @@ const handleFileSelected = async (event: Event) => {
 
   isUploading.value = true;
   try {
+    let uploadFile = file;
+    if (isHeicFile(file.name, file.type)) {
+      const jpegBlob = await convertHeicBlob(file);
+      uploadFile = new File(
+        [jpegBlob],
+        file.name.replace(/\.hei[cf]$/i, '.jpg'),
+        { type: 'image/jpeg' },
+      );
+    }
+
     const messageText = newMessage.value.trim();
     const createdMessage = await ServiceChatServices.uploadEvidence(
       props.service.id,
-      file,
+      uploadFile,
       messageText || undefined,
     );
     newMessage.value = '';
@@ -239,6 +265,31 @@ const attachmentUrl = (message: ServiceChatMessage) => {
   return `${baseUrl}/service-chats/${message.serviceId}/evidence/${message.id}?token=${encodeURIComponent(token)}`;
 };
 
+const displayedAttachmentUrl = (message: ServiceChatMessage) => {
+  return convertedAttachmentUrls.value[message.id] || attachmentUrl(message);
+};
+
+const loadHeicAttachment = async (message: ServiceChatMessage) => {
+  if (!isHeicFile(message.attachmentName, message.attachmentMime)
+    || convertedAttachmentUrls.value[message.id]) {
+    return;
+  }
+
+  try {
+    const response = await fetch(attachmentUrl(message));
+    if (!response.ok) {
+      throw new Error(`Unable to fetch HEIC attachment (${response.status})`);
+    }
+    const jpegBlob = await convertHeicBlob(await response.blob());
+    convertedAttachmentUrls.value = {
+      ...convertedAttachmentUrls.value,
+      [message.id]: URL.createObjectURL(jpegBlob),
+    };
+  } catch (error) {
+    console.error('Unable to display HEIC attachment.', error);
+  }
+};
+
 watch(
   () => props.service.id,
   async (newId, oldId) => {
@@ -246,6 +297,7 @@ watch(
       return;
     }
 
+    clearConvertedAttachmentUrls();
     connectSocket();
 
     if (oldId) {
@@ -259,6 +311,7 @@ watch(
 );
 
 onBeforeUnmount(() => {
+  clearConvertedAttachmentUrls();
   if (props.service?.id) {
     leaveRoom(props.service.id);
   }
@@ -300,8 +353,9 @@ onBeforeUnmount(() => {
           <img
             v-if="message.attachmentType === 'image' && message.attachmentPath"
             class="service-chat__media"
-            :src="attachmentUrl(message)"
+            :src="displayedAttachmentUrl(message)"
             :alt="message.attachmentName || 'evidence'"
+            @error="loadHeicAttachment(message)"
           />
           <video
             v-if="message.attachmentType === 'video' && message.attachmentPath"
@@ -325,7 +379,7 @@ onBeforeUnmount(() => {
         ref="fileInput"
         type="file"
         class="service-chat__file"
-        accept="image/*,video/*"
+        accept="image/*,.heic,.heif,video/*"
         @change="handleFileSelected"
       />
       <button
