@@ -390,21 +390,32 @@ function toYYYYMMDD(date: any): string {
 }
 
 const QA_FLAG_COLOR = '#f97316';
+const RETURNED_ASSIGNMENT_COLOR = '#ef4444';
 
 const isQaPendingFlag = (event: CalendarInterface): boolean => {
   const statusName = event.status?.statusName?.toLowerCase().trim() ?? '';
   return !!event.qaFlagged && statusName !== 'finished';
 };
 
+const isReturnedAssignment = (event: CalendarInterface): boolean => {
+  return event.statusId === '1' && !event.userId && Boolean(event.assignmentExpiredAt);
+};
+
+const displayedStatus = (event: CalendarInterface): string => {
+  return isReturnedAssignment(event) ? 'Returned' : (event.status?.statusName || 'N/A');
+};
+
 const eventToCalendarEvent = (event: CalendarInterface): EventInput => ({
   id: event.id,
   start: toYYYYMMDD(event.date),
   allDay: true,
-  color: isQaPendingFlag(event) ? QA_FLAG_COLOR : getEventColor(event.status?.statusName),
+  color: isReturnedAssignment(event)
+    ? RETURNED_ASSIGNMENT_COLOR
+    : (isQaPendingFlag(event) ? QA_FLAG_COLOR : getEventColor(event.status?.statusName)),
   extendedProps: {
     userName: event.user?.name || 'N/A',
     communityName: event.community?.communityName || 'N/A',
-    status: event.status?.statusName || 'N/A',
+    status: displayedStatus(event),
     type: event.type?.cleaningType || 'N/A',
     unitNumber: event.unitNumber || 'N/A',
     date: toYYYYMMDD(event.date),

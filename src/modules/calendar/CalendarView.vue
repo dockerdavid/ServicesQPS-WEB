@@ -15,6 +15,7 @@
 <script setup lang="ts">
 const statusColors = [
   { color: 'da1919', value: 'Created' },
+  { color: 'ef4444', value: 'Returned' },
   { color: 'f7e83a', value: 'Pending' },
   { color: '00e01f', value: 'Assigned' },
   { color: '9500c1', value: 'Rejected' },
