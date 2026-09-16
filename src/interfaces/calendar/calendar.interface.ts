@@ -30,6 +30,7 @@ export interface CalendarInterface {
     kdsOrder?:   number | null;
     kdsWeekOf?:  string | null;
     qaFlagged?:  boolean;
+    assignmentExpiredAt?: string | null;
 }
 
 export interface Community {
