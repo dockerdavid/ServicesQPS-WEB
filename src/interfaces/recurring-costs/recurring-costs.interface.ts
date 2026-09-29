@@ -7,6 +7,7 @@ export interface RecurringCosts {
 
 export interface RecurringCost {
   id: string;
+  category: string;
   description: string;
   amount: string;
   startDate: string;
@@ -17,6 +18,7 @@ export interface RecurringCost {
 }
 
 export interface NewRecurringCost {
+  category?: string;
   description: string;
   amount: string;
   startDate: string;
@@ -28,6 +30,7 @@ export class RecurringCostAdapter {
   static fromExternalToInternal(externalCost: RecurringCost) {
     return {
       id: externalCost.id,
+      category: externalCost.category,
       description: externalCost.description,
       amount: `$${externalCost.amount}`,
       startDate: externalCost.startDate,

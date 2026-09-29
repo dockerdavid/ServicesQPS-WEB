@@ -3,6 +3,7 @@ import type { InputConfig } from 'src/interfaces/input-config.interface';
 import GenericCreateForm from '../shared/views/GenericCreateForm.vue';
 import { RecurringCostsServices } from './recurring-costs.services';
 import type { NewRecurringCost } from 'src/interfaces/recurring-costs/recurring-costs.interface';
+import { costCategoryOptions, DEFAULT_COST_CATEGORY } from '../../constants/cost-categories';
 
 const breadcrumbRoutes = [
   { label: 'Recurring Costs', to: { name: 'recurring-costs-default' } },
@@ -10,6 +11,7 @@ const breadcrumbRoutes = [
 ];
 
 const inputs: InputConfig[] = [
+  { inputId: 'category', label: 'Category', inputType: 'select', defaultValue: DEFAULT_COST_CATEGORY },
   { inputId: 'description', label: 'Description', inputType: 'input' },
   { inputId: 'amount', label: 'Amount', inputType: 'numeric' },
   { inputId: 'startDate', label: 'Start date', inputType: 'datepicker' },
@@ -19,6 +21,7 @@ const inputs: InputConfig[] = [
 
 const loadOptions = async () => {
   return {
+    category: costCategoryOptions,
     isActive: [
       { label: 'Active', value: true },
       { label: 'Inactive', value: false },

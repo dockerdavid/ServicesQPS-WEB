@@ -7,6 +7,7 @@ import { useGlobalStateStore } from "../../../src/store/auth.store";
 import { computed, ref } from "vue";
 import moment from 'moment-timezone';
 import { Calendar, FloatLabel, InputGroup, InputGroupAddon } from "primevue";
+import { formatCostCategory } from "../../constants/cost-categories";
 
 const startDate = ref(new Date());
 const endDate = ref(new Date());
@@ -63,6 +64,7 @@ const getWeeklyCosts = async () => {
 <template>
     <GenericDataView view-title="Costs" create-new-route="/costs/create" :headers="[
         { field: 'date', name: 'Date' },
+        { field: 'category', name: 'Category', format: formatCostCategory },
         { field: 'description', name: 'Description' },
         { field: 'amount', name: 'Amount' },
     ]" :fetch-data="fetchCosts" :delete-data="deleteCost" :search-data="searchCost">

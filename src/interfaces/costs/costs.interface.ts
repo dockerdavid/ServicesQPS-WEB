@@ -8,6 +8,7 @@ export interface Costs {
 export interface Cost {
     id:          string;
     date:        Date;
+    category:    string;
     description: string;
     amount:      string;
     createdAt:   Date;
@@ -16,6 +17,7 @@ export interface Cost {
 
 export interface NewCost {
     date:        string;
+    category?:   string;
     description: string;
     amount:      string;
 }
@@ -25,6 +27,7 @@ export class CostAdapter {
         return {
             id: externalCost.id,
             date: externalCost.date,
+            category: externalCost.category,
             description: externalCost.description,
             amount: `$${externalCost.amount}`,
             createdAt: externalCost.createdAt,

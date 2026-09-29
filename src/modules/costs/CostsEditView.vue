@@ -5,6 +5,7 @@ import { CostsServices } from './costs.services';
 import { useToast } from 'primevue';
 import { useRoute } from 'vue-router';
 import type { InputConfig } from '../../interfaces/input-config.interface';
+import { costCategoryOptions, DEFAULT_COST_CATEGORY } from '../../constants/cost-categories';
 
 
 const route = useRoute();
@@ -17,6 +18,7 @@ const breadcrumbRoutes = [
 
 const inputs: InputConfig[] = [
   { label: 'Date', inputId: 'date', inputType: 'datepicker', icon: 'calendar' },
+  { label: 'Category', inputId: 'category', inputType: 'select', options: costCategoryOptions },
   { label: 'Description', inputId: 'description', inputType: 'input' },
   { label: 'Amount', inputId: 'amount', inputType: 'numeric' },
 ];
@@ -25,6 +27,7 @@ const loadData = async (id: string) => {
   const cost = await CostsServices.getCostById(id);
   return {
     ...cost,
+    category: cost.category ?? DEFAULT_COST_CATEGORY,
     amount: cost.amount.toString(),
   };
 };
@@ -38,5 +41,5 @@ const updateEntity = async (id: string, data: any) => {
 
 <template>
   <GenericEditForm :breadcrumb-routes="breadcrumbRoutes" view-title="Edit Cost" :inputs="inputs" :load-data="loadData"
-    :update-entity="updateEntity" :initial-data="{ date: '', description: '', amount: '' }" />
+    :update-entity="updateEntity" :initial-data="{ date: '', category: DEFAULT_COST_CATEGORY, description: '', amount: '' }" />
 </template>
