@@ -2,6 +2,7 @@
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import { RecurringCostsServices } from './recurring-costs.services';
 import type { InputConfig } from '../../interfaces/input-config.interface';
+import { costCategoryOptions, DEFAULT_COST_CATEGORY } from '../../constants/cost-categories';
 
 const breadcrumbRoutes = [
   { label: 'Recurring Costs', to: { name: 'recurring-costs-default' } },
@@ -9,6 +10,7 @@ const breadcrumbRoutes = [
 ];
 
 const inputs: InputConfig[] = [
+  { label: 'Category', inputId: 'category', inputType: 'select', options: costCategoryOptions },
   { label: 'Description', inputId: 'description', inputType: 'input' },
   { label: 'Amount', inputId: 'amount', inputType: 'numeric' },
   { label: 'Start date', inputId: 'startDate', inputType: 'datepicker', icon: 'calendar' },
@@ -28,6 +30,7 @@ const loadData = async (id: string) => {
   const cost = await RecurringCostsServices.getRecurringCostById(id);
   return {
     ...cost,
+    category: cost.category ?? DEFAULT_COST_CATEGORY,
     amount: cost.amount.toString(),
   };
 };
@@ -45,6 +48,6 @@ const updateEntity = async (id: string, data: any) => {
     :inputs="inputs"
     :load-data="loadData"
     :update-entity="updateEntity"
-    :initial-data="{ description: '', amount: '', startDate: '', endDate: '', isActive: true }"
+    :initial-data="{ category: DEFAULT_COST_CATEGORY, description: '', amount: '', startDate: '', endDate: '', isActive: true }"
   />
 </template>

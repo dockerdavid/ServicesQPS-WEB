@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import GenericDataView from "../shared/views/GenericDataView.vue";
 import { RecurringCostsServices } from "./recurring-costs.services";
+import { formatCostCategory } from "../../constants/cost-categories";
 
 const fetchRecurringCosts = async (page: number, rows: number) => {
   return await RecurringCostsServices.getRecurringCosts(page, rows);
@@ -20,6 +21,7 @@ const formatDate = (value: string | null) => (value ? value : 'No end');
 
 <template>
   <GenericDataView view-title="Recurring Costs" create-new-route="/recurring-costs/create" :headers="[
+    { field: 'category', name: 'Category', format: formatCostCategory },
     { field: 'description', name: 'Description' },
     { field: 'amount', name: 'Amount' },
     { field: 'startDate', name: 'Start date' },

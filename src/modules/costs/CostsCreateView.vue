@@ -4,6 +4,7 @@ import type { InputConfig } from 'src/interfaces/input-config.interface';
 import GenericCreateForm from '../shared/views/GenericCreateForm.vue';
 import { CostsServices } from './costs.services';
 import type { NewCost } from 'src/interfaces/costs/costs.interface';
+import { costCategoryOptions, DEFAULT_COST_CATEGORY } from '../../constants/cost-categories';
 
 
 const breadcrumbRoutes = [
@@ -14,11 +15,13 @@ const breadcrumbRoutes = [
 
 const inputs:InputConfig[] = [
   { inputId: 'date', label: 'Date', inputType: 'datepicker' },
+  { inputId: 'category', label: 'Category', inputType: 'select', defaultValue: DEFAULT_COST_CATEGORY },
   { inputId: 'description', label: 'Description', inputType: 'input' },
   { inputId: 'amount', label: 'Amount', inputType: 'numeric'},
 ];
 
 
+const loadOptions = async () => ({ category: costCategoryOptions });
 
 const createEntity = async (data: NewCost) => {
 data.amount = data.amount.toString();
@@ -32,6 +35,7 @@ data.amount = data.amount.toString();
     view-title="Create cost"
     :inputs="inputs"
     :create-entity="createEntity"
+    :load-options="loadOptions"
  
   />
 </template>
