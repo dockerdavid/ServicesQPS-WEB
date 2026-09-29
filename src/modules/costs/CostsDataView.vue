@@ -6,11 +6,12 @@ import { CostsServices } from "./costs.services";
 import { useGlobalStateStore } from "../../../src/store/auth.store";
 import { computed, ref } from "vue";
 import moment from 'moment-timezone';
-import { Calendar, FloatLabel, InputGroup, InputGroupAddon } from "primevue";
-import { formatCostCategory } from "../../constants/cost-categories";
+import { Calendar, FloatLabel, InputGroup, InputGroupAddon, Select } from "primevue";
+import { costCategoryOptions, formatCostCategory } from "../../constants/cost-categories";
 
 const startDate = ref(new Date());
 const endDate = ref(new Date());
+const selectedCategory = ref<string | null>(null);
 
 const formattedStartDate = computed(() =>
     startDate.value ? moment(startDate.value).format('YYYY-MM-DD') : ''
@@ -38,7 +39,12 @@ const searchCost = async (searchWord: any, page: number, rows: number) => {
 const getWeeklyCosts = async () => {
     setIsLoading(true);
     try {
-        const { data } = await apiServicesQps.get(`/reports/costos-semana?startDate=${formattedStartDate.value}&endDate=${formattedEndDate.value}`, {
+        const { data } = await apiServicesQps.get('/reports/costos-semana', {
+            params: {
+                startDate: formattedStartDate.value,
+                endDate: formattedEndDate.value,
+                category: selectedCategory.value || undefined,
+            },
             responseType: 'blob'
         });
 
@@ -46,7 +52,8 @@ const getWeeklyCosts = async () => {
         const url = window.URL.createObjectURL(new Blob([data]));
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `reporte-costos-${formattedStartDate.value}-${formattedEndDate.value}.pdf`);
+        const categorySuffix = selectedCategory.value ? `-${selectedCategory.value}` : '';
+        link.setAttribute('download', `reporte-costos${categorySuffix}-${formattedStartDate.value}-${formattedEndDate.value}.pdf`);
         document.body.appendChild(link);
         link.click();
 
@@ -93,6 +100,17 @@ const getWeeklyCosts = async () => {
                                 <label>End date</label>
                             </FloatLabel>
                         </InputGroup>
+                    </div>
+                    <div class="min-w-[16rem]">
+                        <Select
+                            v-model="selectedCategory"
+                            :options="costCategoryOptions"
+                            optionLabel="label"
+                            optionValue="value"
+                            showClear
+                            placeholder="All categories"
+                            class="w-full"
+                        />
                     </div>
                 </div>
 
