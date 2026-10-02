@@ -67,8 +67,8 @@
         </Column>
       </DataTable>
       <p class="nota">
-        La base es lo que deja el complex después de pagarle a las cleaners y
-        antes de los gastos generales de la empresa.
+        La base es lo facturado al complex: precio de los servicios más precio
+        de los extras.
       </p>
     </div>
 
