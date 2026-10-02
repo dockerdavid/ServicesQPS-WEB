@@ -22,7 +22,8 @@
 
             <InputNumber :required="props.required" :aria-required="props.required" :useGrouping="false"
                 :placeholder="props.placeholder" :mode="props.inputNumericMode" currency="USD"
-                v-if="props.inputType === 'numeric'" v-model="numericValue" :inputId="props.inputId" />
+                v-if="props.inputType === 'numeric'" v-model="numericValue" :inputId="props.inputId"
+                locale="en-US" @keypress.capture="acceptCommaAsDecimal" />
 
             <Textarea :placeholder="props.placeholder" v-if="props.inputType === 'textarea'"
                 v-model="modelValue" :required="props.required" :aria-required="props.required" :id="props.inputId"
@@ -133,6 +134,20 @@ const dateValue = computed({
         model.value = value ? moment.tz(value, 'America/New_York').format('YYYY-MM-DD') : '';
     },
 });
+
+/**
+ * Los montos se escriben siempre en formato de EE. UU. ($2.48), sin depender del
+ * idioma del navegador. PrimeVue solo acepta el separador decimal del locale, asi
+ * que una coma se reenvia como punto para que tambien sirva en teclados en español.
+ */
+const acceptCommaAsDecimal = (event: KeyboardEvent) => {
+    if (event.key !== ',' || !event.isTrusted) {
+        return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    event.target?.dispatchEvent(new KeyboardEvent('keypress', { key: '.', bubbles: true, cancelable: true }));
+};
 
 const numericValue = computed({
     get() {
