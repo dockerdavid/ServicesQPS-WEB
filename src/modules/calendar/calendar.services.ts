@@ -28,6 +28,20 @@ export class CalendarServices {
         }
     }
 
+    static async getCalendarDataByRange(startDate: string, endDate: string): Promise<CalendarInterface[]> {
+
+        this.store.setIsLoading(true)
+
+        try {
+            const { data } = await apiServicesQps.get<CalendarInterface[]>(`/calendar/by-range?startDate=${startDate}&endDate=${endDate}`)
+            return data
+        } catch (error: any) {
+            return []
+        } finally {
+            this.store.setIsLoading(false)
+        }
+    }
+
 
     static async getReviewItemsWithClasses(): Promise<any> {
         this.store.setIsLoading(true)
