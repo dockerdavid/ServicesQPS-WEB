@@ -35,6 +35,26 @@
         @click="clearFilter"
         class="p-button-secondary"
       />
+      <fieldset class="w-64">
+        <label for="dateRange">Rango de fechas</label>
+        <DatePicker
+          v-model="dateRange"
+          inputId="dateRange"
+          selectionMode="range"
+          :manualInput="false"
+          dateFormat="mm/dd/yy"
+          placeholder="Desde - Hasta"
+          showIcon
+          class="w-full"
+        />
+      </fieldset>
+      <LoadingButton
+        v-if="activeRange"
+        label="Quitar rango"
+        icon="pi pi-times"
+        @click="clearDateRange"
+        class="p-button-secondary"
+      />
     </div>
     <div>
       <FullCalendar :options="calendarOptions" ref="fullCalendar" />
@@ -158,7 +178,7 @@ import 'tippy.js/dist/tippy.css';
 import MyInputGroup from '../../shared/components/MyInputGroup.vue';
 import LoadingButton from '../../shared/components/LoadingButton.vue';
 import { useUserStore } from '../../../store/user.store';
-import { Dialog, Button, InputSwitch, Textarea, useToast } from 'primevue';
+import { Dialog, Button, InputSwitch, Textarea, DatePicker, useToast } from 'primevue';
 import { showToast } from '../../../../src/utils/show-toast';
 import { CleanersServices } from '../../services/services.services';
 import { KdsServices, KDS_DAYS, type KdsDay } from '../../kds/kds.services';
@@ -173,6 +193,14 @@ const filterText = ref('');
 const allEvents = ref<CalendarInterface[]>([]);
 const calendarEvents = ref<EventInput[]>([]);
 const isInitialLoad = ref(true);
+
+// Rango de fechas: el calendario sigue en vista mes, pero solo muestra servicios dentro del rango
+const dateRange = ref<(Date | null)[] | null>(null);
+const activeRange = computed<{ start: string; end: string } | null>(() => {
+  const [start, end] = dateRange.value ?? [];
+  if (!start || !end) return null;
+  return { start: toLocalYYYYMMDD(start), end: toLocalYYYYMMDD(end) };
+});
 
 // Estado para el modal
 const showServiceModal = ref(false);
@@ -238,14 +266,36 @@ const clearFilter = () => {
   applyFilter();
 };
 
+const clearDateRange = () => {
+  dateRange.value = null;
+};
+
 const reloadCalendarEvents = async (year?: number, month?: number) => {
-  let events = await CalendarServices.getCalendarData(year, month);
+  let events: CalendarInterface[];
+  const range = activeRange.value;
+  if (range) {
+    // Solo se pide la parte del rango que cae en el mes visible
+    const viewDate = getCurrentViewDate();
+    const y = year ?? viewDate.getFullYear();
+    const m = month ?? (viewDate.getMonth() + 1);
+    const monthStart = `${y}-${String(m).padStart(2, '0')}-01`;
+    const monthEnd = `${y}-${String(m).padStart(2, '0')}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`;
+    const start = range.start > monthStart ? range.start : monthStart;
+    const end = range.end < monthEnd ? range.end : monthEnd;
+    events = start <= end ? await CalendarServices.getCalendarDataByRange(start, end) : [];
+  } else {
+    events = await CalendarServices.getCalendarData(year, month);
+  }
   if (userStore.userData?.roleId === '7') {
     events = events.filter(ev => ['3', '5', '6'].includes(ev.statusId));
   }
   allEvents.value = events;
   calendarEvents.value = events.map(eventToCalendarEvent);
   calendarOptions.value.events = calendarEvents.value;
+  // Reaplicar el filtro de texto si hay uno activo
+  if (filterType.value && filterText.value.trim()) {
+    applyFilter();
+  }
 };
 
 const getCurrentViewDate = () => {
@@ -377,7 +427,22 @@ const closeServiceModal = async () => {
     reviewItems: cls.reviewItems.map((item: any) => ({ ...item, checked: false }))
   }));
   isSavingReview.value = false;
-  await reloadCalendarEvents();
+  const currentDate = getCurrentViewDate();
+  await reloadCalendarEvents(currentDate.getFullYear(), currentDate.getMonth() + 1);
+};
+
+function toLocalYYYYMMDD(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+const isOutsideActiveRange = (date: Date): boolean => {
+  const range = activeRange.value;
+  if (!range) return false;
+  const day = toLocalYYYYMMDD(date);
+  return day < range.start || day > range.end;
 };
 
 function toYYYYMMDD(date: any): string {
@@ -430,6 +495,7 @@ const calendarOptions = ref({
   editable: false,
   selectable: false,
   timeZone: 'local',
+  dayCellClassNames: (arg: any) => (isOutsideActiveRange(arg.date) ? ['fc-day-out-of-range'] : []),
   datesSet: async (dateInfo: any) => {
     // Se dispara cuando cambia el mes/año en el calendario (incluyendo la carga inicial)
     const currentDate = dateInfo.view.currentStart;
@@ -647,6 +713,24 @@ watch(filterText, (newVal) => {
   }
 });
 
+// Al elegir o quitar un rango: ir al mes donde empieza, recargar y sombrear los días fuera del rango
+watch(activeRange, async (range, previous) => {
+  if (range?.start === previous?.start && range?.end === previous?.end) return;
+  calendarOptions.value.dayCellClassNames = (arg: any) => (isOutsideActiveRange(arg.date) ? ['fc-day-out-of-range'] : []);
+  const api = fullCalendar.value?.getApi();
+  if (range && api) {
+    const [y, m] = range.start.split('-').map(Number);
+    const viewDate = api.getDate();
+    if (viewDate.getFullYear() !== y || viewDate.getMonth() + 1 !== m) {
+      // gotoDate dispara datesSet, que recarga los eventos
+      api.gotoDate(range.start);
+      return;
+    }
+  }
+  const currentDate = getCurrentViewDate();
+  await reloadCalendarEvents(currentDate.getFullYear(), currentDate.getMonth() + 1);
+});
+
 defineExpose({
   getApi: () => fullCalendar.value?.getApi(),
 });
@@ -656,6 +740,11 @@ defineExpose({
 .fc {
   width: 100%;
   margin: 0 auto;
+}
+
+.fc .fc-day-out-of-range {
+  background-color: #f1f5f9;
+  opacity: 0.55;
 }
 
 .tippy-box[data-theme="custom-tooltip"] {
