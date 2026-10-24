@@ -126,4 +126,16 @@ export const resolveRoleRoutes = (
   return roleKey ? roleRoutes[roleKey] : [];
 };
 
+export const canAccessRoute = (
+  routeName: string,
+  roleName?: string | null,
+  roleId?: string | null
+): boolean => resolveRoleRoutes(roleName, roleId).includes(routeName);
+
+/** Primera pantalla permitida del rol: a donde aterriza tras el login. */
+export const homeRouteFor = (
+  roleName?: string | null,
+  roleId?: string | null
+): string | null => resolveRoleRoutes(roleName, roleId).find((name) => name !== 'notFound') ?? null;
+
 export default roleRoutes
