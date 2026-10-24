@@ -178,6 +178,7 @@ import 'tippy.js/dist/tippy.css';
 import MyInputGroup from '../../shared/components/MyInputGroup.vue';
 import LoadingButton from '../../shared/components/LoadingButton.vue';
 import { useUserStore } from '../../../store/user.store';
+import { canAccessRoute } from '../../../router/role-routes';
 import { Dialog, Button, InputSwitch, Textarea, DatePicker, useToast } from 'primevue';
 import { showToast } from '../../../../src/utils/show-toast';
 import { CleanersServices } from '../../services/services.services';
@@ -505,7 +506,10 @@ const calendarOptions = ref({
     isInitialLoad.value = false;
   },
   eventClick: (info: any) => {
-    if (isReadOnlyCalendarRole()) {
+    // Solo abre la edicion quien tiene permiso de editar servicios: el Cheo ve
+    // el calendario pero no `services-edit`, y el guard lo sacaba a notFound.
+    const canEdit = canAccessRoute('services-edit', userStore.userData?.role?.name, userStore.userData?.roleId);
+    if (isReadOnlyCalendarRole() || !canEdit) {
       return;
     }
     router.push(`/services/edit/${info.event.id}`);

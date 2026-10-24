@@ -13,6 +13,7 @@ import { useAuthStore } from '../store/auth.store';
 import { useUserStore } from '../store/user.store';
 import { useChatNotificationsStore } from '../store/chat-notifications.store';
 import { UsersServices } from '../modules/users/users.services';
+import { canAccessRoute, homeRouteFor } from '../router/role-routes';
 import {
     isNotificationSupported,
     getNotificationPermission,
@@ -56,8 +57,15 @@ const requestNotifications = async () => {
     notificationPermission.value = await requestNotificationPermission();
 };
 
+/**
+ * El usuario queda guardado en localStorage desde el login y antes solo se
+ * pedia si faltaba: si un admin le cambiaba el rol, el telefono seguia con el
+ * viejo (menu y permisos equivocados) hasta cerrar sesion. Ahora se refresca
+ * cada vez que abre la app y, si la pantalla actual ya no le corresponde, se
+ * le lleva a la de su rol.
+ */
 const hydrateUserFromToken = async () => {
-    if (store.userData || !authStore.token) {
+    if (!authStore.token) {
         return;
     }
 
@@ -74,8 +82,14 @@ const hydrateUserFromToken = async () => {
         }
         const user = await UsersServices.getUserById(String(userId));
         store.setUserData(user);
+
+        const current = router.currentRoute.value.name as string | undefined;
+        const home = homeRouteFor(user.role?.name, user.roleId);
+        if (current && home && !canAccessRoute(current, user.role?.name, user.roleId)) {
+            router.replace({ name: home });
+        }
     } catch (error) {
-        // ignore decode errors
+        // sin red o token invalido: se queda con los datos guardados
     }
 };
 
