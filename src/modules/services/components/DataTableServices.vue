@@ -105,7 +105,7 @@ const canAccessChat = computed(() => {
 const canAccessChatHub = computed(() => {
     const roleId = store.userData?.roleId ?? '';
     const roleName = store.userData?.role?.name?.toLowerCase() ?? '';
-    return roleId === '1' || roleId === '7' || roleName === 'super_admin' || roleName === 'qa';
+    return isAdminLikeRole(roleId, roleName) || roleId === '7' || roleName === 'qa';
 });
 
 const canManageService = (service: ExternalService) => {
@@ -316,7 +316,7 @@ watch(
                         <div class="flex justify-around">
                             <Button variant="text" icon="pi pi-pencil" severity="warn" label="Edit"
                                 @click="redirectToEdit(data.id)" />
-                            <Button v-if="!props.lockEdit && store.userData?.roleId === '1'"  variant="text" icon="pi pi-trash" severity="danger" label="Delete"
+                            <Button v-if="!props.lockEdit && isAdminLikeRole(store.userData?.roleId, store.userData?.role?.name)"  variant="text" icon="pi pi-trash" severity="danger" label="Delete"
                                 @click="showDeleteToast(data)" />
                         </div>
                     </template>
