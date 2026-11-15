@@ -14,6 +14,7 @@ import { showToast } from '../../utils/show-toast';
 import MyMapPicker from '../shared/components/MyMapPicker.vue';
 import CommunityContactsFields from './components/CommunityContactsFields.vue';
 import { emptyCommunityContacts, pickCommunityContacts } from '../../interfaces/communities/communities.interface';
+import CommunityBlackoutsPanel from './components/CommunityBlackoutsPanel.vue';
 
 interface EntityData {
   communityName: string;
@@ -470,6 +471,8 @@ const updateEntity = async (id: string, data: any) => {
           <span class="report-visibility-value">{{ entityData.useWax ? 'Sí' : 'No' }}</span>
         </div>
       </fieldset>
+      <CommunityBlackoutsPanel :community-id="currentCommunityId" />
+
       <fieldset class="community-services-panel">
         <div class="range-header">
           <div>

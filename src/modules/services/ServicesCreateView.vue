@@ -301,8 +301,8 @@ const createService = async (leave: boolean) => {
         await CleanersServices.createService(payload);
         showToast(toast, { severity: 'success', detail: 'Service was created' });
         leave ? router.back() : clearForm();
-    } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Service wasn't created" });
+    } catch (error: any) {
+        showToast(toast, { severity: 'error', summary: "Service wasn't created", detail: error?.message, life: 6000 });
     }
 };
 

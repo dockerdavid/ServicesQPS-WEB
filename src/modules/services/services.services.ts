@@ -7,6 +7,7 @@ import { useGlobalStateStore } from "../../store/auth.store";
 import genericNullObject from "../../utils/null-data-meta";
 import { CommunitiesServices } from "../communities/communities.services";
 import type { GeoPayload } from "../../composables/useGeolocation";
+import { getApiErrorMessage } from "../../utils/api-error-message";
 
 
 export class CleanersServices {
@@ -82,7 +83,8 @@ export class CleanersServices {
         try {
             await apiServicesQps.post('/services', newService)
         } catch (error: any) {
-            throw new Error(error)
+            // Conserva el mensaje del API (p.ej. "La comunidad X no trabaja el ...").
+            throw new Error(getApiErrorMessage(error, "Service wasn't created"))
         } finally {
             this.store.setIsLoading(false)
         }
@@ -180,7 +182,7 @@ export class CleanersServices {
         try {
             await apiServicesQps.patch(`/services/${serviceId}`, changedValue);
         } catch (error: any) {
-            throw new Error(error);
+            throw new Error(getApiErrorMessage(error, "Service wasn't updated"));
         } finally {
             this.store.setIsLoading(false);
         }

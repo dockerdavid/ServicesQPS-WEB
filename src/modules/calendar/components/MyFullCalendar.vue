@@ -185,6 +185,7 @@ import { showToast } from '../../../../src/utils/show-toast';
 import { CleanersServices } from '../../services/services.services';
 import { KdsServices, KDS_DAYS, type KdsDay } from '../../kds/kds.services';
 import { captureLocation } from '../../../composables/useGeolocation';
+import { blackoutEventContent, blackoutEventSource, isBlackoutEvent } from '../blackout-events';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -495,6 +496,8 @@ const calendarOptions = ref({
   plugins: [dayGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
   events: calendarEvents.value,
+  // Dias fuera de servicio de las comunidades, sombreados de fondo.
+  eventSources: [blackoutEventSource],
   editable: false,
   selectable: false,
   timeZone: 'local',
@@ -508,6 +511,7 @@ const calendarOptions = ref({
     isInitialLoad.value = false;
   },
   eventClick: (info: any) => {
+    if (isBlackoutEvent(info.event)) return;
     // Solo abre la edicion quien tiene permiso de editar servicios: el Cheo ve
     // el calendario pero no `services-edit`, y el guard lo sacaba a notFound.
     const canEdit = canAccessRoute('services-edit', userStore.userData?.role?.name, userStore.userData?.roleId);
@@ -518,6 +522,7 @@ const calendarOptions = ref({
   },
   eventContent: (arg: any) => {
     const event = arg.event;
+    if (isBlackoutEvent(event)) return blackoutEventContent(event);
     // Formato personalizado como la imagen
     return {
       html: `
@@ -534,6 +539,10 @@ const calendarOptions = ref({
   },
   eventDidMount: (info: any) => {
     const event = info.event;
+    if (isBlackoutEvent(event)) {
+      info.el.title = [event.title, ...(event.extendedProps.communities ?? [])].join('\n');
+      return;
+    }
     const serviceInfo = allEvents.value.find(ev => ev.id === event.id);
     
     // El detalle del servicio en calendario queda solo para admin.

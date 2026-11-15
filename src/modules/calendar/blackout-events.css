@@ -1,0 +1,15 @@
+/* Dias fuera de servicio de comunidades (eventos de fondo del calendario). */
+.fc .fc-community-blackout {
+  background: repeating-linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0 8px, rgba(245, 158, 11, 0.08) 8px 16px);
+  opacity: 1;
+}
+
+.fc .fc-blackout-label {
+  color: #92400e;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 2px 4px;
+  white-space: normal;
+}
