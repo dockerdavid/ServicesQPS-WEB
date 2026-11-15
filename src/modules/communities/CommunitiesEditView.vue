@@ -18,6 +18,7 @@ interface EntityData {
   companyId: string;
   userId: string[];
   showInReports: boolean;
+  useWax: boolean;
   isActive: boolean;
   vendorUserId: string | null;
   latitude: number | null;
@@ -30,6 +31,7 @@ interface UpdateCommunityData {
   managerUserId: string | null;
   supervisorUserId: string | null;
   showInReports: boolean;
+  useWax: boolean;
   isActive: boolean;
   vendorUserId: string | null;
   latitude: number | null;
@@ -53,6 +55,7 @@ const entityData = ref<EntityData>({
   companyId: '',
   userId: [],
   showInReports: true,
+  useWax: false,
   isActive: true,
   vendorUserId: null,
   latitude: null,
@@ -145,6 +148,7 @@ const loadData = async (id: string) => {
     companyId: communityResult.company.id,
     userId: selectedUserIds,
     showInReports: communityResult.showInReports ?? true,
+    useWax: communityResult.useWax ?? false,
     isActive: communityResult.isActive ?? true,
     vendorUserId: communityResult.vendorUser?.id ?? communityResult.vendorUserId ?? null,
     // El API las manda como string (columna decimal); el mapa trabaja con number.
@@ -329,6 +333,7 @@ const updateEntity = async (id: string, data: any) => {
     communityName: data.communityName,
     companyId: data.companyId,
     showInReports: entityData.value.showInReports,
+    useWax: entityData.value.useWax,
     isActive: entityData.value.isActive,
     vendorUserId: entityData.value.vendorUserId || null,
     id: id,
@@ -431,6 +436,15 @@ const updateEntity = async (id: string, data: any) => {
             v-model="entityData.showInReports"
           />
           <span class="report-visibility-value">{{ entityData.showInReports ? 'Sí' : 'No' }}</span>
+        </div>
+      </fieldset>
+      <fieldset>
+        <label for="useWax">Utiliza cera (wax)
+          <small class="text-gray-400">(se muestra al cleaner en la app)</small>
+        </label>
+        <div class="report-visibility-control">
+          <InputSwitch inputId="useWax" v-model="entityData.useWax" />
+          <span class="report-visibility-value">{{ entityData.useWax ? 'Sí' : 'No' }}</span>
         </div>
       </fieldset>
       <fieldset class="community-services-panel">

@@ -91,6 +91,7 @@
             <h3 class="font-bold text-lg mb-2">Comunidad</h3>
             <p><strong>Nombre:</strong> {{ selectedServiceInfo.community?.communityName || 'N/A' }}</p>
             <p><strong>ID Comunidad:</strong> {{ selectedServiceInfo.communityId }}</p>
+            <p><strong>Wax:</strong> {{ selectedServiceInfo.community?.useWax ? 'YES' : 'NO' }}</p>
           </div>
           
           <div class="info-group">
@@ -481,6 +482,7 @@ const eventToCalendarEvent = (event: CalendarInterface): EventInput => ({
   extendedProps: {
     userName: event.user?.name || 'N/A',
     communityName: event.community?.communityName || 'N/A',
+    useWax: !!event.community?.useWax,
     status: displayedStatus(event),
     type: event.type?.cleaningType || 'N/A',
     unitNumber: event.unitNumber || 'N/A',
@@ -543,6 +545,7 @@ const calendarOptions = ref({
       <div style="font-family: inherit; font-size: 13px;">
         <b>${event.extendedProps.userName}</b><br/>
         <b>Community:</b> ${event.extendedProps.communityName}<br/>
+        <b>Wax:</b> ${event.extendedProps.useWax ? '<span style="color:#b45309;font-weight:700">YES</span>' : 'NO'}<br/>
         <b>Unit number:</b> ${event.extendedProps.unitNumber}<br/>
         <b>Date:</b> ${formatDate(event.extendedProps.date)}<br/>
         <b>Type:</b> ${event.extendedProps.type}<br/>
