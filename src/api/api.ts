@@ -2,6 +2,8 @@ import axios from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
 
 import { useAuthStore } from '../store/auth.store';
+import { isPendingApproval, markPendingApproval } from '../utils/pending-approval';
+import { addGlobalToast } from '../utils/global-toast';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -43,6 +45,18 @@ apiServicesQps.interceptors.request.use(async function (config: InternalAxiosReq
 
 
 apiServicesQps.interceptors.response.use((response) => {
+    // Admin Papel: el API respondió 202 sin aplicar el cambio. La respuesta se
+    // deja pasar como éxito (los formularios vuelven al listado), pero se avisa
+    // que quedó en aprobación y se silencian sus toasts de "guardado".
+    if (response.status === 202 && isPendingApproval(response.data)) {
+        markPendingApproval();
+        addGlobalToast({
+            severity: 'info',
+            summary: `Enviado a aprobación (código ${response.data.code})`,
+            detail: 'Un administrador debe aprobar este cambio. Puedes seguirlo en "Mis solicitudes".',
+            life: 7000,
+        });
+    }
     return response;
 }, (error) => {
     return Promise.reject(error)

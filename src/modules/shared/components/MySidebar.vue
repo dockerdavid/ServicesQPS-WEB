@@ -25,6 +25,17 @@ const adminRoutes: RouteLink[] = [
   { route: 'users-default', icon: 'ph:users-three-duotone', label: 'users' },
 ]
 
+const superAdminRoutes: RouteLink[] = [
+  ...adminRoutes,
+  { route: 'approvals', icon: 'ph:seal-check-duotone', label: 'solicitudes de aprobación' },
+]
+
+/** Admin Papel: mismo menú que el admin + sus solicitudes. */
+const adminPapelRoutes: RouteLink[] = [
+  ...adminRoutes,
+  { route: 'approvals-mine', icon: 'ph:seal-question-duotone', label: 'mis solicitudes' },
+]
+
 const cleanerRoutes: RouteLink[] = [
   { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
   { route: 'calendar', icon: 'ph:calendar-dots', label: 'calendar' },
@@ -64,7 +75,9 @@ const routes = computed(() => {
 
   switch (roleKey) {
     case "super_admin":
-      return adminRoutes;
+      return superAdminRoutes;
+    case "admin_papel":
+      return adminPapelRoutes;
     case "manager":
       return managerRoutes;
     case "cleaner":

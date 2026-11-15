@@ -1,48 +1,59 @@
+/** Pantallas del super admin. El Admin Papel (rol 9) ve exactamente las mismas;
+ *  sus cambios quedan en aprobación (lo resuelve el API). */
+const superAdminRoutes = [
+  'dashboard',
+  'calendar',
+  'communities-default',
+  'communities-create',
+  'communities-edit',
+  'companies-default',
+  'companies-create',
+  'companies-edit',
+  'costs-default',
+  'costs-create',
+  'costs-edit',
+  'recurring-costs',
+  'recurring-costs-default',
+  'recurring-costs-create',
+  'recurring-costs-edit',
+  'recurring-services',
+  'recurring-services-default',
+  'recurring-services-create',
+  'recurring-services-edit',
+  'extras-default',
+  'extras-create',
+  'extras-edit',
+  'news',
+  'news-default',
+  'news-create',
+  'news-edit',
+  'services-default',
+  'services-create',
+  'services-edit',
+  'services-tracking',
+  'chat',
+  'statuses-default',
+  'statuses-create',
+  'statuses-edit',
+  'types-default',
+  'types-create',
+  'types-edit',
+  'users-default',
+  'users-create',
+  'users-edit',
+  'kds-admin',
+  'kds-admin-default',
+  'approvals',
+  'notFound'
+];
+
 const roleRoutes = {
-  super_admin: [
-    'dashboard',
-    'calendar',
-    'communities-default',
-    'communities-create',
-    'communities-edit',
-    'companies-default',
-    'companies-create',
-    'companies-edit',
-    'costs-default',
-    'costs-create',
-    'costs-edit',
-    'recurring-costs',
-    'recurring-costs-default',
-    'recurring-costs-create',
-    'recurring-costs-edit',
-    'recurring-services',
-    'recurring-services-default',
-    'recurring-services-create',
-    'recurring-services-edit',
-    'extras-default',
-    'extras-create',
-    'extras-edit',
-    'news',
-    'news-default',
-    'news-create',
-    'news-edit',
-    'services-default',
-    'services-create',
-    'services-edit',
-    'services-tracking',
-    'chat',
-    'statuses-default',
-    'statuses-create',
-    'statuses-edit',
-    'types-default',
-    'types-create',
-    'types-edit',
-    'users-default',
-    'users-create',
-    'users-edit',
-    'kds-admin',
-    'kds-admin-default',
-    'notFound'
+  super_admin: superAdminRoutes,
+  admin_papel: [
+    // 'notFound' al final: homeRouteFor toma la primera que no sea notFound.
+    ...superAdminRoutes.filter((name) => name !== 'approvals' && name !== 'notFound'),
+    'approvals-mine',
+    'notFound',
   ],
   qa: [
     'chat',
@@ -94,6 +105,18 @@ const roleRoutes = {
 
 export type RoleKey = keyof typeof roleRoutes;
 
+/** Roles que la UI trata como administrador (lectura/permisos de pantalla). */
+export const ADMIN_LIKE_ROLE_IDS = ['1', '9'];
+
+export const isAdminLikeRole = (roleId?: string | null, roleName?: string | null): boolean => {
+  if (roleId && ADMIN_LIKE_ROLE_IDS.includes(String(roleId))) return true;
+  const key = roleName ? roleName.toLowerCase().replace(/[-\s]+/g, '_') : '';
+  return key === 'super_admin' || key === 'admin_papel';
+};
+
+export const isAdminPapelRole = (roleId?: string | null, roleName?: string | null): boolean =>
+  String(roleId ?? '') === '9' || (roleName ?? '').toLowerCase().replace(/[-\s]+/g, '_') === 'admin_papel';
+
 const roleIdToKey: Record<string, RoleKey> = {
   '1': 'super_admin',
   '3': 'manager',
@@ -102,6 +125,7 @@ const roleIdToKey: Record<string, RoleKey> = {
   '6': 'supervisor',
   '7': 'qa',
   '8': 'vendedor',
+  '9': 'admin_papel',
 };
 
 export const resolveRoleKey = (

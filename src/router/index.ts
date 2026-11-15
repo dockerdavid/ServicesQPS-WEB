@@ -248,6 +248,20 @@ const router = createRouter({
           ],
         },
         {
+          // Super admin: todas las solicitudes del Admin Papel, para aprobar/rechazar.
+          path: 'approvals',
+          name: 'approvals',
+          component: () => import('../modules/approvals/ApprovalsView.vue'),
+          props: { mode: 'admin' },
+        },
+        {
+          // Admin Papel: solo sus solicitudes y el estado de cada una.
+          path: 'my-approvals',
+          name: 'approvals-mine',
+          component: () => import('../modules/approvals/ApprovalsView.vue'),
+          props: { mode: 'mine' },
+        },
+        {
           path: 'kds-admin',
           name: 'kds-admin',
           component: () => import('../modules/kds/KdsAdminView.vue'),

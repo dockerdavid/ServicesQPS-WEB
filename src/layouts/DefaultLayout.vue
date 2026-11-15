@@ -13,7 +13,7 @@ import { useAuthStore } from '../store/auth.store';
 import { useUserStore } from '../store/user.store';
 import { useChatNotificationsStore } from '../store/chat-notifications.store';
 import { UsersServices } from '../modules/users/users.services';
-import { canAccessRoute, homeRouteFor } from '../router/role-routes';
+import { canAccessRoute, homeRouteFor, isAdminLikeRole } from '../router/role-routes';
 import {
     isNotificationSupported,
     getNotificationPermission,
@@ -96,7 +96,7 @@ const hydrateUserFromToken = async () => {
 const canAccessChat = computed(() => {
     const roleId = store.userData?.roleId ?? '';
     const roleName = store.userData?.role?.name?.toLowerCase() ?? '';
-    return roleId === '1'
+    return isAdminLikeRole(roleId, roleName)
         || roleId === '4'
         || roleId === '7'
         || roleName === 'super_admin'
@@ -107,7 +107,7 @@ const canAccessChat = computed(() => {
 const canAccessChatHub = computed(() => {
     const roleId = store.userData?.roleId ?? '';
     const roleName = store.userData?.role?.name?.toLowerCase() ?? '';
-    return roleId === '1' || roleId === '7' || roleName === 'super_admin' || roleName === 'qa';
+    return isAdminLikeRole(roleId, roleName) || roleId === '7' || roleName === 'qa';
 });
 
 const socketUrl = computed(() => {

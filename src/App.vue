@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { Toast } from 'primevue';
+import { Toast, useToast } from 'primevue';
+import { setGlobalToast } from './utils/global-toast';
 import { requestLocationPermission } from './composables/useGeolocation';
+
+setGlobalToast(useToast());
 
 // Persistently ask for location permission until granted
 const ensureLocationPermission = async () => {
