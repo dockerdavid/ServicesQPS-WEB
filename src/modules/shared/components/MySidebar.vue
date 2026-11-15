@@ -16,6 +16,7 @@ const adminRoutes: RouteLink[] = [
   { route: 'recurring-costs-default', icon: 'ph:repeat-duotone', label: 'recurring costs' },
   { route: 'recurring-services-default', icon: 'ph:repeat-duotone', label: 'recurring services' },
   { route: 'extras-default', icon: 'ph:stack-plus-duotone', label: 'extras' },
+  { route: 'news-default', icon: 'ph:newspaper-duotone', label: 'last news' },
   { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
   { route: 'services-tracking', icon: 'ph:map-trifold-duotone', label: 'tracking map' },
   { route: 'chat', icon: 'ph:chats-circle-duotone', label: 'chat' },

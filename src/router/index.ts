@@ -189,6 +189,28 @@ const router = createRouter({
           ],
         },
         {
+          path: 'news',
+          name: 'news',
+          component: () => import('../modules/news/NewsView.vue'),
+          children: [
+            {
+              path: '',
+              name: 'news-default',
+              component: () => import('../modules/news/NewsDataView.vue'),
+            },
+            {
+              path: 'create',
+              name: 'news-create',
+              component: () => import('../modules/news/NewsCreateView.vue'),
+            },
+            {
+              path: 'edit/:id',
+              name: 'news-edit',
+              component: () => import('../modules/news/NewsEditView.vue'),
+            },
+          ],
+        },
+        {
           path: 'services',
           name: 'services',
           component: () => import('../modules/services/ServicesView.vue'),
