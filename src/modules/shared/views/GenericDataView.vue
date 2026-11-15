@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { IconField, InputIcon, InputText, useToast } from 'primevue';
 import BaseLayout from '../../../layouts/BaseLayout.vue';
 import { showToast } from "../../../utils/show-toast";
@@ -31,6 +31,9 @@ interface Props {
     createNewRoute?: string;
     editRoute?: string;
     routeBase?: string;
+    /** Cambiarlo (ej: el filtro de rol de Users) vuelve a la pagina 1 y recarga
+     *  la tabla respetando la busqueda escrita. Opcional: sin el, nada cambia. */
+    reloadKey?: string | number | null;
 }
 
 const props = defineProps<Props>();
@@ -44,6 +47,7 @@ const currentPage = ref(1);
 const rowsPerPage = ref(10);
 
 const searchWord = ref('');
+const pageResetKey = ref(0);
 const prevSearchWord = ref("");
 
 const breadcrumbRoutes = [
@@ -137,6 +141,21 @@ const onSearch = () => {
     debouncedSearch();
 };
 
+const reload = async () => {
+    currentPage.value = 1;
+    pageResetKey.value++;
+    if (searchWord.value) {
+        dataList.value = await props.searchData(searchWord.value, currentPage.value, rowsPerPage.value);
+        prevSearchWord.value = searchWord.value;
+    } else {
+        await fetchDataList();
+    }
+};
+
+watch(() => props.reloadKey, () => { reload(); });
+
+defineExpose({ reload });
+
 onMounted(async () => {
     fetchDataList();
 });
@@ -172,7 +191,7 @@ onMounted(async () => {
 
             <DataTable v-if="!props.useServicesTable" :data="dataList.data" :headers="headers" :onDelete="onDelete"
                 :lockEdit="lockEdit" :hide-delete="hideDelete" @page-change="handlePageChange" :total-records="dataList.meta.totalCount"
-                :edit-route="editRoute" :show-export-button="props.showExportButton"
+                :edit-route="editRoute" :page-reset-key="pageResetKey" :show-export-button="props.showExportButton"
                 :export-start-date="props.exportStartDate" :export-end-date="props.exportEndDate">
                 <template #isActive="slotProps">
                     <slot name="isActive" v-bind="slotProps" />

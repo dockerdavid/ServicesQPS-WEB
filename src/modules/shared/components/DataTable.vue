@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useToast } from 'primevue/usetoast';
 import { Column, DataTable, InputText, Button, Skeleton } from "primevue";
 import MyDeleteToast from "./MyDeleteToast.vue";
@@ -27,6 +27,8 @@ interface TableI {
     showExportButton?: boolean;
     exportStartDate?: string;
     exportEndDate?: string;
+    /** Al cambiar, el paginador vuelve a la primera pagina (ej: cambio de filtro). */
+    pageResetKey?: number;
 }
 
 const { isLoading } = storeToRefs(useGlobalStateStore());
@@ -37,6 +39,8 @@ const toast = useToast();
 
 const rows = ref(10);
 const first = ref(0);
+
+watch(() => props.pageResetKey, () => { first.value = 0; });
 
 const onPageChange = (event: any) => {
     first.value = event.first;
