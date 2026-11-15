@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue';
+import { isAdminLikeRole } from '../../router/role-routes';
+import { computed, ref, onMounted, watch } from 'vue';
 import moment from 'moment-timezone';
 import { DatePicker, MultiSelect, useToast } from 'primevue';
 import CreateLayout from '../../layouts/CreateLayout.vue';
@@ -244,6 +245,24 @@ watch(
     }
 );
 
+// Comunidades con lockScheduleForStaff: managers (3) y supervisores (6) no
+// eligen hora, el servicio queda a las 00:00 (el API lo fuerza igual).
+const isScheduleLocked = computed(() => {
+    const roleId = userStore.userData?.roleId;
+    if (roleId !== '3' && roleId !== '6') {
+        return false;
+    }
+    const community = communities.value.find((c) => c.id === newService.value.communityId);
+    return Boolean(community?.lockScheduleForStaff);
+});
+
+watch(isScheduleLocked, (locked) => {
+    if (locked) {
+        scheduleDate.value = moment().startOf('day').toDate();
+        newService.value.schedule = '00:00:00';
+    }
+});
+
 const createService = async (leave: boolean) => {
     isFormSubmitted.value = true;
 
@@ -283,8 +302,8 @@ const createService = async (leave: boolean) => {
         await CleanersServices.createService(payload);
         showToast(toast, { severity: 'success', detail: 'Service was created' });
         leave ? router.back() : clearForm();
-    } catch (error) {
-        showToast(toast, { severity: 'error', summary: "Service wasn't created" });
+    } catch (error: any) {
+        showToast(toast, { severity: 'error', summary: "Service wasn't created", detail: error?.message, life: 6000 });
     }
 };
 
@@ -338,7 +357,8 @@ watch(
 
             <fieldset>
                 <label for="schedule">Schedule</label>
-                <DatePicker v-model="scheduleDate" :time-only="true" hour-format="24" id="schedule" />
+                <DatePicker v-model="scheduleDate" :time-only="true" hour-format="24" id="schedule" :disabled="isScheduleLocked" />
+                <small v-if="isScheduleLocked" class="text-gray-400">Esta comunidad no permite seleccionar hora</small>
             </fieldset>
 
             <!-- Campo: Tamaño de la unidad -->
@@ -374,7 +394,7 @@ watch(
             </fieldset>
 
             <!-- Campo: Limpiador / QA -->
-            <MyInputGroup v-if="userStore.userData?.roleId === '1'" :required="false" v-model="newService.userId" label="Cleaner / QA" inputId="userId"
+            <MyInputGroup v-if="isAdminLikeRole(userStore.userData?.roleId)" :required="false" v-model="newService.userId" label="Cleaner / QA" inputId="userId"
                 inputType="select" :options="assigneeOptions"
                 :is-form-submitted="isFormSubmitted" />
 
@@ -384,7 +404,7 @@ watch(
 
             <!-- Botón de creación -->
 
-            <div v-if="userStore.userData?.roleId !== '1'" />
+            <div v-if="!isAdminLikeRole(userStore.userData?.roleId)" />
 
             <div class="flex">
                 <LoadingButton label="Create" @click="createService(false)" />

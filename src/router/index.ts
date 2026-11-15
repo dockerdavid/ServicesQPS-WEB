@@ -189,6 +189,28 @@ const router = createRouter({
           ],
         },
         {
+          path: 'news',
+          name: 'news',
+          component: () => import('../modules/news/NewsView.vue'),
+          children: [
+            {
+              path: '',
+              name: 'news-default',
+              component: () => import('../modules/news/NewsDataView.vue'),
+            },
+            {
+              path: 'create',
+              name: 'news-create',
+              component: () => import('../modules/news/NewsCreateView.vue'),
+            },
+            {
+              path: 'edit/:id',
+              name: 'news-edit',
+              component: () => import('../modules/news/NewsEditView.vue'),
+            },
+          ],
+        },
+        {
           path: 'services',
           name: 'services',
           component: () => import('../modules/services/ServicesView.vue'),
@@ -224,6 +246,20 @@ const router = createRouter({
               component: () => import('../modules/vendedores/VendedorComisionesView.vue'),
             },
           ],
+        },
+        {
+          // Super admin: todas las solicitudes del Admin Papel, para aprobar/rechazar.
+          path: 'approvals',
+          name: 'approvals',
+          component: () => import('../modules/approvals/ApprovalsView.vue'),
+          props: { mode: 'admin' },
+        },
+        {
+          // Admin Papel: solo sus solicitudes y el estado de cada una.
+          path: 'my-approvals',
+          name: 'approvals-mine',
+          component: () => import('../modules/approvals/ApprovalsView.vue'),
+          props: { mode: 'mine' },
         },
         {
           path: 'kds-admin',

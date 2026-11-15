@@ -39,7 +39,7 @@ let selectedServiceFetchToken = 0;
 
 const canAccessChatHub = computed(() => {
   const roleKey = resolveRoleKey(userStore.userData?.role?.name, userStore.userData?.roleId);
-  return roleKey === 'qa' || roleKey === 'super_admin';
+  return roleKey === 'qa' || roleKey === 'super_admin' || roleKey === 'admin_papel';
 });
 
 const isRoleResolved = computed(() => {
@@ -660,15 +660,32 @@ watch(
   font-weight: 600;
 }
 
+/*
+ * Tablet / movil: una sola columna. La lista de chats queda arriba con altura
+ * acotada y el panel del chat tiene altura fija para que el contenedor de
+ * mensajes haga scroll interno (antes height:auto lo dejaba crecer sin limite).
+ */
 @media (max-width: 980px) {
   .chat-hub {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
     height: auto;
     max-width: none;
   }
 
+  .chat-hub__sidebar {
+    max-height: min(320px, 38vh);
+    max-height: min(320px, 38dvh);
+  }
+
   .chat-hub__content {
     padding: 0.75rem;
+    height: max(420px, calc(100vh - 9rem));
+    height: max(420px, calc(100dvh - 9rem));
+  }
+
+  .chat-hub__placeholder {
+    min-height: 0;
   }
 }
 </style>

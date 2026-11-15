@@ -16,12 +16,24 @@ const adminRoutes: RouteLink[] = [
   { route: 'recurring-costs-default', icon: 'ph:repeat-duotone', label: 'recurring costs' },
   { route: 'recurring-services-default', icon: 'ph:repeat-duotone', label: 'recurring services' },
   { route: 'extras-default', icon: 'ph:stack-plus-duotone', label: 'extras' },
+  { route: 'news-default', icon: 'ph:newspaper-duotone', label: 'last news' },
   { route: 'services-default', icon: 'ph:folder-open-duotone', label: 'services' },
   { route: 'services-tracking', icon: 'ph:map-trifold-duotone', label: 'tracking map' },
   { route: 'chat', icon: 'ph:chats-circle-duotone', label: 'chat' },
   { route: 'statuses-default', icon: 'ph:faders-duotone', label: 'statuses' },
   { route: 'types-default', icon: 'ph:shapes-duotone', label: 'types' },
   { route: 'users-default', icon: 'ph:users-three-duotone', label: 'users' },
+]
+
+const superAdminRoutes: RouteLink[] = [
+  ...adminRoutes,
+  { route: 'approvals', icon: 'ph:seal-check-duotone', label: 'solicitudes de aprobación' },
+]
+
+/** Admin Papel: mismo menú que el admin + sus solicitudes. */
+const adminPapelRoutes: RouteLink[] = [
+  ...adminRoutes,
+  { route: 'approvals-mine', icon: 'ph:seal-question-duotone', label: 'mis solicitudes' },
 ]
 
 const cleanerRoutes: RouteLink[] = [
@@ -63,7 +75,9 @@ const routes = computed(() => {
 
   switch (roleKey) {
     case "super_admin":
-      return adminRoutes;
+      return superAdminRoutes;
+    case "admin_papel":
+      return adminPapelRoutes;
     case "manager":
       return managerRoutes;
     case "cleaner":

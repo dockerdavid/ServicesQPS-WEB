@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Filtro global con diseño consistente -->
-    <div class="flex items-end mb-4 gap-2">
+    <div class="flex flex-wrap items-end mb-4 gap-2">
       <MyInputGroup
         v-model="filterType"
         label="Filtro"
@@ -55,10 +55,84 @@
         @click="clearDateRange"
         class="p-button-secondary"
       />
+      <Button
+        v-if="canSuggest && unassignedCount > 0"
+        class="suggest-trigger ml-auto"
+        icon="pi pi-sparkles"
+        :label="suggestionsActive ? 'Revisar sugerencias' : 'Sugerir asignaciones'"
+        :badge="String(suggestionsActive ? applicable.length : unassignedCount)"
+        badge-severity="contrast"
+        @click="openSuggestions"
+      />
     </div>
-    <div>
-      <FullCalendar :options="calendarOptions" ref="fullCalendar" />
+
+    <!-- Sugerencias activas: se ven como chips en los servicios sin cleaner -->
+    <div v-if="canSuggest && suggestionsActive && suggestResult" class="calendar-banner calendar-banner--suggest" role="status">
+      <i class="pi pi-sparkles calendar-banner__icon" />
+      <span class="calendar-banner__text">
+        <b>{{ applicable.length }}</b> sugerencia(s) marcadas en el calendario
+        <span class="calendar-banner__score">
+          · Balance {{ suggestResult.currentScore ?? '–' }}
+          <i class="pi pi-arrow-right" />
+          <b>{{ suggestResult.projectedScore ?? '–' }}</b>
+        </span>
+      </span>
+      <span class="calendar-banner__actions">
+        <Button label="Revisar y aplicar" size="small" icon="pi pi-list-check" @click="showSuggestDialog = true" />
+        <Button label="Descartar" size="small" severity="secondary" text @click="discardSuggestions" />
+      </span>
     </div>
+
+    <div class="calendar-layout" :class="{ 'has-panel': showWorkloadPanel }">
+      <CleanerWorkloadPanel
+        v-if="showWorkloadPanel"
+        class="calendar-layout__panel"
+        v-model:selected-id="selectedCleanerId"
+        v-model:include-qa="includeQa"
+        :workloads="workloads"
+        :balance="balance"
+        :unassigned-count="unassignedCount"
+        :range-days="rangeDays"
+        :range-label="rangeLabel"
+        :can-suggest="canSuggest"
+        :suggestions-active="suggestionsActive"
+        :projected-score="suggestResult?.projectedScore ?? null"
+        :suggested-by-cleaner="suggestedByCleaner"
+        @hover="hoveredCleanerId = $event"
+        @suggest="openSuggestions"
+      />
+      <div ref="calendarColumn" class="calendar-layout__main" :class="{ 'is-hovering': !!hoveredCleanerId }">
+        <div v-if="selectedCleanerId" class="calendar-banner calendar-banner--focus" role="status">
+          <i class="pi pi-filter calendar-banner__icon" />
+          <span class="calendar-banner__text">
+            <template v-if="selectedCleanerId === UNASSIGNED_FILTER">
+              Mostrando solo servicios <b>sin cleaner</b> ({{ unassignedCount }})
+            </template>
+            <template v-else>
+              Mostrando servicios de <b>{{ selectedCleanerName }}</b> ({{ selectedCleanerTotal }})
+              <template v-if="selectedCleanerSuggested"> + {{ selectedCleanerSuggested }} sugerido(s)</template>
+            </template>
+          </span>
+          <Button label="Quitar filtro" size="small" severity="secondary" text icon="pi pi-times" @click="selectedCleanerId = null" />
+        </div>
+        <FullCalendar :options="calendarOptions" ref="fullCalendar" />
+      </div>
+    </div>
+
+    <AssignmentSuggestionsDialog
+      v-if="canSuggest"
+      v-model:visible="showSuggestDialog"
+      v-model:include-past="includePast"
+      :result="suggestResult"
+      :is-applying="isApplying"
+      :progress="applyProgress"
+      :range-label="rangeLabel"
+      @pin="pinCleaner"
+      @skip="setSkipped"
+      @reset="resetOverrides"
+      @discard="discardSuggestions"
+      @apply="handleApplySuggestions"
+    />
     
     <!-- Modal para mostrar información del servicio -->
     <Dialog 
@@ -91,6 +165,7 @@
             <h3 class="font-bold text-lg mb-2">Comunidad</h3>
             <p><strong>Nombre:</strong> {{ selectedServiceInfo.community?.communityName || 'N/A' }}</p>
             <p><strong>ID Comunidad:</strong> {{ selectedServiceInfo.communityId }}</p>
+            <p><strong>Wax:</strong> {{ selectedServiceInfo.community?.useWax ? 'YES' : 'NO' }}</p>
           </div>
           
           <div class="info-group">
@@ -165,7 +240,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -178,12 +253,17 @@ import 'tippy.js/dist/tippy.css';
 import MyInputGroup from '../../shared/components/MyInputGroup.vue';
 import LoadingButton from '../../shared/components/LoadingButton.vue';
 import { useUserStore } from '../../../store/user.store';
-import { canAccessRoute } from '../../../router/role-routes';
+import { canAccessRoute, isAdminLikeRole } from '../../../router/role-routes';
 import { Dialog, Button, InputSwitch, Textarea, DatePicker, useToast } from 'primevue';
 import { showToast } from '../../../../src/utils/show-toast';
 import { CleanersServices } from '../../services/services.services';
 import { KdsServices, KDS_DAYS, type KdsDay } from '../../kds/kds.services';
 import { captureLocation } from '../../../composables/useGeolocation';
+import { blackoutEventContent, blackoutEventSource, isBlackoutEvent } from '../blackout-events';
+import CleanerWorkloadPanel from './CleanerWorkloadPanel.vue';
+import AssignmentSuggestionsDialog from './AssignmentSuggestionsDialog.vue';
+import { useLoadBalancer, UNASSIGNED_FILTER } from '../composables/useLoadBalancer';
+import { isUnassignedService } from '../utils/load-balancer';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -218,13 +298,147 @@ const isSavingReview = ref(false);
 const isCalendarAdmin = () => {
   const roleId = userStore.userData?.roleId ?? '';
   const roleName = userStore.userData?.role?.name?.toLowerCase() ?? '';
-  return roleId === '1' || roleName === 'super_admin';
+  return isAdminLikeRole(roleId, roleName);
 };
 
 const isReadOnlyCalendarRole = () => {
   const roleId = userStore.userData?.roleId ?? '';
   return roleId === '4' || roleId === '7';
 };
+
+// --- Panel de carga de cleaners + sugerencias de asignacion -----------------
+// Logica pura en ../utils/load-balancer.ts; estado reactivo en useLoadBalancer.
+const {
+  includeQa,
+  loadCleaners,
+  workloads,
+  balance,
+  unassignedCount,
+  suggestionsActive,
+  includePast,
+  result: suggestResult,
+  suggestionByServiceId,
+  applicable,
+  startSuggestions,
+  clearSuggestions,
+  resetOverrides,
+  pinCleaner,
+  setSkipped,
+  applySuggestions,
+  isApplying,
+  progress: applyProgress,
+} = useLoadBalancer(allEvents);
+
+/** Cleaners y QA ven su propio calendario: el panel de carga es para la oficina. */
+const showWorkloadPanel = computed(() => !isReadOnlyCalendarRole());
+/** Sugerir y aplicar asignaciones: solo admin (roleId 1). */
+const canSuggest = computed(() => isCalendarAdmin());
+
+const selectedCleanerId = ref<string | null>(null);
+const hoveredCleanerId = ref<string | null>(null);
+const showSuggestDialog = ref(false);
+const calendarColumn = ref<HTMLElement | null>(null);
+
+/** Rango realmente cargado (mes visible, o la parte del rango que cae en el). */
+const loadedRange = ref<{ start: string; end: string } | null>(null);
+
+const rangeDays = computed(() => {
+  const range = loadedRange.value;
+  if (!range) return [];
+  const days: string[] = [];
+  const [sy, sm, sd] = range.start.split('-').map(Number);
+  const cursor = new Date(sy, sm - 1, sd);
+  for (let i = 0; i < 62; i++) {
+    const day = toLocalYYYYMMDD(cursor);
+    if (day > range.end) break;
+    days.push(day);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+});
+
+const rangeLabel = computed(() => {
+  const range = loadedRange.value;
+  if (!range) return '';
+  const [y, m] = range.start.split('-').map(Number);
+  if (activeRange.value) return `${formatDate(range.start)} – ${formatDate(range.end)}`;
+  const label = new Date(y, m - 1, 1).toLocaleDateString('es', { month: 'long', year: 'numeric' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+});
+
+const suggestedByCleaner = computed<Record<string, number>>(() => {
+  const counts: Record<string, number> = {};
+  suggestionByServiceId.value.forEach((s) => {
+    if (s.cleanerId) counts[s.cleanerId] = (counts[s.cleanerId] ?? 0) + 1;
+  });
+  return counts;
+});
+
+const selectedWorkload = computed(() => workloads.value.find((w) => w.cleanerId === selectedCleanerId.value) ?? null);
+const selectedCleanerName = computed(() =>
+  selectedWorkload.value?.name
+  ?? allEvents.value.find((ev) => String(ev.userId) === selectedCleanerId.value)?.user?.name
+  ?? 'cleaner',
+);
+const selectedCleanerTotal = computed(() =>
+  selectedWorkload.value?.total
+  ?? allEvents.value.filter((ev) => String(ev.userId) === selectedCleanerId.value).length,
+);
+const selectedCleanerSuggested = computed(() =>
+  selectedCleanerId.value ? suggestedByCleaner.value[selectedCleanerId.value] ?? 0 : 0,
+);
+
+const openSuggestions = () => {
+  if (!canSuggest.value) return;
+  if (!suggestionsActive.value) startSuggestions();
+  showSuggestDialog.value = true;
+};
+
+const discardSuggestions = () => {
+  clearSuggestions();
+  showSuggestDialog.value = false;
+};
+
+const handleApplySuggestions = async () => {
+  if (!canSuggest.value) return;
+  const { ok, failed } = await applySuggestions();
+  if (ok) {
+    showToast(toast, { severity: 'success', summary: 'Asignaciones aplicadas', detail: `${ok} servicio(s) asignado(s)` });
+  }
+  if (failed.length) {
+    showToast(toast, {
+      severity: 'error',
+      summary: 'Algunas asignaciones fallaron',
+      detail: `${failed.length} servicio(s) no se pudieron asignar. Quedan en la lista para reintentar.`,
+      life: 6000,
+    });
+  }
+  const currentDate = getCurrentViewDate();
+  await reloadCalendarEvents(currentDate.getFullYear(), currentDate.getMonth() + 1);
+  if (!failed.length) {
+    clearSuggestions();
+    showSuggestDialog.value = false;
+  }
+};
+
+const escapeHtml = (value: unknown) => String(value ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+/** Resalta (sin filtrar) los servicios del cleaner bajo el cursor en el panel. */
+const syncHoverHighlight = () => {
+  const root = calendarColumn.value;
+  if (!root) return;
+  const id = hoveredCleanerId.value;
+  root.querySelectorAll<HTMLElement>('.fc-event').forEach((el) => {
+    const match = !!id && (el.dataset.userId === id || el.dataset.suggestedId === id);
+    el.classList.toggle('qps-ev--hover', match);
+  });
+};
+watch(hoveredCleanerId, syncHoverHighlight);
 
 
 const filterOptions = [
@@ -242,23 +456,32 @@ const filterPlaceholder = computed(() => {
   }
 });
 
-const applyFilter = () => {
-  if (!filterType.value || !filterText.value.trim()) {
-    // Sin filtro, mostrar todo
-    calendarEvents.value = allEvents.value.map(eventToCalendarEvent);
-    calendarOptions.value.events = calendarEvents.value;
-    return;
-  }
+const applyTextFilter = (events: CalendarInterface[]): CalendarInterface[] => {
+  if (!filterType.value || !filterText.value.trim()) return events;
   const text = filterText.value.trim().toLowerCase();
-  let filtered: CalendarInterface[] = [];
   if (filterType.value === 'cleaner') {
-    filtered = allEvents.value.filter(ev => (ev.user?.name || '').toLowerCase().includes(text));
+    return events.filter(ev => (ev.user?.name || '').toLowerCase().includes(text));
   } else if (filterType.value === 'unit') {
-    filtered = allEvents.value.filter(ev => (ev.unitNumber || '').toLowerCase().includes(text));
+    return events.filter(ev => (ev.unitNumber || '').toLowerCase().includes(text));
   } else if (filterType.value === 'community') {
-    filtered = allEvents.value.filter(ev => (ev.community?.communityName || '').toLowerCase().includes(text));
+    return events.filter(ev => (ev.community?.communityName || '').toLowerCase().includes(text));
   }
-  calendarEvents.value = filtered.map(eventToCalendarEvent);
+  return [];
+};
+
+/** Filtro del panel de carga: un cleaner (sus servicios + los sugeridos para el) o "sin asignar". */
+const applyCleanerFilter = (events: CalendarInterface[]): CalendarInterface[] => {
+  const selected = selectedCleanerId.value;
+  if (!selected) return events;
+  if (selected === UNASSIGNED_FILTER) return events.filter(ev => isUnassignedService(ev));
+  return events.filter(ev =>
+    String(ev.userId ?? '') === selected
+    || suggestionByServiceId.value.get(String(ev.id))?.cleanerId === selected,
+  );
+};
+
+const applyFilter = () => {
+  calendarEvents.value = applyCleanerFilter(applyTextFilter(allEvents.value)).map(eventToCalendarEvent);
   calendarOptions.value.events = calendarEvents.value;
 };
 
@@ -284,19 +507,23 @@ const reloadCalendarEvents = async (year?: number, month?: number) => {
     const start = range.start > monthStart ? range.start : monthStart;
     const end = range.end < monthEnd ? range.end : monthEnd;
     events = start <= end ? await CalendarServices.getCalendarDataByRange(start, end) : [];
+    loadedRange.value = start <= end ? { start, end } : null;
   } else {
     events = await CalendarServices.getCalendarData(year, month);
+    const viewDate = getCurrentViewDate();
+    const y = year ?? viewDate.getFullYear();
+    const m = month ?? (viewDate.getMonth() + 1);
+    loadedRange.value = {
+      start: `${y}-${String(m).padStart(2, '0')}-01`,
+      end: `${y}-${String(m).padStart(2, '0')}-${String(new Date(y, m, 0).getDate()).padStart(2, '0')}`,
+    };
   }
   if (userStore.userData?.roleId === '7') {
     events = events.filter(ev => ['3', '5', '6'].includes(ev.statusId));
   }
   allEvents.value = events;
-  calendarEvents.value = events.map(eventToCalendarEvent);
-  calendarOptions.value.events = calendarEvents.value;
-  // Reaplicar el filtro de texto si hay uno activo
-  if (filterType.value && filterText.value.trim()) {
-    applyFilter();
-  }
+  // Reaplica el filtro de texto (si hay) y el del panel de carga
+  applyFilter();
 };
 
 const getCurrentViewDate = () => {
@@ -471,28 +698,44 @@ const displayedStatus = (event: CalendarInterface): string => {
   return isReturnedAssignment(event) ? 'Returned' : (event.status?.statusName || 'N/A');
 };
 
-const eventToCalendarEvent = (event: CalendarInterface): EventInput => ({
+const eventToCalendarEvent = (event: CalendarInterface): EventInput => {
+  const suggestion = suggestionByServiceId.value.get(String(event.id)) ?? null;
+  const selected = selectedCleanerId.value;
+  const classNames: string[] = [];
+  if (suggestion) classNames.push('qps-ev--suggested');
+  if (selected && selected !== UNASSIGNED_FILTER && String(event.userId ?? '') === selected) classNames.push('qps-ev--focus');
+  if (selected && suggestion?.cleanerId === selected) classNames.push('qps-ev--proposed');
+  return {
   id: event.id,
   start: toYYYYMMDD(event.date),
   allDay: true,
+  classNames,
   color: isReturnedAssignment(event)
     ? RETURNED_ASSIGNMENT_COLOR
     : (isQaPendingFlag(event) ? QA_FLAG_COLOR : getEventColor(event.status?.statusName)),
   extendedProps: {
+    userId: event.userId ? String(event.userId) : '',
+    suggestedId: suggestion?.cleanerId ?? '',
+    suggestedName: suggestion?.cleanerName ?? '',
+    suggestedReason: suggestion?.reason ?? '',
     userName: event.user?.name || 'N/A',
     communityName: event.community?.communityName || 'N/A',
+    useWax: !!event.community?.useWax,
     status: displayedStatus(event),
     type: event.type?.cleaningType || 'N/A',
     unitNumber: event.unitNumber || 'N/A',
     date: toYYYYMMDD(event.date),
     qaFlagged: !!event.qaFlagged,
   },
-});
+  };
+};
 
 const calendarOptions = ref({
   plugins: [dayGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
   events: calendarEvents.value,
+  // Dias fuera de servicio de las comunidades, sombreados de fondo.
+  eventSources: [blackoutEventSource],
   editable: false,
   selectable: false,
   timeZone: 'local',
@@ -506,6 +749,7 @@ const calendarOptions = ref({
     isInitialLoad.value = false;
   },
   eventClick: (info: any) => {
+    if (isBlackoutEvent(info.event)) return;
     // Solo abre la edicion quien tiene permiso de editar servicios: el Cheo ve
     // el calendario pero no `services-edit`, y el guard lo sacaba a notFound.
     const canEdit = canAccessRoute('services-edit', userStore.userData?.role?.name, userStore.userData?.roleId);
@@ -516,6 +760,7 @@ const calendarOptions = ref({
   },
   eventContent: (arg: any) => {
     const event = arg.event;
+    if (isBlackoutEvent(event)) return blackoutEventContent(event);
     // Formato personalizado como la imagen
     return {
       html: `
@@ -526,13 +771,28 @@ const calendarOptions = ref({
           <b>Date:</b> ${formatDate(event.extendedProps.date)}<br/>
           <b>Type:</b> ${event.extendedProps.type}<br/>
           <b>Status:</b> ${event.extendedProps.status}
+          ${event.extendedProps.suggestedName ? `
+            <div class="qps-suggest-chip" title="${escapeHtml(event.extendedProps.suggestedReason)}">
+              <i class="pi pi-sparkles"></i><span>${escapeHtml(event.extendedProps.suggestedName)}</span>
+            </div>
+          ` : ''}
         </div>
       `,
     };
   },
   eventDidMount: (info: any) => {
     const event = info.event;
+    if (isBlackoutEvent(event)) {
+      info.el.title = [event.title, ...(event.extendedProps.communities ?? [])].join('\n');
+      return;
+    }
     const serviceInfo = allEvents.value.find(ev => ev.id === event.id);
+    info.el.dataset.userId = event.extendedProps.userId || '';
+    info.el.dataset.suggestedId = event.extendedProps.suggestedId || '';
+    if (hoveredCleanerId.value) {
+      const id = hoveredCleanerId.value;
+      info.el.classList.toggle('qps-ev--hover', info.el.dataset.userId === id || info.el.dataset.suggestedId === id);
+    }
     
     // El detalle del servicio en calendario queda solo para admin.
     // QA lo maneja exclusivamente desde KDS QA.
@@ -543,10 +803,17 @@ const calendarOptions = ref({
       <div style="font-family: inherit; font-size: 13px;">
         <b>${event.extendedProps.userName}</b><br/>
         <b>Community:</b> ${event.extendedProps.communityName}<br/>
+        <b>Wax:</b> ${event.extendedProps.useWax ? '<span style="color:#b45309;font-weight:700">YES</span>' : 'NO'}<br/>
         <b>Unit number:</b> ${event.extendedProps.unitNumber}<br/>
         <b>Date:</b> ${formatDate(event.extendedProps.date)}<br/>
         <b>Type:</b> ${event.extendedProps.type}<br/>
         <b>Status:</b> ${event.extendedProps.status}
+        ${event.extendedProps.suggestedName ? `
+          <div style="margin-top: 6px; padding: 6px 8px; border-radius: 6px; background: #f5f3ff; color: #5b21b6; font-size: 12px;">
+            <b>Sugerido:</b> ${escapeHtml(event.extendedProps.suggestedName)}<br/>
+            <span style="color: #6b7280;">${escapeHtml(event.extendedProps.suggestedReason)}</span>
+          </div>
+        ` : ''}
         ${canShowButton && serviceInfo ? `
           <br/><br/>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -703,12 +970,29 @@ function formatDate(date: string | Date): string {
   return `${month}/${day}/${year}`;
 }
 
+let calendarResizeObserver: ResizeObserver | null = null;
+
 onMounted(async () => {
   // datesSet se encargará de cargar los datos iniciales
   // No necesitamos cargar aquí para evitar doble carga
+  if (calendarColumn.value) {
+    // El panel lateral cambia el ancho de la columna: FullCalendar tiene que enterarse.
+    calendarResizeObserver = new ResizeObserver(() => fullCalendar.value?.getApi()?.updateSize());
+    calendarResizeObserver.observe(calendarColumn.value);
+  }
+  if (showWorkloadPanel.value) {
+    await loadCleaners();
+  }
+});
+
+onBeforeUnmount(() => {
+  calendarResizeObserver?.disconnect();
 });
 
 const fullCalendar = ref<typeof FullCalendar | null>(null);
+
+// Filtro del panel / sugerencias: re-pinta el calendario
+watch([selectedCleanerId, suggestionByServiceId], () => applyFilter());
 
 // Watcher para limpiar el filtro automáticamente si el input queda vacío
 watch(filterText, (newVal) => {
@@ -744,6 +1028,141 @@ defineExpose({
 .fc {
   width: 100%;
   margin: 0 auto;
+}
+
+/* --- Panel de carga + sugerencias ---------------------------------------- */
+.calendar-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.calendar-layout__main {
+  flex: 1;
+  min-width: 0;
+}
+@media (min-width: 1024px) {
+  .calendar-layout.has-panel {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .calendar-layout__panel {
+    order: 2;
+    flex: 0 0 300px;
+    width: 300px;
+  }
+}
+@media (min-width: 1536px) {
+  .calendar-layout__panel {
+    flex-basis: 330px;
+    width: 330px;
+  }
+}
+
+.calendar-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  background: #fff;
+  font-size: 0.85rem;
+  color: var(--ink-700);
+}
+.calendar-banner__icon {
+  font-size: 0.85rem;
+}
+.calendar-banner__text {
+  flex: 1;
+  min-width: 12rem;
+}
+.calendar-banner__text b {
+  color: var(--ink-900);
+}
+.calendar-banner__score {
+  white-space: nowrap;
+  color: var(--ink-500);
+}
+.calendar-banner__score .pi {
+  font-size: 0.65rem;
+  margin: 0 0.15rem;
+}
+.calendar-banner__actions {
+  display: flex;
+  gap: 0.35rem;
+}
+.calendar-banner--suggest {
+  background: linear-gradient(90deg, #f5f3ff, #eef3ff);
+  border-color: #ddd6fe;
+}
+.calendar-banner--suggest .calendar-banner__icon {
+  color: #7c3aed;
+}
+.calendar-banner--focus {
+  background: var(--accent-100);
+  border-color: var(--accent-200);
+}
+.calendar-banner--focus .calendar-banner__icon {
+  color: var(--accent-600);
+}
+
+/* Servicio sin cleaner con sugerencia */
+.fc .fc-event.qps-ev--suggested {
+  outline: 2px dashed #8b5cf6;
+  outline-offset: -2px;
+}
+.fc .qps-suggest-chip {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  margin-top: 4px;
+  padding: 1px 8px 1px 6px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #5b21b6;
+  border: 1px solid #c4b5fd;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fc .qps-suggest-chip .pi {
+  font-size: 10px;
+}
+/* Sugerido al cleaner filtrado: se ve "propuesto", no asignado */
+.fc .fc-event.qps-ev--proposed {
+  background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0 6px, transparent 6px 12px);
+}
+/* Cleaner filtrado */
+.fc .fc-event.qps-ev--focus {
+  box-shadow: inset 4px 0 0 var(--accent-600);
+}
+/* Hover en el panel: atenua el resto */
+.calendar-layout__main.is-hovering .fc-event {
+  transition: opacity 0.15s ease;
+}
+.calendar-layout__main.is-hovering .fc-event:not(.qps-ev--hover) {
+  opacity: 0.25;
+}
+.calendar-layout__main .fc-event.qps-ev--hover {
+  box-shadow: 0 0 0 2px var(--accent-500);
+  position: relative;
+  z-index: 2;
+}
+
+.suggest-trigger.p-button {
+  background: linear-gradient(135deg, #6d28d9, var(--accent-600));
+  border-color: transparent;
+}
+.suggest-trigger.p-button:not(:disabled):hover {
+  background: linear-gradient(135deg, #5b21b6, var(--accent-700));
+  border-color: transparent;
 }
 
 .fc .fc-day-out-of-range {

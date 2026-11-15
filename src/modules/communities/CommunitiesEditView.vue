@@ -12,13 +12,18 @@ import type { User } from '../../interfaces/users/users.interface';
 import type { Service } from '../../interfaces/services/services.interface';
 import { showToast } from '../../utils/show-toast';
 import MyMapPicker from '../shared/components/MyMapPicker.vue';
+import CommunityContactsFields from './components/CommunityContactsFields.vue';
+import { emptyCommunityContacts, pickCommunityContacts } from '../../interfaces/communities/communities.interface';
+import CommunityBlackoutsPanel from './components/CommunityBlackoutsPanel.vue';
 
 interface EntityData {
   communityName: string;
   companyId: string;
   userId: string[];
   showInReports: boolean;
+  useWax: boolean;
   isActive: boolean;
+  lockScheduleForStaff: boolean;
   vendorUserId: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -30,7 +35,9 @@ interface UpdateCommunityData {
   managerUserId: string | null;
   supervisorUserId: string | null;
   showInReports: boolean;
+  useWax: boolean;
   isActive: boolean;
+  lockScheduleForStaff: boolean;
   vendorUserId: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -48,12 +55,16 @@ const hasSearchedRange = ref(false);
 const isLoadingRange = ref(false);
 const isDeletingRange = ref(false);
 const showDeleteDialog = ref(false);
+// Contactos del complex (supervisor de mantenimiento, tecnico, manager).
+const contacts = ref(emptyCommunityContacts());
 const entityData = ref<EntityData>({
   communityName: '',
   companyId: '',
   userId: [],
   showInReports: true,
+  useWax: false,
   isActive: true,
+  lockScheduleForStaff: false,
   vendorUserId: null,
   latitude: null,
   longitude: null
@@ -145,7 +156,9 @@ const loadData = async (id: string) => {
     companyId: communityResult.company.id,
     userId: selectedUserIds,
     showInReports: communityResult.showInReports ?? true,
+    useWax: communityResult.useWax ?? false,
     isActive: communityResult.isActive ?? true,
+    lockScheduleForStaff: communityResult.lockScheduleForStaff ?? false,
     vendorUserId: communityResult.vendorUser?.id ?? communityResult.vendorUserId ?? null,
     // El API las manda como string (columna decimal); el mapa trabaja con number.
     latitude: communityResult.latitude !== null && communityResult.latitude !== undefined
@@ -155,6 +168,8 @@ const loadData = async (id: string) => {
       ? Number(communityResult.longitude)
       : null
   };
+
+  contacts.value = pickCommunityContacts(communityResult);
 
   return {
     ...communityResult,
@@ -329,13 +344,16 @@ const updateEntity = async (id: string, data: any) => {
     communityName: data.communityName,
     companyId: data.companyId,
     showInReports: entityData.value.showInReports,
+    useWax: entityData.value.useWax,
     isActive: entityData.value.isActive,
+    lockScheduleForStaff: entityData.value.lockScheduleForStaff,
     vendorUserId: entityData.value.vendorUserId || null,
     id: id,
     managerUserId: manager?.id || null,
     supervisorUserId: supervisor?.id || null,
     latitude: entityData.value.latitude ?? null,
-    longitude: entityData.value.longitude ?? null
+    longitude: entityData.value.longitude ?? null,
+    ...pickCommunityContacts(contacts.value)
   };
   try {
     await CommunitiesServices.updateCommunity(id, updateData);
@@ -396,6 +414,7 @@ const updateEntity = async (id: string, data: any) => {
         v-model:latitude="entityData.latitude"
         v-model:longitude="entityData.longitude"
       />
+      <CommunityContactsFields v-model="contacts" />
 
       <fieldset>
         <label for="vendorUserId">Vendedor asociado
@@ -424,6 +443,16 @@ const updateEntity = async (id: string, data: any) => {
       </fieldset>
 
       <fieldset>
+        <label for="lockScheduleForStaff">Bloquear hora para managers y supervisores
+          <small class="text-gray-400">(sus servicios quedan siempre a las 00:00)</small>
+        </label>
+        <div class="report-visibility-control">
+          <InputSwitch inputId="lockScheduleForStaff" v-model="entityData.lockScheduleForStaff" />
+          <span class="report-visibility-value">{{ entityData.lockScheduleForStaff ? 'Sí' : 'No' }}</span>
+        </div>
+      </fieldset>
+
+      <fieldset>
         <label for="showInReports">Debe visualizar reportes</label>
         <div class="report-visibility-control">
           <InputSwitch
@@ -433,6 +462,17 @@ const updateEntity = async (id: string, data: any) => {
           <span class="report-visibility-value">{{ entityData.showInReports ? 'Sí' : 'No' }}</span>
         </div>
       </fieldset>
+      <fieldset>
+        <label for="useWax">Utiliza cera (wax)
+          <small class="text-gray-400">(se muestra al cleaner en la app)</small>
+        </label>
+        <div class="report-visibility-control">
+          <InputSwitch inputId="useWax" v-model="entityData.useWax" />
+          <span class="report-visibility-value">{{ entityData.useWax ? 'Sí' : 'No' }}</span>
+        </div>
+      </fieldset>
+      <CommunityBlackoutsPanel :community-id="currentCommunityId" />
+
       <fieldset class="community-services-panel">
         <div class="range-header">
           <div>

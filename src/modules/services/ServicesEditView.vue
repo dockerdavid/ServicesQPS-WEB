@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdminLikeRole } from '../../router/role-routes';
 import { useRoute, useRouter } from 'vue-router';
 import { CommunitiesServices } from '../communities/communities.services';
 import { TypesServices } from '../types/types.services';
@@ -168,6 +169,24 @@ watch(
   }
 );
 
+// Comunidades con lockScheduleForStaff: managers (3) y supervisores (6) no
+// eligen hora, el servicio queda a las 00:00 (el API lo fuerza igual).
+const isScheduleLocked = computed(() => {
+  const roleId = userStore.userData?.roleId;
+  if (roleId !== '3' && roleId !== '6') {
+    return false;
+  }
+  const community = communities.value.data.find((c) => c.id === updatedService.value.communityId);
+  return Boolean(community?.lockScheduleForStaff);
+});
+
+watch(isScheduleLocked, (locked) => {
+  if (locked) {
+    scheduleDate.value = moment('00:00:00', 'HH:mm:ss').toDate();
+    updatedService.value.schedule = '00:00:00';
+  }
+});
+
 const updateService = async () => {
 
   isFormSubmitted.value = true;
@@ -209,8 +228,8 @@ const updateService = async () => {
 
     await CleanersServices.updateService(entityId, payload);
     showToast(toast, { severity: 'success', detail: 'Service was updated' });
-  } catch (error) {
-    showToast(toast, { severity: 'error', summary: "Service wasn't updated" });
+  } catch (error: any) {
+    showToast(toast, { severity: 'error', summary: "Service wasn't updated", detail: error?.message, life: 6000 });
   } finally {
     isFormSubmitted.value = false;
   }
@@ -418,7 +437,8 @@ watch(
     <!-- Campo: Horario -->
     <fieldset>
       <label for="schedule">Schedule</label>
-      <DatePicker v-model="scheduleDate" :time-only="true" hour-format="24" id="schedule" />
+      <DatePicker v-model="scheduleDate" :time-only="true" hour-format="24" id="schedule" :disabled="isScheduleLocked" />
+      <small v-if="isScheduleLocked" class="text-gray-400">Esta comunidad no permite seleccionar hora</small>
     </fieldset>
 
     <!-- Campo: Tamaño de la unidad -->
@@ -450,7 +470,7 @@ watch(
     </fieldset>
 
     <!-- Campo: Limpiador / QA -->
-    <MyInputGroup v-if="userStore.userData?.roleId === '1'" v-model="updatedService.userId" label="Cleaner / QA"
+    <MyInputGroup v-if="isAdminLikeRole(userStore.userData?.roleId)" v-model="updatedService.userId" label="Cleaner / QA"
       inputType="select" inputId="cleaner" :required="false" :loading="isLoadingOptions" :options="cleanerOptions"
       :is-form-submitted="isFormSubmitted" />
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdminLikeRole } from '../../../router/role-routes';
 import { computed, ref, watch } from "vue";
 import { useToast } from 'primevue/usetoast';
 import moment from 'moment-timezone';
@@ -93,7 +94,7 @@ const activeChatService = ref<Service | ExternalService | null>(null);
 const canAccessChat = computed(() => {
     const roleId = store.userData?.roleId ?? '';
     const roleName = store.userData?.role?.name?.toLowerCase() ?? '';
-    return roleId === '1'
+    return isAdminLikeRole(roleId, roleName)
         || roleId === '4'
         || roleId === '7'
         || roleName === 'super_admin'
@@ -104,7 +105,7 @@ const canAccessChat = computed(() => {
 const canAccessChatHub = computed(() => {
     const roleId = store.userData?.roleId ?? '';
     const roleName = store.userData?.role?.name?.toLowerCase() ?? '';
-    return roleId === '1' || roleId === '7' || roleName === 'super_admin' || roleName === 'qa';
+    return isAdminLikeRole(roleId, roleName) || roleId === '7' || roleName === 'qa';
 });
 
 const canManageService = (service: ExternalService) => {
@@ -315,7 +316,7 @@ watch(
                         <div class="flex justify-around">
                             <Button variant="text" icon="pi pi-pencil" severity="warn" label="Edit"
                                 @click="redirectToEdit(data.id)" />
-                            <Button v-if="!props.lockEdit && store.userData?.roleId === '1'"  variant="text" icon="pi pi-trash" severity="danger" label="Delete"
+                            <Button v-if="!props.lockEdit && isAdminLikeRole(store.userData?.roleId, store.userData?.role?.name)"  variant="text" icon="pi pi-trash" severity="danger" label="Delete"
                                 @click="showDeleteToast(data)" />
                         </div>
                     </template>
@@ -368,7 +369,10 @@ watch(
             @close="closeToastByAction('reject')" />
         <Dialog v-model:visible="isChatDialogOpen" modal header="Service chat" :style="{ width: 'min(720px, 94vw)' }"
             @hide="closeChat">
-            <ServiceChatPanel v-if="activeChatService" :service="activeChatService" />
+            <!-- Altura fija: el contenedor de mensajes hace scroll interno (chat DESC). -->
+            <div v-if="activeChatService" style="height: min(640px, 70dvh); min-height: 360px; display: flex; flex-direction: column;">
+                <ServiceChatPanel :service="activeChatService" />
+            </div>
         </Dialog>
 
     </div>

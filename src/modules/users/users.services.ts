@@ -71,11 +71,13 @@ export class UsersServices {
         }
     }
 
-    static async searchUser(searchWord: string, page: number = 1, take: number = 10): Promise<User[]> {
+    static async searchUser(searchWord: string, page: number = 1, take: number = 10, roleId?: string): Promise<User[]> {
         const store = useGlobalStateStore();
         store.setIsLoading(true)
         try {
-            const { data } = await apiServicesQps.post(`/users/search?page=${page}&take=${take}`, { searchWord });
+            const params = new URLSearchParams({ page: String(page), take: String(take) });
+            if (roleId) params.set('roleId', roleId);
+            const { data } = await apiServicesQps.post(`/users/search?${params}`, { searchWord });
             return data
         } catch (error) {
             return []
