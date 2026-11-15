@@ -12,6 +12,7 @@ import type {
 } from '../../../interfaces/chat/service-chat.interface';
 import { ServiceStatusId, isChatOpenStatus } from '../../../constants/service-status';
 import { showToast } from '../../../utils/show-toast';
+import { prependChatMessage, sortChatMessagesDesc } from '../../../utils/chat-messages';
 
 interface ServiceChatContext {
   id: string;
@@ -88,21 +89,23 @@ const socketUrl = computed(() => {
   return baseUrl?.replace(/\/$/, '');
 });
 
-const scrollToBottom = async () => {
+// El chat es DESC (mas reciente arriba): ante un mensaje nuevo se vuelve al
+// inicio de la lista para que quede visible.
+const scrollToNewest = async () => {
   await nextTick();
   if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+    messagesContainer.value.scrollTop = 0;
   }
 };
 
-const appendMessage = (message: ServiceChatMessage) => {
-  if (messages.value.some((existing) => existing.id === message.id)) {
+const addMessage = (message: ServiceChatMessage) => {
+  if (messages.value.some((existing) => String(existing.id) === String(message.id))) {
     return;
   }
 
-  messages.value = [...messages.value, message];
+  messages.value = prependChatMessage(messages.value, message);
   emit('message', message);
-  scrollToBottom();
+  scrollToNewest();
 };
 
 const connectSocket = () => {
@@ -122,7 +125,7 @@ const connectSocket = () => {
       return;
     }
 
-    appendMessage(message);
+    addMessage(message);
   });
 
   socket.value.on('serviceChat:error', (payload: { message?: string }) => {
@@ -154,10 +157,10 @@ const fetchHistory = async (serviceId: string) => {
   isLoading.value = true;
   try {
     const history: ServiceChatHistory = await ServiceChatServices.getHistory(serviceId);
-    messages.value = history.messages ?? [];
+    messages.value = sortChatMessagesDesc(history.messages ?? []);
     canSend.value = history.canSend;
     statusId.value = history.statusId;
-    await scrollToBottom();
+    await scrollToNewest();
   } catch (error) {
     showToast(toast, { severity: 'error', summary: 'Unable to load chat history.' });
   } finally {
@@ -229,7 +232,7 @@ const handleFileSelected = async (event: Event) => {
       messageText || undefined,
     );
     newMessage.value = '';
-    appendMessage(createdMessage);
+    addMessage(createdMessage);
   } catch (error) {
     showToast(toast, { severity: 'error', summary: 'Unable to upload evidence.' });
   } finally {
@@ -330,6 +333,7 @@ onBeforeUnmount(() => {
         <p class="service-chat__title">{{ serviceTitle }}</p>
         <p v-if="chatStatusMessage" class="service-chat__status">{{ chatStatusMessage }}</p>
       </div>
+      <span v-if="messages.length > 1" class="service-chat__order-hint">Newest first</span>
     </header>
 
     <div ref="messagesContainer" class="service-chat__messages">
@@ -403,6 +407,13 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 1rem;
   height: 100%;
+  min-height: 0;
+}
+
+.service-chat__order-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  white-space: nowrap;
 }
 
 .service-chat__header {
@@ -429,7 +440,9 @@ onBeforeUnmount(() => {
   border-radius: 12px;
   padding: 1rem;
   overflow-y: auto;
-  min-height: 240px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
 }
 
 .service-chat__loading,

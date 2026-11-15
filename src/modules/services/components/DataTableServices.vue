@@ -368,7 +368,10 @@ watch(
             @close="closeToastByAction('reject')" />
         <Dialog v-model:visible="isChatDialogOpen" modal header="Service chat" :style="{ width: 'min(720px, 94vw)' }"
             @hide="closeChat">
-            <ServiceChatPanel v-if="activeChatService" :service="activeChatService" />
+            <!-- Altura fija: el contenedor de mensajes hace scroll interno (chat DESC). -->
+            <div v-if="activeChatService" style="height: min(640px, 70dvh); min-height: 360px; display: flex; flex-direction: column;">
+                <ServiceChatPanel :service="activeChatService" />
+            </div>
         </Dialog>
 
     </div>
