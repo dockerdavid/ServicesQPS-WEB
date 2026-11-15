@@ -43,6 +43,17 @@ export class CalendarServices {
     }
 
 
+    /**
+     * Asigna un servicio a un cleaner desde las sugerencias del calendario.
+     * Es el mismo PATCH /services/:id que usa la edicion del servicio: con
+     * statusId '2' (Pending) la API marca assignedAt/assignedByUserId y
+     * manda la notificacion de "asignado". No toca el loading global para que
+     * el lote muestre su propio progreso.
+     */
+    static async assignServiceToCleaner(serviceId: string, userId: string): Promise<void> {
+        await apiServicesQps.patch(`/services/${serviceId}`, { userId, statusId: '2' });
+    }
+
     static async getReviewItemsWithClasses(): Promise<any> {
         this.store.setIsLoading(true)
         try {
