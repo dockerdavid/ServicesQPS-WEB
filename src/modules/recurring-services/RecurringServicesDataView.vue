@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import GenericDataView from "../shared/views/GenericDataView.vue";
 import { RecurringServicesServices } from "./recurring-services.services";
+import { IconField, InputIcon, InputText } from "primevue";
+import ActiveStatusSelect from "../shared/components/ActiveStatusSelect.vue";
+import { useStatusFilter } from "../shared/composables/useStatusFilter";
+
+const { selectedStatus, statusParam } = useStatusFilter();
 
 const fetchRecurringServices = async (page: number, rows: number) => {
-  return await RecurringServicesServices.getRecurringServices(page, rows);
+  return await RecurringServicesServices.getRecurringServices(page, rows, statusParam());
 };
 
 const deleteRecurringService = async (id: string) => {
@@ -11,7 +16,7 @@ const deleteRecurringService = async (id: string) => {
 };
 
 const searchRecurringService = async (searchWord: any, page: number, rows: number) => {
-  return await RecurringServicesServices.searchRecurringService(searchWord, page, rows);
+  return await RecurringServicesServices.searchRecurringService(searchWord, page, rows, statusParam());
 };
 
 const formatActive = (value: boolean | number) => (value ? 'Yes' : 'No');
@@ -61,5 +66,22 @@ const formatDays = (value: string[] | string | null | undefined) => {
     :fetch-data="fetchRecurringServices"
     :delete-data="deleteRecurringService"
     :search-data="searchRecurringService"
-  />
+    :reload-key="selectedStatus"
+  >
+    <template #header-search="{ searchWord, clearSearch, setSearchWord }">
+      <div class="flex flex-wrap items-center justify-end gap-3 w-full">
+        <ActiveStatusSelect v-model="selectedStatus" />
+        <IconField>
+          <InputIcon class="pi pi-search" />
+          <InputText
+            :model-value="searchWord"
+            @update:model-value="(v?: string) => setSearchWord(v ?? '')"
+            placeholder="Search"
+          />
+          <InputIcon v-if="searchWord" class="pi pi-times cursor-pointer text-gray-500 hover:text-black"
+            @click="clearSearch" />
+        </IconField>
+      </div>
+    </template>
+  </GenericDataView>
 </template>

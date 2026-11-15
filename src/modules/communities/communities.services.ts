@@ -9,10 +9,11 @@ export class CommunitiesServices {
     /** Por defecto el API devuelve solo comunidades ACTIVAS. `includeInactive`
      *  se usa en el listado de administracion y en las pantallas de edicion,
      *  donde hay que poder ver (y conservar) una comunidad ya desactivada. */
-    static async getCommunities(page: number = 1, take: number = 10, includeInactive = false): Promise<Communities> {
+    static async getCommunities(page: number = 1, take: number = 10, includeInactive = false, status?: 'active' | 'inactive'): Promise<Communities> {
         try {
             const params = new URLSearchParams({ page: String(page), take: String(take) });
             if (includeInactive) params.set('includeInactive', 'true');
+            if (status) params.set('status', status);
             const { data } = await apiServicesQps.get<Communities>(`/communities?${params}`)
             return data
         } catch (error: any) {
@@ -50,9 +51,9 @@ export class CommunitiesServices {
         }
     }
 
-    static async searchCommunity(searchWord: string, page: number = 1, take: number = 10): Promise<Community[]> {
+    static async searchCommunity(searchWord: string, page: number = 1, take: number = 10, status?: 'active' | 'inactive'): Promise<Community[]> {
         try {
-            const { data } = await apiServicesQps.post(`/communities/search?page=${page}&take=${take}`, { searchWord });
+            const { data } = await apiServicesQps.post(`/communities/search?page=${page}&take=${take}${status ? `&status=${status}` : '&includeInactive=true'}`, { searchWord });
             return data
         } catch (error) {
             return []

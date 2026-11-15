@@ -6,10 +6,10 @@ import { RecurringCostAdapter, type NewRecurringCost, type RecurringCosts, type 
 export class RecurringCostsServices {
   static store = useGlobalStateStore();
 
-  static async getRecurringCosts(page: number = 1, take: number = 10): Promise<RecurringCosts> {
+  static async getRecurringCosts(page: number = 1, take: number = 10, status?: 'active' | 'inactive'): Promise<RecurringCosts> {
     this.store.setIsLoading(true);
     try {
-      const { data } = await apiServicesQps.get(`/recurring-costs?order=DESC&page=${page}&take=${take}`);
+      const { data } = await apiServicesQps.get(`/recurring-costs?order=DESC&page=${page}&take=${take}${status ? `&status=${status}` : ''}`);
       return {
         data: data.data.map(RecurringCostAdapter.fromExternalToInternal),
         meta: data.meta,
@@ -42,10 +42,10 @@ export class RecurringCostsServices {
     }
   }
 
-  static async searchRecurringCost(searchWord: string, page: number = 1, take: number = 10): Promise<RecurringCosts> {
+  static async searchRecurringCost(searchWord: string, page: number = 1, take: number = 10, status?: 'active' | 'inactive'): Promise<RecurringCosts> {
     this.store.setIsLoading(true);
     try {
-      const { data } = await apiServicesQps.post(`/recurring-costs/search?page=${page}&take=${take}`, { searchWord });
+      const { data } = await apiServicesQps.post(`/recurring-costs/search?page=${page}&take=${take}${status ? `&status=${status}` : ''}`, { searchWord });
       return {
         data: data.data.map(RecurringCostAdapter.fromExternalToInternal),
         meta: data.meta,

@@ -7,10 +7,10 @@ import type {
 import genericNullObject from "../../utils/null-data-meta";
 
 export class RecurringServicesServices {
-  static async getRecurringServices(page: number = 1, take: number = 10): Promise<RecurringServices> {
+  static async getRecurringServices(page: number = 1, take: number = 10, status?: 'active' | 'inactive'): Promise<RecurringServices> {
     try {
       const { data } = await apiServicesQps.get<RecurringServices>(
-        `/recurring-services?order=DESC&page=${page}&take=${take}`,
+        `/recurring-services?order=DESC&page=${page}&take=${take}${status ? `&status=${status}` : ''}`,
       );
       return data;
     } catch (error) {
@@ -37,10 +37,10 @@ export class RecurringServicesServices {
     }
   }
 
-  static async searchRecurringService(searchWord: string, page: number = 1, take: number = 10): Promise<RecurringServices> {
+  static async searchRecurringService(searchWord: string, page: number = 1, take: number = 10, status?: 'active' | 'inactive'): Promise<RecurringServices> {
     try {
       const { data } = await apiServicesQps.post<RecurringServices>(
-        `/recurring-services/search?page=${page}&take=${take}`,
+        `/recurring-services/search?page=${page}&take=${take}${status ? `&status=${status}` : ''}`,
         { searchWord },
       );
       return data;

@@ -4,11 +4,15 @@ import moment from 'moment-timezone';
 import { Calendar, FloatLabel, IconField, InputGroup, InputGroupAddon, InputIcon, InputText } from "primevue";
 import GenericDataView from "../shared/views/GenericDataView.vue";
 import { CommunitiesServices } from "./communities.services";
+import ActiveStatusSelect from "../shared/components/ActiveStatusSelect.vue";
+import { useStatusFilter } from "../shared/composables/useStatusFilter";
+
+const { selectedStatus, statusParam } = useStatusFilter();
 
 const fetchCommunities = async (page: number, rows: number) => {
     // true = incluir las desactivadas: en administracion hay que verlas para
     // poder reactivarlas.
-    return await CommunitiesServices.getCommunities(page, rows, true);
+    return await CommunitiesServices.getCommunities(page, rows, true, statusParam());
 };
 
 const deleteCommunity = async (id: string) => {
@@ -17,7 +21,7 @@ const deleteCommunity = async (id: string) => {
 
 
 const searchCommunity = async (searchWord: any, page: number, rows: number) => {
-    return await CommunitiesServices.searchCommunity(searchWord, page, rows)
+    return await CommunitiesServices.searchCommunity(searchWord, page, rows, statusParam())
 };
 
 const startDate = ref(moment().startOf('year').toDate());
@@ -101,9 +105,12 @@ const headers = [
         :show-export-button="true"
         :export-start-date="formattedStartDate"
         :export-end-date="formattedEndDate"
+        :reload-key="selectedStatus"
     >
         <template #header-search="{ searchWord, onSearch, clearSearch, setSearchWord }">
             <div class="flex flex-wrap items-center justify-between gap-3 w-full">
+                <div class="flex flex-wrap items-center gap-3">
+                <ActiveStatusSelect v-model="selectedStatus" />
                 <IconField>
                     <InputIcon class="pi pi-search" />
                     <InputText
@@ -114,7 +121,7 @@ const headers = [
                     <InputIcon v-if="searchWord" class="pi pi-times cursor-pointer text-gray-500 hover:text-black"
                         @click="clearSearch" />
                 </IconField>
-
+                </div>
                 <div class="flex flex-wrap items-center gap-3">
                     <div class="min-w-[12rem]">
                         <InputGroup>
