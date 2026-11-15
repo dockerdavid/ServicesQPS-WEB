@@ -42,6 +42,11 @@ const router = createRouter({
       component: SupportView,
     },
     {
+      path: '/approve/:token',
+      name: 'approve-link',
+      component: () => import('../modules/approvals/ApprovalLinkView.vue'),
+    },
+    {
       path: '/',
       component: DefaultLayout,
       redirect: inicioSegunRol,
