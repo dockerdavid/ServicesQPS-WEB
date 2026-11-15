@@ -13,6 +13,12 @@ const authGuard = (
   const userStore = useUserStore();
   const isAuthenticated = authStore.token;
 
+  // Enlace de aprobación del SMS: público, con o sin sesión y para cualquier rol.
+  if (to.path.startsWith('/approve/')) {
+    next();
+    return;
+  }
+
   const publicPaths = ['/auth', '/support'];
 
   if (!isAuthenticated) {

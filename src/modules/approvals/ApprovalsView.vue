@@ -77,6 +77,17 @@
           <span v-if="!data.comment && !data.error">—</span>
         </template>
       </Column>
+      <Column v-if="!isAdmin" header="" style="width: 11rem">
+        <template #body="{ data }">
+          <div v-if="data.status === 'pending'" class="flex flex-col items-start gap-1">
+            <Button label="Reenviar SMS" icon="pi pi-send" size="small" severity="secondary" outlined
+              :loading="reminding === data.id" @click="remind(data)" />
+            <small v-if="data.remindCount" class="text-gray-500">
+              Reenviada {{ data.remindCount }} {{ data.remindCount === 1 ? 'vez' : 'veces' }}
+            </small>
+          </div>
+        </template>
+      </Column>
       <Column v-if="isAdmin" header="" style="width: 13rem">
         <template #body="{ data }">
           <div v-if="data.status === 'pending'" class="flex gap-2">
@@ -225,6 +236,23 @@ const confirmDecision = async () => {
   } finally {
     deciding.value = false;
     load();
+  }
+};
+
+const reminding = ref<string | null>(null);
+
+/** Admin Papel: insiste reenviando el SMS con enlace a los admins (máx. cada 10 min). */
+const remind = async (row: Approval) => {
+  reminding.value = row.id;
+  try {
+    const res = await ApprovalsServices.remind(row.id);
+    toast.add({ severity: 'success', summary: `SMS de ${res.code} reenviado a ${res.sentTo} administrador(es).`, life: 4000 });
+    load();
+  } catch (error: any) {
+    const message = error?.response?.data?.message ?? 'No se pudo reenviar el SMS.';
+    toast.add({ severity: 'warn', summary: Array.isArray(message) ? message.join(', ') : message, life: 5000 });
+  } finally {
+    reminding.value = null;
   }
 };
 

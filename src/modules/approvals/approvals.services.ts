@@ -16,6 +16,8 @@ export interface Approval {
   userId: string;
   summary: string;
   status: ApprovalStatus;
+  lastRemindedAt?: string | null;
+  remindCount?: number;
   decidedByUserId: string | null;
   decisionChannel: 'sms' | 'web' | null;
   comment: string | null;
@@ -44,6 +46,12 @@ export class ApprovalsServices {
 
   static async approve(id: string, comment?: string): Promise<Approval> {
     const { data } = await apiServicesQps.post<Approval>(`/approvals/${id}/approve`, comment ? { comment } : {});
+    return data;
+  }
+
+  /** Admin Papel: reenviar el SMS (con enlace) a los admins. */
+  static async remind(id: string): Promise<{ ok: boolean; code: string; sentTo: number; remindCount: number }> {
+    const { data } = await apiServicesQps.post(`/approvals/${id}/remind`, {});
     return data;
   }
 
