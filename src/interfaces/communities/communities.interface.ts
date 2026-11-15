@@ -19,6 +19,8 @@ export interface Community {
     /** TypeORM devuelve las columnas decimal como string. */
     latitude: string | null;
     longitude: string | null;
+    /** Managers y supervisores no pueden elegir hora en los servicios (quedan a las 00:00). */
+    lockScheduleForStaff?: boolean;
     createdAt: Date;
     updatedAt: Date;
     managerUser: User | null;
@@ -33,6 +35,7 @@ export interface NewCommunity {
     vendorUserId?: string | null;
     latitude?: number | null;
     longitude?: number | null;
+    lockScheduleForStaff?: boolean;
     managerUserId: string | null;
     supervisorUserId: string | null;
     companyId: string;

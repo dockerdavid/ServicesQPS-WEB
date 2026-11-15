@@ -168,6 +168,24 @@ watch(
   }
 );
 
+// Comunidades con lockScheduleForStaff: managers (3) y supervisores (6) no
+// eligen hora, el servicio queda a las 00:00 (el API lo fuerza igual).
+const isScheduleLocked = computed(() => {
+  const roleId = userStore.userData?.roleId;
+  if (roleId !== '3' && roleId !== '6') {
+    return false;
+  }
+  const community = communities.value.data.find((c) => c.id === updatedService.value.communityId);
+  return Boolean(community?.lockScheduleForStaff);
+});
+
+watch(isScheduleLocked, (locked) => {
+  if (locked) {
+    scheduleDate.value = moment('00:00:00', 'HH:mm:ss').toDate();
+    updatedService.value.schedule = '00:00:00';
+  }
+});
+
 const updateService = async () => {
 
   isFormSubmitted.value = true;
@@ -418,7 +436,8 @@ watch(
     <!-- Campo: Horario -->
     <fieldset>
       <label for="schedule">Schedule</label>
-      <DatePicker v-model="scheduleDate" :time-only="true" hour-format="24" id="schedule" />
+      <DatePicker v-model="scheduleDate" :time-only="true" hour-format="24" id="schedule" :disabled="isScheduleLocked" />
+      <small v-if="isScheduleLocked" class="text-gray-400">Esta comunidad no permite seleccionar hora</small>
     </fieldset>
 
     <!-- Campo: Tamaño de la unidad -->
