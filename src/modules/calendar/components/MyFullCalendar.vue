@@ -178,7 +178,7 @@ import 'tippy.js/dist/tippy.css';
 import MyInputGroup from '../../shared/components/MyInputGroup.vue';
 import LoadingButton from '../../shared/components/LoadingButton.vue';
 import { useUserStore } from '../../../store/user.store';
-import { canAccessRoute } from '../../../router/role-routes';
+import { canAccessRoute, isAdminLikeRole } from '../../../router/role-routes';
 import { Dialog, Button, InputSwitch, Textarea, DatePicker, useToast } from 'primevue';
 import { showToast } from '../../../../src/utils/show-toast';
 import { CleanersServices } from '../../services/services.services';
@@ -218,7 +218,7 @@ const isSavingReview = ref(false);
 const isCalendarAdmin = () => {
   const roleId = userStore.userData?.roleId ?? '';
   const roleName = userStore.userData?.role?.name?.toLowerCase() ?? '';
-  return roleId === '1' || roleName === 'super_admin';
+  return isAdminLikeRole(roleId, roleName);
 };
 
 const isReadOnlyCalendarRole = () => {

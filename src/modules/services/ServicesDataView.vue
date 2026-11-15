@@ -13,6 +13,7 @@ const fetchServices = async (page: number, rows: number) => {
 
     switch (store.userData?.roleId) {
         case "1":
+        case "9":
             data = await CleanersServices.getServices(page, rows);
             break;
         case "3":

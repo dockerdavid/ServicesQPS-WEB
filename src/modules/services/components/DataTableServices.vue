@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdminLikeRole } from '../../../router/role-routes';
 import { computed, ref, watch } from "vue";
 import { useToast } from 'primevue/usetoast';
 import moment from 'moment-timezone';
@@ -93,7 +94,7 @@ const activeChatService = ref<Service | ExternalService | null>(null);
 const canAccessChat = computed(() => {
     const roleId = store.userData?.roleId ?? '';
     const roleName = store.userData?.role?.name?.toLowerCase() ?? '';
-    return roleId === '1'
+    return isAdminLikeRole(roleId, roleName)
         || roleId === '4'
         || roleId === '7'
         || roleName === 'super_admin'

@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { isAdminLikeRole } from '../../router/role-routes';
 import { ref, onMounted, watch } from 'vue';
 import moment from 'moment-timezone';
 import { DatePicker, MultiSelect, useToast } from 'primevue';
@@ -374,7 +375,7 @@ watch(
             </fieldset>
 
             <!-- Campo: Limpiador / QA -->
-            <MyInputGroup v-if="userStore.userData?.roleId === '1'" :required="false" v-model="newService.userId" label="Cleaner / QA" inputId="userId"
+            <MyInputGroup v-if="isAdminLikeRole(userStore.userData?.roleId)" :required="false" v-model="newService.userId" label="Cleaner / QA" inputId="userId"
                 inputType="select" :options="assigneeOptions"
                 :is-form-submitted="isFormSubmitted" />
 
@@ -384,7 +385,7 @@ watch(
 
             <!-- Botón de creación -->
 
-            <div v-if="userStore.userData?.roleId !== '1'" />
+            <div v-if="!isAdminLikeRole(userStore.userData?.roleId)" />
 
             <div class="flex">
                 <LoadingButton label="Create" @click="createService(false)" />

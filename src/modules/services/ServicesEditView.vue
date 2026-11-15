@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdminLikeRole } from '../../router/role-routes';
 import { useRoute, useRouter } from 'vue-router';
 import { CommunitiesServices } from '../communities/communities.services';
 import { TypesServices } from '../types/types.services';
@@ -450,7 +451,7 @@ watch(
     </fieldset>
 
     <!-- Campo: Limpiador / QA -->
-    <MyInputGroup v-if="userStore.userData?.roleId === '1'" v-model="updatedService.userId" label="Cleaner / QA"
+    <MyInputGroup v-if="isAdminLikeRole(userStore.userData?.roleId)" v-model="updatedService.userId" label="Cleaner / QA"
       inputType="select" inputId="cleaner" :required="false" :loading="isLoadingOptions" :options="cleanerOptions"
       :is-form-submitted="isFormSubmitted" />
 

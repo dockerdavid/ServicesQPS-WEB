@@ -39,7 +39,7 @@ let selectedServiceFetchToken = 0;
 
 const canAccessChatHub = computed(() => {
   const roleKey = resolveRoleKey(userStore.userData?.role?.name, userStore.userData?.roleId);
-  return roleKey === 'qa' || roleKey === 'super_admin';
+  return roleKey === 'qa' || roleKey === 'super_admin' || roleKey === 'admin_papel';
 });
 
 const isRoleResolved = computed(() => {

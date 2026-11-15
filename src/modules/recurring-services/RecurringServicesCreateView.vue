@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isAdminLikeRole } from '../../router/role-routes';
 import { ref, onMounted, watch, computed } from 'vue';
 import moment from 'moment-timezone';
 import { DatePicker, MultiSelect, Select, useToast } from 'primevue';
@@ -431,7 +432,7 @@ watch(
       </fieldset>
 
       <MyInputGroup
-        v-if="userStore.userData?.roleId === '1'"
+        v-if="isAdminLikeRole(userStore.userData?.roleId)"
         v-model="newRecurring.userId"
         label="Cleaner / QA"
         inputId="userId"
