@@ -3,10 +3,13 @@
 import { CommunitiesServices } from './communities.services';
 import { CompaniesServices } from '../companies/companies.services';
 import { UsersServices } from '../users/users.services';
+import { emptyCommunityContacts, pickCommunityContacts } from '../../interfaces/communities/communities.interface';
 import type { NewCommunity } from '../../interfaces/communities/communities.interface';
 import type { InputConfig } from 'src/interfaces/input-config.interface';
 import GenericCreateForm from '../shared/views/GenericCreateForm.vue';
 import MyMapPicker from '../shared/components/MyMapPicker.vue';
+import CommunityContactsFields from './components/CommunityContactsFields.vue';
+import { ref } from 'vue';
 
 const breadcrumbRoutes = [
   { label: 'Comunidades', to: { name: 'communities-default' } },
@@ -41,8 +44,13 @@ const loadOptions = async () => {
   };
 };
 
+// Contactos del complex: viven fuera del entityData generico para no
+// depender de los inputs del formulario.
+const contacts = ref(emptyCommunityContacts());
+
 const createEntity = async (data: NewCommunity) => {
-  await CommunitiesServices.createCommunity(data);
+  await CommunitiesServices.createCommunity({ ...data, ...pickCommunityContacts(contacts.value) });
+  contacts.value = emptyCommunityContacts();
 };
 </script>
 
@@ -59,6 +67,7 @@ const createEntity = async (data: NewCommunity) => {
         v-model:latitude="entityData.latitude"
         v-model:longitude="entityData.longitude"
       />
+      <CommunityContactsFields v-model="contacts" />
     </template>
   </GenericCreateForm>
 </template>
