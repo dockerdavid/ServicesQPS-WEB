@@ -12,7 +12,7 @@ export class UsersServices {
     /** `roleId` lo resuelve el API: el tope de `take` es 150, asi que filtrar por
      *  rol en el navegador deja fuera a los usuarios mas nuevos en cuanto la
      *  tabla pasa de ese numero. */
-    static async getUsers(page: number = 1, take: number = 10, filterCleaners: boolean = false, activeOnly: boolean = false, roleId?: string, status?: 'active' | 'inactive'): Promise<Users> {
+    static async getUsers(page: number = 1, take: number = 10, filterCleaners: boolean = false, activeOnly: boolean = false, roleId?: string, status?: 'active' | 'inactive' | 'all'): Promise<Users> {
         const store = useGlobalStateStore();
         store.setIsLoading(true)
 
@@ -72,7 +72,7 @@ export class UsersServices {
         }
     }
 
-    static async searchUser(searchWord: string, page: number = 1, take: number = 10, roleId?: string, status?: 'active' | 'inactive'): Promise<User[]> {
+    static async searchUser(searchWord: string, page: number = 1, take: number = 10, roleId?: string, status?: 'active' | 'inactive' | 'all'): Promise<User[]> {
         const store = useGlobalStateStore();
         store.setIsLoading(true)
         try {
