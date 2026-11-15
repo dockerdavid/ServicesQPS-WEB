@@ -41,11 +41,11 @@ const searchService = async (searchWord: any, page: number, rows: number) => {
 const userStore = useUserStore();
 
 const headers = computed(() => {
-    if (userStore?.userData?.roleId !== "4") {
-        return headersSuperAdmin
-    } else {
-        return headersCleaner
-    }
+    const roleId = userStore?.userData?.roleId
+    if (roleId === "4") return headersCleaner
+    // Precio negociado: admin (1/9) y manager (3). El supervisor (6) no lo ve.
+    if (roleId === "1" || roleId === "9" || roleId === "3") return headersWithPrice
+    return headersSuperAdmin
 })
 
 const headersSuperAdmin = [
@@ -61,6 +61,12 @@ const headersSuperAdmin = [
     { field: 'user.name', name: 'Cleaner' },
 ]
 
+
+const headersWithPrice = [
+    ...headersSuperAdmin.slice(0, 6),
+    { field: 'type.price', name: 'Price' },
+    ...headersSuperAdmin.slice(6),
+]
 
 const headersCleaner = [
     { field: 'date', name: 'Date' },
