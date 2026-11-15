@@ -21,6 +21,14 @@ export interface Community {
     /** TypeORM devuelve las columnas decimal como string. */
     latitude: string | null;
     longitude: string | null;
+    // Contactos del complex que el cleaner puede llamar desde la app.
+    maintenanceSupervisorName?: string | null;
+    maintenanceSupervisorPhone?: string | null;
+    technicianName?: string | null;
+    technicianPhone?: string | null;
+    managerContactName?: string | null;
+    managerContactPhone?: string | null;
+    showContactsInApp?: boolean;
     createdAt: Date;
     updatedAt: Date;
     managerUser: User | null;
@@ -36,11 +44,49 @@ export interface NewCommunity {
     vendorUserId?: string | null;
     latitude?: number | null;
     longitude?: number | null;
+    maintenanceSupervisorName?: string | null;
+    maintenanceSupervisorPhone?: string | null;
+    technicianName?: string | null;
+    technicianPhone?: string | null;
+    managerContactName?: string | null;
+    managerContactPhone?: string | null;
+    showContactsInApp?: boolean;
     managerUserId: string | null;
     supervisorUserId: string | null;
     companyId: string;
     id: string;
 }
+
+/** Contactos del complex (datos libres, no usuarios del sistema). */
+export interface CommunityContacts {
+    maintenanceSupervisorName: string | null;
+    maintenanceSupervisorPhone: string | null;
+    technicianName: string | null;
+    technicianPhone: string | null;
+    managerContactName: string | null;
+    managerContactPhone: string | null;
+    showContactsInApp: boolean;
+}
+
+export const emptyCommunityContacts = (): CommunityContacts => ({
+    maintenanceSupervisorName: null,
+    maintenanceSupervisorPhone: null,
+    technicianName: null,
+    technicianPhone: null,
+    managerContactName: null,
+    managerContactPhone: null,
+    showContactsInApp: false,
+});
+
+export const pickCommunityContacts = (source: Partial<CommunityContacts>): CommunityContacts => ({
+    maintenanceSupervisorName: source.maintenanceSupervisorName ?? null,
+    maintenanceSupervisorPhone: source.maintenanceSupervisorPhone ?? null,
+    technicianName: source.technicianName ?? null,
+    technicianPhone: source.technicianPhone ?? null,
+    managerContactName: source.managerContactName ?? null,
+    managerContactPhone: source.managerContactPhone ?? null,
+    showContactsInApp: source.showContactsInApp ?? false,
+});
 
 export interface Company {
     id: string;

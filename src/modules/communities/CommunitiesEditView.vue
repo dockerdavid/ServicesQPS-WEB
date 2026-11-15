@@ -12,6 +12,8 @@ import type { User } from '../../interfaces/users/users.interface';
 import type { Service } from '../../interfaces/services/services.interface';
 import { showToast } from '../../utils/show-toast';
 import MyMapPicker from '../shared/components/MyMapPicker.vue';
+import CommunityContactsFields from './components/CommunityContactsFields.vue';
+import { emptyCommunityContacts, pickCommunityContacts } from '../../interfaces/communities/communities.interface';
 
 interface EntityData {
   communityName: string;
@@ -50,6 +52,8 @@ const hasSearchedRange = ref(false);
 const isLoadingRange = ref(false);
 const isDeletingRange = ref(false);
 const showDeleteDialog = ref(false);
+// Contactos del complex (supervisor de mantenimiento, tecnico, manager).
+const contacts = ref(emptyCommunityContacts());
 const entityData = ref<EntityData>({
   communityName: '',
   companyId: '',
@@ -159,6 +163,8 @@ const loadData = async (id: string) => {
       ? Number(communityResult.longitude)
       : null
   };
+
+  contacts.value = pickCommunityContacts(communityResult);
 
   return {
     ...communityResult,
@@ -340,7 +346,8 @@ const updateEntity = async (id: string, data: any) => {
     managerUserId: manager?.id || null,
     supervisorUserId: supervisor?.id || null,
     latitude: entityData.value.latitude ?? null,
-    longitude: entityData.value.longitude ?? null
+    longitude: entityData.value.longitude ?? null,
+    ...pickCommunityContacts(contacts.value)
   };
   try {
     await CommunitiesServices.updateCommunity(id, updateData);
@@ -401,6 +408,7 @@ const updateEntity = async (id: string, data: any) => {
         v-model:latitude="entityData.latitude"
         v-model:longitude="entityData.longitude"
       />
+      <CommunityContactsFields v-model="contacts" />
 
       <fieldset>
         <label for="vendorUserId">Vendedor asociado
