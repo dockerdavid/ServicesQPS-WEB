@@ -2,6 +2,8 @@
 import { computed, onMounted, ref } from "vue";
 import { IconField, InputIcon, InputSwitch, InputText, Select, useToast } from "primevue";
 import GenericDataView from "../shared/views/GenericDataView.vue";
+import ActiveStatusSelect from "../shared/components/ActiveStatusSelect.vue";
+import { useStatusFilter } from "../shared/composables/useStatusFilter";
 import { UsersServices } from "./users.services";
 import { showToast } from "../../utils/show-toast";
 import type { User, UserRoles } from "../../interfaces/users/users.interface";
@@ -16,14 +18,7 @@ const selectedRoleId = ref<string | null>(null);
 const roles = ref<UserRoles[]>([]);
 
 /** Estado: por defecto solo activos, para no mezclar a los que ya no trabajan. */
-type StatusFilter = 'active' | 'inactive' | 'all';
-const selectedStatus = ref<StatusFilter>('active');
-const statusOptions = [
-    { label: 'Activos', value: 'active' },
-    { label: 'Inactivos', value: 'inactive' },
-    { label: 'Todos', value: 'all' },
-];
-const statusParam = () => (selectedStatus.value === 'all' ? undefined : selectedStatus.value);
+const { selectedStatus, statusParam } = useStatusFilter();
 const reloadKey = computed(() => `${selectedRoleId.value ?? 'all'}|${selectedStatus.value}`);
 
 const fetchUsers = async (page: number, rows: number) => {
@@ -90,13 +85,7 @@ const handleIsActiveChange = (row: User, newValue: boolean) => {
                     placeholder="All roles"
                     class="min-w-[12rem]"
                 />
-                <Select
-                    v-model="selectedStatus"
-                    :options="statusOptions"
-                    optionLabel="label"
-                    optionValue="value"
-                    class="min-w-[9rem]"
-                />
+                <ActiveStatusSelect v-model="selectedStatus" />
                 <IconField>
                     <InputIcon class="pi pi-search" />
                     <InputText
