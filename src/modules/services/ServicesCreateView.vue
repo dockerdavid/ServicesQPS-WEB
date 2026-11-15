@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, watch } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import moment from 'moment-timezone';
 import { DatePicker, MultiSelect, useToast } from 'primevue';
 import CreateLayout from '../../layouts/CreateLayout.vue';
@@ -244,6 +244,24 @@ watch(
     }
 );
 
+// Comunidades con lockScheduleForStaff: managers (3) y supervisores (6) no
+// eligen hora, el servicio queda a las 00:00 (el API lo fuerza igual).
+const isScheduleLocked = computed(() => {
+    const roleId = userStore.userData?.roleId;
+    if (roleId !== '3' && roleId !== '6') {
+        return false;
+    }
+    const community = communities.value.find((c) => c.id === newService.value.communityId);
+    return Boolean(community?.lockScheduleForStaff);
+});
+
+watch(isScheduleLocked, (locked) => {
+    if (locked) {
+        scheduleDate.value = moment().startOf('day').toDate();
+        newService.value.schedule = '00:00:00';
+    }
+});
+
 const createService = async (leave: boolean) => {
     isFormSubmitted.value = true;
 
@@ -338,7 +356,8 @@ watch(
 
             <fieldset>
                 <label for="schedule">Schedule</label>
-                <DatePicker v-model="scheduleDate" :time-only="true" hour-format="24" id="schedule" />
+                <DatePicker v-model="scheduleDate" :time-only="true" hour-format="24" id="schedule" :disabled="isScheduleLocked" />
+                <small v-if="isScheduleLocked" class="text-gray-400">Esta comunidad no permite seleccionar hora</small>
             </fieldset>
 
             <!-- Campo: Tamaño de la unidad -->

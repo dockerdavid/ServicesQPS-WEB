@@ -22,6 +22,7 @@ interface EntityData {
   showInReports: boolean;
   useWax: boolean;
   isActive: boolean;
+  lockScheduleForStaff: boolean;
   vendorUserId: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -35,6 +36,7 @@ interface UpdateCommunityData {
   showInReports: boolean;
   useWax: boolean;
   isActive: boolean;
+  lockScheduleForStaff: boolean;
   vendorUserId: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -61,6 +63,7 @@ const entityData = ref<EntityData>({
   showInReports: true,
   useWax: false,
   isActive: true,
+  lockScheduleForStaff: false,
   vendorUserId: null,
   latitude: null,
   longitude: null
@@ -154,6 +157,7 @@ const loadData = async (id: string) => {
     showInReports: communityResult.showInReports ?? true,
     useWax: communityResult.useWax ?? false,
     isActive: communityResult.isActive ?? true,
+    lockScheduleForStaff: communityResult.lockScheduleForStaff ?? false,
     vendorUserId: communityResult.vendorUser?.id ?? communityResult.vendorUserId ?? null,
     // El API las manda como string (columna decimal); el mapa trabaja con number.
     latitude: communityResult.latitude !== null && communityResult.latitude !== undefined
@@ -341,6 +345,7 @@ const updateEntity = async (id: string, data: any) => {
     showInReports: entityData.value.showInReports,
     useWax: entityData.value.useWax,
     isActive: entityData.value.isActive,
+    lockScheduleForStaff: entityData.value.lockScheduleForStaff,
     vendorUserId: entityData.value.vendorUserId || null,
     id: id,
     managerUserId: manager?.id || null,
@@ -433,6 +438,16 @@ const updateEntity = async (id: string, data: any) => {
         <div class="report-visibility-control">
           <InputSwitch inputId="isActive" v-model="entityData.isActive" />
           <span class="report-visibility-value">{{ entityData.isActive ? 'Activa' : 'Inactiva' }}</span>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <label for="lockScheduleForStaff">Bloquear hora para managers y supervisores
+          <small class="text-gray-400">(sus servicios quedan siempre a las 00:00)</small>
+        </label>
+        <div class="report-visibility-control">
+          <InputSwitch inputId="lockScheduleForStaff" v-model="entityData.lockScheduleForStaff" />
+          <span class="report-visibility-value">{{ entityData.lockScheduleForStaff ? 'Sí' : 'No' }}</span>
         </div>
       </fieldset>
 

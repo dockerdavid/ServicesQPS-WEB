@@ -29,6 +29,8 @@ export interface Community {
     managerContactName?: string | null;
     managerContactPhone?: string | null;
     showContactsInApp?: boolean;
+    /** Managers y supervisores no pueden elegir hora en los servicios (quedan a las 00:00). */
+    lockScheduleForStaff?: boolean;
     createdAt: Date;
     updatedAt: Date;
     managerUser: User | null;
@@ -51,6 +53,7 @@ export interface NewCommunity {
     managerContactName?: string | null;
     managerContactPhone?: string | null;
     showContactsInApp?: boolean;
+    lockScheduleForStaff?: boolean;
     managerUserId: string | null;
     supervisorUserId: string | null;
     companyId: string;
