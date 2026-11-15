@@ -19,6 +19,7 @@ const inputs:InputConfig[] = [
   { inputId: 'companyId', label: 'Compañía', inputType: 'select', },
   { inputId: 'vendorUserId', label: 'Vendedor asociado', inputType: 'select', required: false },
   { inputId: 'isActive', label: 'Comunidad activa', inputType: 'switch', required: false, defaultValue: true },
+  { inputId: 'useWax', label: 'Utiliza cera (wax)', inputType: 'switch', required: false, defaultValue: false },
 ];
 
 const loadOptions = async () => {

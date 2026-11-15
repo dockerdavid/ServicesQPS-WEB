@@ -10,6 +10,8 @@ export interface Community {
     id: string;
     communityName: string;
     showInReports: boolean;
+    /** El complex exige usar cera (wax) en sus servicios. */
+    useWax?: boolean;
     /** Las comunidades inactivas no aparecen al crear servicios. */
     isActive: boolean;
     /** Vendedor asociado que consiguió el complex (null si no lo trajo nadie). */
@@ -29,6 +31,7 @@ export interface Community {
 export interface NewCommunity {
     communityName: string;
     showInReports: boolean;
+    useWax?: boolean;
     isActive?: boolean;
     vendorUserId?: string | null;
     latitude?: number | null;

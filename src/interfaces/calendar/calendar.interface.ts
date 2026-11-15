@@ -36,6 +36,7 @@ export interface CalendarInterface {
 export interface Community {
     id:            string;
     communityName: string;
+    useWax?:       boolean;
     userId:        string;
     companyId:     string;
     createdAt:     Date;
