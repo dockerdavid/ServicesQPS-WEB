@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { IconField, InputIcon, InputSwitch, InputText, Select, useToast } from "primevue";
 import GenericDataView from "../shared/views/GenericDataView.vue";
 import { UsersServices } from "./users.services";
@@ -15,12 +15,23 @@ const DEBOUNCE_MS = 500;
 const selectedRoleId = ref<string | null>(null);
 const roles = ref<UserRoles[]>([]);
 
+/** Estado: por defecto solo activos, para no mezclar a los que ya no trabajan. */
+type StatusFilter = 'active' | 'inactive' | 'all';
+const selectedStatus = ref<StatusFilter>('active');
+const statusOptions = [
+    { label: 'Activos', value: 'active' },
+    { label: 'Inactivos', value: 'inactive' },
+    { label: 'Todos', value: 'all' },
+];
+const statusParam = () => (selectedStatus.value === 'all' ? undefined : selectedStatus.value);
+const reloadKey = computed(() => `${selectedRoleId.value ?? 'all'}|${selectedStatus.value}`);
+
 const fetchUsers = async (page: number, rows: number) => {
-    return await UsersServices.getUsers(page, rows, false, false, selectedRoleId.value ?? undefined);
+    return await UsersServices.getUsers(page, rows, false, false, selectedRoleId.value ?? undefined, statusParam());
 };
 
 const searchUser = async (searchWord: string, page: number, rows: number) => {
-    return await UsersServices.searchUser(searchWord, page, rows, selectedRoleId.value ?? undefined);
+    return await UsersServices.searchUser(searchWord, page, rows, selectedRoleId.value ?? undefined, statusParam());
 };
 
 onMounted(async () => {
@@ -66,7 +77,7 @@ const handleIsActiveChange = (row: User, newValue: boolean) => {
         :delete-data="UsersServices.deleteUser"
         :hide-delete="true"
         :search-data="searchUser"
-        :reload-key="selectedRoleId"
+        :reload-key="reloadKey"
     >
         <template #header-search="{ searchWord, clearSearch, setSearchWord }">
             <div class="flex flex-wrap items-center justify-end gap-3 w-full">
@@ -78,6 +89,13 @@ const handleIsActiveChange = (row: User, newValue: boolean) => {
                     showClear
                     placeholder="All roles"
                     class="min-w-[12rem]"
+                />
+                <Select
+                    v-model="selectedStatus"
+                    :options="statusOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    class="min-w-[9rem]"
                 />
                 <IconField>
                     <InputIcon class="pi pi-search" />

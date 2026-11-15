@@ -12,7 +12,7 @@ export class UsersServices {
     /** `roleId` lo resuelve el API: el tope de `take` es 150, asi que filtrar por
      *  rol en el navegador deja fuera a los usuarios mas nuevos en cuanto la
      *  tabla pasa de ese numero. */
-    static async getUsers(page: number = 1, take: number = 10, filterCleaners: boolean = false, activeOnly: boolean = false, roleId?: string): Promise<Users> {
+    static async getUsers(page: number = 1, take: number = 10, filterCleaners: boolean = false, activeOnly: boolean = false, roleId?: string, status?: 'active' | 'inactive'): Promise<Users> {
         const store = useGlobalStateStore();
         store.setIsLoading(true)
 
@@ -20,6 +20,7 @@ export class UsersServices {
             const params = new URLSearchParams({ page: String(page), take: String(take) });
             if (activeOnly) params.set('activeOnly', 'true');
             if (roleId) params.set('roleId', roleId);
+            if (status) params.set('status', status);
             const { data } = await apiServicesQps.get(`/users?${params}`)
 
             const filteredData = filterCleaners ? data.data.filter((user: any) => user.role.id === '4') : data.data;
@@ -71,12 +72,13 @@ export class UsersServices {
         }
     }
 
-    static async searchUser(searchWord: string, page: number = 1, take: number = 10, roleId?: string): Promise<User[]> {
+    static async searchUser(searchWord: string, page: number = 1, take: number = 10, roleId?: string, status?: 'active' | 'inactive'): Promise<User[]> {
         const store = useGlobalStateStore();
         store.setIsLoading(true)
         try {
             const params = new URLSearchParams({ page: String(page), take: String(take) });
             if (roleId) params.set('roleId', roleId);
+            if (status) params.set('status', status);
             const { data } = await apiServicesQps.post(`/users/search?${params}`, { searchWord });
             return data
         } catch (error) {
