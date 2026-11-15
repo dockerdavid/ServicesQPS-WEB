@@ -12,6 +12,7 @@ import type { User } from '../../interfaces/users/users.interface';
 import type { Service } from '../../interfaces/services/services.interface';
 import { showToast } from '../../utils/show-toast';
 import MyMapPicker from '../shared/components/MyMapPicker.vue';
+import CommunityBlackoutsPanel from './components/CommunityBlackoutsPanel.vue';
 
 interface EntityData {
   communityName: string;
@@ -433,6 +434,8 @@ const updateEntity = async (id: string, data: any) => {
           <span class="report-visibility-value">{{ entityData.showInReports ? 'Sí' : 'No' }}</span>
         </div>
       </fieldset>
+      <CommunityBlackoutsPanel :community-id="currentCommunityId" />
+
       <fieldset class="community-services-panel">
         <div class="range-header">
           <div>

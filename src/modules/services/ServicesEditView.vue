@@ -209,8 +209,8 @@ const updateService = async () => {
 
     await CleanersServices.updateService(entityId, payload);
     showToast(toast, { severity: 'success', detail: 'Service was updated' });
-  } catch (error) {
-    showToast(toast, { severity: 'error', summary: "Service wasn't updated" });
+  } catch (error: any) {
+    showToast(toast, { severity: 'error', summary: "Service wasn't updated", detail: error?.message, life: 6000 });
   } finally {
     isFormSubmitted.value = false;
   }
