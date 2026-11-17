@@ -10,7 +10,7 @@ import { CleanersServices } from './services.services';
 import moment from 'moment-timezone';
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
 import LoadingButton from '../shared/components/LoadingButton.vue';
-import { Breadcrumb, useToast, DatePicker, MultiSelect } from 'primevue';
+import { Breadcrumb, useToast, DatePicker, MultiSelect, InputText } from 'primevue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { showToast } from '../../utils/show-toast';
 import type { Communities } from '../../interfaces/communities/communities.interface';
@@ -168,6 +168,14 @@ watch(
     }
   }
 );
+
+// Managers (3) y supervisores (6) no pueden mover la fecha (el API lo rechaza).
+const isStaffEditor = computed(() => ['3', '6'].includes(String(userStore.userData?.roleId ?? '')));
+const staffDateLabel = computed(() => {
+  const d: any = updatedService.value.date;
+  if (!d) return '';
+  return d instanceof Date ? moment(d).format('MM/DD/YYYY') : moment(String(d).slice(0, 10)).format('MM/DD/YYYY');
+});
 
 // Comunidades con lockScheduleForStaff: managers (3) y supervisores (6) no
 // eligen hora, el servicio queda a las 00:00 (el API lo fuerza igual).
@@ -431,8 +439,13 @@ watch(
 
   <form class="form-grid">
     <!-- Campo: Fecha -->
-    <MyInputGroup v-model="updatedService.date" label="Date" inputType="datepicker" inputId="date"
+    <MyInputGroup v-if="!isStaffEditor" v-model="updatedService.date" label="Date" inputType="datepicker" inputId="date"
       :is-form-submitted="isFormSubmitted" />
+    <div v-else class="flex flex-col gap-1">
+      <label for="date-readonly">Date</label>
+      <InputText id="date-readonly" :model-value="staffDateLabel" disabled />
+      <small class="text-gray-400">Los supervisores y managers no pueden cambiar la fecha.</small>
+    </div>
 
     <!-- Campo: Horario -->
     <fieldset>
