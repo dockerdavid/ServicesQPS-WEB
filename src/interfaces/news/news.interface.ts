@@ -1,5 +1,10 @@
 import type { MetaPagination } from "../meta-pagination.interface";
 
+export interface NewsAudienceUser {
+    id: string;
+    roleId: string;
+}
+
 export interface News {
     id: string;
     title: string;
@@ -7,6 +12,8 @@ export interface News {
     imageUrl: string | null;
     /** null = todos los usuarios de la app */
     audienceRoles: string[] | null;
+    /** Usuarios específicos: si un rol tiene elegidos, de ese rol solo ellos la ven. */
+    audienceUsers?: NewsAudienceUser[] | null;
     isPublished: boolean;
     publishedAt: string | null;
     createdByUserId: string | null;
@@ -24,6 +31,7 @@ export interface NewsPayload {
     body?: string;
     imageUrl?: string | null;
     audienceRoles?: string[] | null;
+    audienceUserIds?: string[] | null;
     isPublished?: boolean;
 }
 
@@ -38,10 +46,17 @@ export const NEWS_AUDIENCE_OPTIONS = [
     { label: 'Super admin', value: '1' },
 ];
 
-export const formatNewsAudience = (audienceRoles: string[] | null | undefined) => {
+export const formatNewsAudience = (
+    audienceRoles: string[] | null | undefined,
+    audienceUsers?: NewsAudienceUser[] | null,
+) => {
     if (!audienceRoles || audienceRoles.length === 0) return 'All';
     return audienceRoles
-        .map((role) => NEWS_AUDIENCE_OPTIONS.find((option) => option.value === String(role))?.label ?? `Role ${role}`)
+        .map((role) => {
+            const label = NEWS_AUDIENCE_OPTIONS.find((option) => option.value === String(role))?.label ?? `Role ${role}`;
+            const count = (audienceUsers ?? []).filter((u) => String(u.roleId) === String(role)).length;
+            return count ? `${label} (${count} ${count === 1 ? 'usuario' : 'usuarios'})` : label;
+        })
         .join(', ');
 };
 

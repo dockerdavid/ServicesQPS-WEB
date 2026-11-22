@@ -4,6 +4,7 @@ import GenericEditForm from '../shared/views/GenericEditForm.vue';
 import NewsImageField from './components/NewsImageField.vue';
 import NewsAudienceField from './components/NewsAudienceField.vue';
 import { NewsServices } from './news.services';
+import type { NewsAudienceUser } from '../../interfaces/news/news.interface';
 import type { InputConfig } from '../../interfaces/input-config.interface';
 
 const breadcrumbRoutes = [
@@ -25,11 +26,13 @@ const initialData = {
 
 const imageUrl = ref<string | null>(null);
 const audienceRoles = ref<string[]>([]);
+const audienceUsers = ref<NewsAudienceUser[]>([]);
 
 const loadData = async (id: string) => {
   const news = await NewsServices.getNewsById(id);
   imageUrl.value = news.imageUrl;
   audienceRoles.value = news.audienceRoles ?? [];
+  audienceUsers.value = (news.audienceUsers ?? []).map((u) => ({ id: String(u.id), roleId: String(u.roleId) }));
   return news;
 };
 
@@ -38,6 +41,7 @@ const updateEntity = async (id: string, data: Record<string, any>) => {
   await NewsServices.updateNews(id, {
     ...data,
     audienceRoles: audienceRoles.value.length ? audienceRoles.value : null,
+    audienceUserIds: audienceUsers.value.map((u) => u.id),
     isPublished: Boolean(data.isPublished),
     imageUrl: imageUrl.value,
   });
@@ -48,7 +52,7 @@ const updateEntity = async (id: string, data: Record<string, any>) => {
   <GenericEditForm :breadcrumb-routes="breadcrumbRoutes" view-title="Edit news" :inputs="inputs" :load-data="loadData"
     :update-entity="updateEntity" :initial-data="initialData">
     <template #additional-fields>
-      <NewsAudienceField v-model="audienceRoles" />
+      <NewsAudienceField v-model="audienceRoles" v-model:users="audienceUsers" />
       <NewsImageField v-model="imageUrl" />
     </template>
   </GenericEditForm>
