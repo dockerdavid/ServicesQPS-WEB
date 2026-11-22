@@ -41,7 +41,6 @@ export const NEWS_AUDIENCE_OPTIONS = [
     { label: 'QA', value: '7' },
     { label: 'Manager', value: '3' },
     { label: 'Supervisor', value: '6' },
-    { label: 'Cheo', value: '5' },
     { label: 'Vendedor', value: '8' },
     { label: 'Super admin', value: '1' },
 ];
