@@ -23,7 +23,7 @@ const formatDate = (value: string | null) => value ? new Date(value).toLocaleStr
         { field: 'title', name: 'Title' },
         { field: 'isPublished', name: 'Published', format: (value) => value ? 'Sí' : 'No' },
         { field: 'publishedAt', name: 'Published at', format: (value) => formatDate(value) },
-        { field: 'audienceRoles', name: 'Audience', format: (value) => formatNewsAudience(value) },
+        { field: 'audienceRoles', name: 'Audience', format: (value, row) => formatNewsAudience(value, row?.audienceUsers) },
         { field: 'imageUrl', name: 'Image', format: (value) => value ? 'Sí' : 'No' },
     ]" :fetch-data="fetchNews" :delete-data="deleteNews" :search-data="searchNews" />
 </template>
