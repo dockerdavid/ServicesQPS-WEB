@@ -726,6 +726,9 @@ const eventToCalendarEvent = (event: CalendarInterface): EventInput => {
     unitNumber: event.unitNumber || 'N/A',
     date: toYYYYMMDD(event.date),
     qaFlagged: !!event.qaFlagged,
+    comment: event.comment || '',
+    userComment: event.userComment || '',
+    schedule: event.schedule || '',
   },
   };
 };
@@ -799,107 +802,76 @@ const calendarOptions = ref({
     const canShowButton = isCalendarAdmin();
     const canDelete = isCalendarAdmin();
     
+    const p = event.extendedProps;
+    const statusColor = info.el.style.backgroundColor || event.backgroundColor || '#64748b';
+    const scheduleLabel = p.schedule && !String(p.schedule).startsWith('00:00') ? ` · ${escapeHtml(String(p.schedule).slice(0, 5))}` : '';
+    const row = (icon: string, label: string, value: string) => `
+      <div class="qtt-row"><i class="pi ${icon}"></i><span class="qtt-label">${label}</span><span class="qtt-value">${value}</span></div>`;
+    const btn = (id: string, label: string, kind: string) => `<button id="${id}" class="qtt-btn qtt-btn--${kind}">${label}</button>`;
+
     const tooltipContent = `
-      <div style="font-family: inherit; font-size: 13px;">
-        <b>${event.extendedProps.userName}</b><br/>
-        <b>Community:</b> ${event.extendedProps.communityName}<br/>
-        <b>Wax:</b> ${event.extendedProps.useWax ? '<span style="color:#b45309;font-weight:700">YES</span>' : 'NO'}<br/>
-        <b>Unit number:</b> ${event.extendedProps.unitNumber}<br/>
-        <b>Date:</b> ${formatDate(event.extendedProps.date)}<br/>
-        <b>Type:</b> ${event.extendedProps.type}<br/>
-        <b>Status:</b> ${event.extendedProps.status}
-        ${event.extendedProps.suggestedName ? `
-          <div style="margin-top: 6px; padding: 6px 8px; border-radius: 6px; background: #f5f3ff; color: #5b21b6; font-size: 12px;">
-            <b>Sugerido:</b> ${escapeHtml(event.extendedProps.suggestedName)}<br/>
-            <span style="color: #6b7280;">${escapeHtml(event.extendedProps.suggestedReason)}</span>
+      <div class="qtt">
+        <div class="qtt-head">
+          <span class="qtt-dot" style="background:${statusColor}"></span>
+          <div class="qtt-title">
+            <strong>${escapeHtml(p.userName)}</strong>
+            <span>${escapeHtml(p.status)}</span>
           </div>
-        ` : ''}
+          ${p.useWax ? '<span class="qtt-badge qtt-badge--wax">WAX</span>' : ''}
+        </div>
+        <div class="qtt-body">
+          ${row('pi-building', 'Community', escapeHtml(p.communityName))}
+          ${row('pi-home', 'Unit', escapeHtml(p.unitNumber))}
+          ${row('pi-calendar', 'Date', escapeHtml(formatDate(p.date)) + scheduleLabel)}
+          ${row('pi-tag', 'Type', escapeHtml(p.type))}
+        </div>
+        ${p.comment ? `
+          <div class="qtt-note">
+            <div class="qtt-note-label"><i class="pi pi-comment"></i> Comentario</div>
+            <div class="qtt-note-text">${escapeHtml(p.comment)}</div>
+          </div>` : ''}
+        ${p.userComment ? `
+          <div class="qtt-note qtt-note--cleaner">
+            <div class="qtt-note-label"><i class="pi pi-user"></i> Nota de la cleaner</div>
+            <div class="qtt-note-text">${escapeHtml(p.userComment)}</div>
+          </div>` : ''}
+        ${p.suggestedName ? `
+          <div class="qtt-suggest">
+            <b>Sugerido:</b> ${escapeHtml(p.suggestedName)}
+            <span>${escapeHtml(p.suggestedReason)}</span>
+          </div>` : ''}
         ${canShowButton && serviceInfo ? `
-          <br/><br/>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button 
-              id="service-modal-btn-${event.id}" 
-              style="
-                background-color: #007bff; 
-                color: white; 
-                border: none; 
-                padding: 5px 10px; 
-                border-radius: 4px; 
-                cursor: pointer; 
-                font-size: 12px;
-              "
-              onmouseover="this.style.backgroundColor='#0056b3'"
-              onmouseout="this.style.backgroundColor='#007bff'"
-            >
-              Ver Detalles
-            </button>
-            ${serviceInfo.qaFlagged ? `
-              <button
-                id="service-qa-flag-btn-${event.id}"
-                style="
-                  background-color: #6b7280;
-                  color: white;
-                  border: none;
-                  padding: 5px 10px;
-                  border-radius: 4px;
-                  cursor: pointer;
-                  font-size: 12px;
-                "
-              >
-                Quitar marca QA${serviceInfo.kdsDay ? ` (${QA_DAY_SHORT_LABELS[serviceInfo.kdsDay]})` : ''}
-              </button>
-            ` : `
-              <span style="display: inline-flex; align-items: center; gap: 4px;">
-                <span style="font-size: 11px; color: #9a3412; font-weight: 600;">QA:</span>
-                ${KDS_DAYS.map((day) => `
-                  <button
-                    id="service-qa-day-btn-${event.id}-${day}"
-                    style="
-                      background-color: #f97316;
-                      color: white;
-                      border: none;
-                      padding: 5px 7px;
-                      border-radius: 4px;
-                      cursor: pointer;
-                      font-size: 11px;
-                      font-weight: 600;
-                    "
-                  >
-                    ${QA_DAY_SHORT_LABELS[day]}
-                  </button>
-                `).join('')}
-              </span>
-            `}
-            ${canDelete ? `
-              <button 
-                id="service-delete-btn-${event.id}" 
-                style="
-                  background-color: #dc2626; 
-                  color: white; 
-                  border: none; 
-                  padding: 5px 10px; 
-                  border-radius: 4px; 
-                  cursor: pointer; 
-                  font-size: 12px;
-                "
-                onmouseover="this.style.backgroundColor='#b91c1c'"
-                onmouseout="this.style.backgroundColor='#dc2626'"
-              >
-                Eliminar
-              </button>
-            ` : ''}
-          </div>
-        ` : ''}
+          <div class="qtt-actions">
+            ${btn(`service-modal-btn-${event.id}`, 'Ver detalles', 'primary')}
+            ${serviceInfo.qaFlagged
+              ? btn(`service-qa-flag-btn-${event.id}`, `Quitar marca QA${serviceInfo.kdsDay ? ` (${QA_DAY_SHORT_LABELS[serviceInfo.kdsDay]})` : ''}`, 'muted')
+              : `<span class="qtt-qa"><span>QA</span>${KDS_DAYS.map((day) => btn(`service-qa-day-btn-${event.id}-${day}`, QA_DAY_SHORT_LABELS[day], 'qa')).join('')}</span>`}
+            ${canDelete ? btn(`service-delete-btn-${event.id}`, 'Eliminar', 'danger') : ''}
+          </div>` : ''}
       </div>
     `;
-    
+
     tippy(info.el, {
       content: tooltipContent,
       allowHTML: true,
+      // Arriba por defecto; si no cabe (servicio cerca del borde de la ventana)
+      // se voltea hacia abajo o a los lados y nunca se sale del viewport.
       placement: 'top',
+      appendTo: () => document.body,
+      maxWidth: 340,
+      delay: [120, 60],
+      offset: [0, 8],
+      animation: 'shift-away-subtle',
       trigger: 'mouseenter',
       interactive: true,
       theme: 'custom-tooltip',
+      popperOptions: {
+        strategy: 'fixed',
+        modifiers: [
+          { name: 'flip', options: { fallbackPlacements: ['bottom', 'right', 'left'], padding: 12, boundary: 'viewport' } },
+          { name: 'preventOverflow', options: { boundary: 'viewport', padding: 12, altAxis: true, tether: false } },
+        ],
+      },
       onShow: (instance) => {
         // Agregar evento click al botón después de que el tooltip se muestre
         if (canShowButton && serviceInfo) {
@@ -1172,15 +1144,45 @@ defineExpose({
 
 .tippy-box[data-theme="custom-tooltip"] {
   background-color: #ffffff;
-  border-radius: 8px;
-  border: 1px solid var(--border-soft);
-  box-shadow: var(--shadow-tight);
-  color: var(--ink-800);
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16), 0 2px 6px rgba(15, 23, 42, 0.06);
+  color: #1f2937;
 }
+.tippy-box[data-theme="custom-tooltip"] .tippy-content { padding: 0; }
+.tippy-box[data-theme="custom-tooltip"] .tippy-arrow { color: #ffffff; }
+.tippy-box[data-animation="shift-away-subtle"][data-state="hidden"] { opacity: 0; transform: translateY(4px); }
+.tippy-box[data-animation="shift-away-subtle"] { transition-property: transform, opacity; }
 
-.tippy-box[data-theme="custom-tooltip"] .tippy-arrow {
-  color: #ffffff;
-}
+.qtt { font-family: inherit; font-size: 13px; width: 300px; max-width: calc(100vw - 32px); }
+.qtt-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px 10px; border-bottom: 1px solid #f1f5f9; }
+.qtt-dot { width: 10px; height: 10px; border-radius: 999px; flex-shrink: 0; box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.06); }
+.qtt-title { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.qtt-title strong { font-size: 14px; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qtt-title span { font-size: 12px; color: #64748b; }
+.qtt-badge { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; padding: 3px 7px; border-radius: 999px; }
+.qtt-badge--wax { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.qtt-body { padding: 8px 14px; display: flex; flex-direction: column; gap: 5px; }
+.qtt-row { display: grid; grid-template-columns: 16px 78px 1fr; align-items: center; gap: 6px; }
+.qtt-row i { font-size: 12px; color: #94a3b8; }
+.qtt-label { color: #64748b; font-size: 12px; }
+.qtt-value { color: #0f172a; font-weight: 500; overflow-wrap: anywhere; }
+.qtt-note { margin: 4px 14px 8px; padding: 8px 10px; background: #f8fafc; border-left: 3px solid #3b82f6; border-radius: 6px; }
+.qtt-note--cleaner { border-left-color: #10b981; }
+.qtt-note-label { font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
+.qtt-note-text { white-space: pre-wrap; overflow-wrap: anywhere; color: #1e293b; line-height: 1.4; max-height: 160px; overflow-y: auto; }
+.qtt-suggest { margin: 4px 14px 8px; padding: 7px 9px; border-radius: 6px; background: #f5f3ff; color: #5b21b6; font-size: 12px; display: flex; flex-direction: column; gap: 2px; }
+.qtt-suggest span { color: #6b7280; }
+.qtt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 14px 12px; border-top: 1px solid #f1f5f9; }
+.qtt-qa { display: inline-flex; align-items: center; gap: 3px; }
+.qtt-qa > span { font-size: 11px; font-weight: 700; color: #9a3412; margin-right: 2px; }
+.qtt-btn { border: none; border-radius: 6px; padding: 6px 10px; font-size: 12px; font-weight: 600; cursor: pointer; transition: filter 0.15s, transform 0.05s; }
+.qtt-btn:hover { filter: brightness(0.92); }
+.qtt-btn:active { transform: translateY(1px); }
+.qtt-btn--primary { background: #2563eb; color: #fff; }
+.qtt-btn--muted { background: #e2e8f0; color: #334155; }
+.qtt-btn--qa { background: #f97316; color: #fff; padding: 5px 7px; font-size: 11px; }
+.qtt-btn--danger { background: #fee2e2; color: #b91c1c; }
 
 .service-info {
   max-height: 70vh;
