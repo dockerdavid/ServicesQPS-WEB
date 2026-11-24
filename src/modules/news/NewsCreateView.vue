@@ -15,7 +15,7 @@ const breadcrumbRoutes = [
 const inputs: InputConfig[] = [
   { label: 'Title', inputId: 'title', inputType: 'input' },
   { label: 'Body', inputId: 'body', inputType: 'textarea' },
-  { label: 'Published (sends push notification)', inputId: 'isPublished', inputType: 'switch', required: false, defaultValue: false },
+  { label: 'Published (sends push + SMS)', inputId: 'isPublished', inputType: 'switch', required: false, defaultValue: false },
 ];
 
 const imageUrl = ref<string | null>(null);

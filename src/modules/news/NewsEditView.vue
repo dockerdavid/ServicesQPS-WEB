@@ -15,7 +15,7 @@ const breadcrumbRoutes = [
 const inputs = ref<InputConfig[]>([
   { label: 'Title', inputId: 'title', inputType: 'input' },
   { label: 'Body', inputId: 'body', inputType: 'textarea' },
-  { label: 'Published (first publish sends push notification)', inputId: 'isPublished', inputType: 'switch', required: false },
+  { label: 'Published (first publish sends push + SMS)', inputId: 'isPublished', inputType: 'switch', required: false },
 ]);
 
 const initialData = {
