@@ -53,7 +53,7 @@ apiServicesQps.interceptors.response.use((response) => {
         addGlobalToast({
             severity: 'info',
             summary: `Enviado a aprobación (código ${response.data.code})`,
-            detail: 'Un administrador debe aprobar este cambio. Puedes seguirlo en "Mis solicitudes".',
+            detail: response.data.message || 'Un administrador debe aprobar este cambio.',
             life: 7000,
         });
     }
