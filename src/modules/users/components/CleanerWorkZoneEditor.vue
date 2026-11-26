@@ -99,7 +99,12 @@
     </div>
     <p class="wz__help">{{ helpText }}</p>
 
-    <div ref="mapContainer" class="wz__map" :class="{ 'wz__map--drawing': mode === 'freehand' || mode === 'points' }"></div>
+    <!-- La clase dinámica va en un wrapper: Vue reescribe el atributo class del
+         elemento con :class y borraría las clases que Leaflet pone en su contenedor
+         (leaflet-container…), y el mapa de fondo dejaba de verse al dibujar. -->
+    <div :class="{ 'wz__map-wrap--drawing': mode === 'freehand' || mode === 'points' }">
+      <div ref="mapContainer" class="wz__map"></div>
+    </div>
 
     <div class="wz__legend">
       <span><i class="wz__dot wz__dot--in" /> Dentro de su zona</span>
@@ -703,7 +708,9 @@ onBeforeUnmount(() => {
   z-index: 0;
 }
 
-.wz__map--drawing {
+.wz__map-wrap--drawing .wz__map,
+.wz__map-wrap--drawing :deep(.leaflet-container),
+.wz__map-wrap--drawing :deep(.leaflet-interactive) {
   cursor: crosshair;
   touch-action: none;
 }
