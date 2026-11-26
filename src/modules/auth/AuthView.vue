@@ -39,6 +39,7 @@ import type { AuthResponse } from '../../interfaces/auth/auth.interface';
 
 import { useAuthStore, useGlobalStateStore } from '../../store/auth.store';
 import { useUserStore } from '../../store/user.store';
+import { usePasswordGateStore } from '../../store/password-gate.store';
 
 import { UsersServices } from '../users/users.services';
 
@@ -59,6 +60,7 @@ const toast = useToast();
 
 const store = useAuthStore();
 const userstore = useUserStore();
+const passwordGate = usePasswordGateStore();
 const { setIsLoading } = useGlobalStateStore();
 
 const schema = z.object({
@@ -109,6 +111,13 @@ const onFormSubmit = async (): Promise<void> => {
         setIsLoading(true)
         try {
             const { data } = await apiServicesQps.post<AuthResponse>('/auth', form);
+            // Cambio de clave pedido por un admin: primero el diálogo
+            // (ForcePasswordChangeDialog) y al completarlo se sigue al inicio.
+            if (data.mustChangePassword) {
+                passwordGate.require(() => getUserData(data.id))
+                store.setToken(data.token)
+                return
+            }
             store.setToken(data.token)
             getUserData(data.id)
 

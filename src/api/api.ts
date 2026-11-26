@@ -4,6 +4,7 @@ import type { InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../store/auth.store';
 import { isPendingApproval, markPendingApproval } from '../utils/pending-approval';
 import { addGlobalToast } from '../utils/global-toast';
+import { isPasswordChangeRequiredError, usePasswordGateStore } from '../store/password-gate.store';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -59,6 +60,10 @@ apiServicesQps.interceptors.response.use((response) => {
     }
     return response;
 }, (error) => {
+    // Cambio de clave obligatorio: abre el diálogo "Crea tu nueva clave".
+    if (isPasswordChangeRequiredError(error)) {
+        usePasswordGateStore().require();
+    }
     return Promise.reject(error)
 })
 

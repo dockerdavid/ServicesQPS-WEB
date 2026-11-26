@@ -194,45 +194,18 @@
           <p><strong>Actualizado:</strong> {{ formatDate(selectedServiceInfo.updatedAt) }}</p>
         </div>
         
-        <!-- Sección Review -->
-        <div class="info-group mt-4">
-          <h3 class="font-bold text-lg mb-4">Review</h3>
-          <div v-for="reviewClass in reviewData" :key="reviewClass.reviewClassId" class="review-section mb-4">
-            <h4 class="font-semibold text-md mb-2 text-blue-600">{{ reviewClass.reviewClassName }}:</h4>
-            <div class="hidden md:grid grid-cols-1 gap-2">
-              <div v-for="item in reviewClass.reviewItems" :key="item.id" class="flex items-center justify-between p-2 bg-gray-50 rounded whitespace-nowrap">
-                <span class="text-sm mr-4">{{ item.name }}</span>
-                <InputSwitch v-model="item.checked" />
-              </div>
-            </div>
-            <div class="md:hidden overflow-x-auto">
-              <div class="flex gap-2 min-w-max">
-                <div v-for="item in reviewClass.reviewItems" :key="item.id" class="flex items-center justify-between p-2 bg-gray-50 rounded whitespace-nowrap">
-                  <span class="text-sm mr-4">{{ item.name }}</span>
-                  <InputSwitch v-model="item.checked" />
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Comentario del Review -->
-          <div class="review-section mb-4">
-            <h4 class="font-semibold text-md mb-2 text-blue-600">Comentario:</h4>
-            <fieldset>
-              <Textarea 
-                v-model="reviewComment" 
-                placeholder="Escribe un comentario sobre el review..." 
-                :rows="4" 
-                :auto-resize="false" 
-                class="w-full"
-                style="max-height: 150px;"
-              />
-            </fieldset>
-          </div>
-        </div>
+        <!-- Review por fotos (sin checklist): fotos de lo que quedó mal =
+             refresh; sin fotos = aprobado. Incluye el historial de refresh. -->
+        <QaPhotoReview
+          :service-id="selectedServiceInfo.id"
+          :capture-qa-location="userStore.userData?.roleId === '7'"
+          @submitting="isSavingReview = $event"
+          @submitted="onReviewSubmitted"
+        />
       </div>
       
       <template #footer>
-        <Button label="Guardar" @click="closeServiceModal" :disabled="isSavingReview" class="p-button-secondary" />
+        <Button label="Cerrar" @click="closeOnlyServiceModal" :disabled="isSavingReview" class="p-button-secondary" />
       </template>
     </Dialog>
 
@@ -254,7 +227,8 @@ import MyInputGroup from '../../shared/components/MyInputGroup.vue';
 import LoadingButton from '../../shared/components/LoadingButton.vue';
 import { useUserStore } from '../../../store/user.store';
 import { canAccessRoute, isAdminLikeRole } from '../../../router/role-routes';
-import { Dialog, Button, InputSwitch, Textarea, DatePicker, useToast } from 'primevue';
+import { Dialog, Button, DatePicker, useToast } from 'primevue';
+import QaPhotoReview from '../../kds/components/QaPhotoReview.vue';
 import { showToast } from '../../../../src/utils/show-toast';
 import { CleanersServices } from '../../services/services.services';
 import { KdsServices, KDS_DAYS, type KdsDay } from '../../kds/kds.services';
@@ -286,12 +260,6 @@ const activeRange = computed<{ start: string; end: string } | null>(() => {
 // Estado para el modal
 const showServiceModal = ref(false);
 const selectedServiceInfo = ref<CalendarInterface | null>(null);
-
-// Estado para los datos de review
-const reviewData = ref<any[]>([]);
-
-// Estado para el comentario del review
-const reviewComment = ref('');
 
 const isSavingReview = ref(false);
 
@@ -587,74 +555,19 @@ const openServiceModal = async (serviceInfo: CalendarInterface) => {
 
 const _loadReviewModal = async (serviceInfo: CalendarInterface) => {
   selectedServiceInfo.value = serviceInfo;
-  const data = await CalendarServices.getReviewItemsWithClasses();
-  const serviceReviews = serviceInfo.reviews || [];
-  if (Array.isArray(data)) {
-    reviewData.value = data.map((cls: any) => ({
-      ...cls,
-      reviewItems: cls.reviewItems.map((item: any) => {
-        const found = serviceReviews.find((r: any) => r.reviewItemId === item.id);
-        return { ...item, checked: found ? found.value === 1 : false };
-      })
-    }));
-  } else {
-    reviewData.value = [];
-  }
   showServiceModal.value = true;
 };
 
 
 const closeOnlyServiceModal = () => {
+  if (isSavingReview.value) return;
   showServiceModal.value = false;
   selectedServiceInfo.value = null;
-  // Resetear el comentario
-  reviewComment.value = '';
-  // Resetear los checks
-  reviewData.value = reviewData.value.map((cls: any) => ({
-    ...cls,
-    reviewItems: cls.reviewItems.map((item: any) => ({ ...item, checked: false }))
-  }));
 };
 
-const closeServiceModal = async () => {
-  isSavingReview.value = true;
-  const serviceId = selectedServiceInfo.value?.id || '';
-  const message = reviewComment.value;
-  const reviewItemsPayload: { reviewItemId: string, value: boolean }[] = [];
-  reviewData.value.forEach((cls: any) => {
-    cls.reviewItems.forEach((item: any) => {
-      reviewItemsPayload.push({ reviewItemId: item.id, value: !!item.checked });
-    });
-  });
-
-  if (serviceId) {
-    const isQA = userStore.userData?.roleId === '7';
-    let finishLocation: any = {};
-    if (isQA) {
-      try {
-        const loc = await captureLocation();
-        finishLocation = loc;
-      } catch {
-        // location failed — submit without finish coords
-      }
-    }
-
-    await CalendarServices.postServiceReview({
-      serviceId,
-      message,
-      reviewItems: reviewItemsPayload,
-      ...finishLocation,
-    });
-  }
-
+const onReviewSubmitted = async () => {
   showServiceModal.value = false;
   selectedServiceInfo.value = null;
-  reviewComment.value = '';
-  reviewData.value = reviewData.value.map((cls: any) => ({
-    ...cls,
-    reviewItems: cls.reviewItems.map((item: any) => ({ ...item, checked: false }))
-  }));
-  isSavingReview.value = false;
   const currentDate = getCurrentViewDate();
   await reloadCalendarEvents(currentDate.getFullYear(), currentDate.getMonth() + 1);
 };

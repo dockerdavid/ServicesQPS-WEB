@@ -13,6 +13,7 @@ import { TypesServices } from '../types/types.services';
 import { StatusesServices } from '../statuses/statuses.services';
 import { ExtrasServices } from '../extras/extras.services';
 import { UsersServices } from '../users/users.services';
+import { useEligibleAssignees } from '../users/composables/useEligibleAssignees';
 import type { TypeByCommunity } from '../../interfaces/services/services.interface';
 import type CreateService from '../../interfaces/services/services.interface';
 import type { Community } from '../../../src/interfaces/communities/communities.interface';
@@ -214,17 +215,22 @@ const getTypesByCommunity = async (communityId: string) => {
     }
 };
 
-const assigneeOptions = ref<{ label: string; value: string }[]>([]);
+// Zona de trabajo: con la comunidad elegida solo se ofrecen las cleaners
+// elegibles (desde CLEANER_ZONE_ENFORCE_FROM; antes salen todas).
+const zoneFilter = useEligibleAssignees(computed(() => newService.value.communityId));
 
-watch(
-    () => cleaners.value.data,
-    () => {
-        assigneeOptions.value = [...cleaners.value.data]
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map((cleaner) => ({ label: cleaner.name, value: cleaner.id }));
-    },
-    { immediate: true, deep: true },
+const assigneeOptions = computed<{ label: string; value: string }[]>(() =>
+    zoneFilter.filterAssignees([...cleaners.value.data])
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((cleaner) => ({ label: cleaner.name, value: cleaner.id })),
 );
+
+// Si al cambiar de comunidad el cleaner elegido queda fuera de zona, se limpia.
+watch(zoneFilter.eligibleIds, () => {
+    if (newService.value.userId && !zoneFilter.isAllowed(newService.value.userId)) {
+        newService.value.userId = '';
+    }
+});
 
 
 watch(
