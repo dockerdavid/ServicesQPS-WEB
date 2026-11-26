@@ -1,5 +1,5 @@
 import { apiServicesQps } from "../../api/api";
-import type { CalendarInterface } from "../../interfaces/calendar/calendar.interface";
+import type { CalendarInterface, RefreshPhotoUpload, RefreshPhotosRound } from "../../interfaces/calendar/calendar.interface";
 import type { GeoPayload } from "../../composables/useGeolocation";
 import { useGlobalStateStore } from "../../store/auth.store";
 
@@ -79,10 +79,17 @@ export class CalendarServices {
         }
     }
 
+    /**
+     * Revision de QA. Metodologia nueva: sin checklist; si `refreshPhotos`
+     * trae 1 o mas fotos (photoPath del upload) el servicio va a refresh, si
+     * no se aprueba. `reviewItems` queda solo por compatibilidad.
+     * Lanza el error para que el modal pueda avisar y no cerrar.
+     */
     static async postServiceReview(payload: {
         serviceId: string,
-        message: string,
-        reviewItems: { reviewItemId: string, value: boolean }[],
+        message?: string,
+        refreshPhotos?: string[],
+        reviewItems?: { reviewItemId: string, value: boolean }[],
         latitude?: number,
         longitude?: number,
         accuracy?: number,
@@ -97,11 +104,23 @@ export class CalendarServices {
         try {
             const { data } = await apiServicesQps.post(`/reviews/service-review`, payload)
             return data
-        } catch (error) {
-            return null
         } finally {
             this.store.setIsLoading(false)
         }
+    }
+
+    static async uploadRefreshPhoto(file: File): Promise<RefreshPhotoUpload> {
+        const payload = new FormData();
+        payload.append('file', file);
+        const { data } = await apiServicesQps.post<RefreshPhotoUpload>(`/reviews/photos/upload`, payload, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return data;
+    }
+
+    static async getRefreshPhotos(serviceId: string): Promise<RefreshPhotosRound[]> {
+        const { data } = await apiServicesQps.get<{ rounds: RefreshPhotosRound[] }>(`/reviews/service/${serviceId}/refresh-photos`);
+        return Array.isArray(data?.rounds) ? data.rounds : [];
     }
 
     static async getQADailyTracking(): Promise<any> {

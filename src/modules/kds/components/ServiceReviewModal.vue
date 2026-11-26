@@ -57,57 +57,30 @@
                 <p><strong>Actualizado:</strong> {{ formatDate(selectedServiceInfo.updatedAt) }}</p>
             </div>
 
-            <!-- Sección Review -->
-            <div class="info-group mt-4">
-                <h3 class="font-bold text-lg mb-4">Review</h3>
-                <div v-for="reviewClass in reviewData" :key="reviewClass.reviewClassId" class="review-section mb-4">
-                    <h4 class="font-semibold text-md mb-2 text-blue-600">{{ reviewClass.reviewClassName }}:</h4>
-                    <div class="hidden md:grid grid-cols-1 gap-2">
-                        <div v-for="item in reviewClass.reviewItems" :key="item.id"
-                            class="flex items-center justify-between p-2 bg-gray-50 rounded whitespace-nowrap">
-                            <span class="text-sm mr-4">{{ item.name }}</span>
-                            <InputSwitch v-model="item.checked" />
-                        </div>
-                    </div>
-                    <div class="md:hidden overflow-x-auto">
-                        <div class="flex gap-2 min-w-max">
-                            <div v-for="item in reviewClass.reviewItems" :key="item.id"
-                                class="flex items-center justify-between p-2 bg-gray-50 rounded whitespace-nowrap">
-                                <span class="text-sm mr-4">{{ item.name }}</span>
-                                <InputSwitch v-model="item.checked" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="review-section mb-4">
-                    <h4 class="font-semibold text-md mb-2 text-blue-600">Comentario:</h4>
-                    <fieldset>
-                        <Textarea
-                            v-model="reviewComment"
-                            placeholder="Escribe un comentario sobre el review..."
-                            :rows="4"
-                            :auto-resize="false"
-                            class="w-full"
-                            style="max-height: 150px;"
-                        />
-                    </fieldset>
-                </div>
-            </div>
+            <!-- Review por fotos (sin checklist): la QA manda fotos de lo que
+                 quedó mal (refresh) o aprueba sin fotos. -->
+            <QaPhotoReview
+                :service-id="selectedServiceInfo.id"
+                :capture-qa-location="userStore.userData?.roleId === '7'"
+                @submitting="isSavingReview = $event"
+                @submitted="onReviewSubmitted"
+            />
         </div>
 
         <template #footer>
-            <Button label="Guardar" @click="saveAndClose" :disabled="isSavingReview" class="p-button-secondary" />
+            <Button label="Cerrar" @click="close" :disabled="isSavingReview" class="p-button-secondary" />
         </template>
     </Dialog>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { Dialog, Button, InputSwitch, Textarea } from 'primevue';
+import { Dialog, Button } from 'primevue';
 import { useUserStore } from '../../../store/user.store';
 import { CalendarServices } from '../../calendar/calendar.services';
 import { captureLocation } from '../../../composables/useGeolocation';
 import type { CalendarInterface } from '../../../interfaces/calendar/calendar.interface';
+import QaPhotoReview from './QaPhotoReview.vue';
 
 const props = defineProps<{
     visible: boolean;
@@ -123,13 +96,11 @@ const userStore = useUserStore();
 
 const internalVisible = ref(false);
 const selectedServiceInfo = ref<CalendarInterface | null>(null);
-const reviewData = ref<any[]>([]);
-const reviewComment = ref('');
 const isSavingReview = ref(false);
 
 watch(() => props.visible, async (val) => {
     if (val && props.service) {
-        await openModal(props.service);
+        openModal(props.service);
     } else if (!val) {
         internalVisible.value = false;
     }
@@ -141,7 +112,7 @@ watch(internalVisible, (val) => {
     }
 });
 
-async function openModal(serviceInfo: CalendarInterface) {
+function openModal(serviceInfo: CalendarInterface) {
     if (userStore.userData?.roleId === '7' && !serviceInfo.qaStartedAt) {
         captureLocation()
             .then(loc => CalendarServices.postQAStart(serviceInfo.id, loc))
@@ -149,56 +120,17 @@ async function openModal(serviceInfo: CalendarInterface) {
     }
 
     selectedServiceInfo.value = serviceInfo;
-    const data = await CalendarServices.getReviewItemsWithClasses();
-    const serviceReviews = serviceInfo.reviews || [];
-
-    if (Array.isArray(data)) {
-        reviewData.value = data.map((cls: any) => ({
-            ...cls,
-            reviewItems: cls.reviewItems.map((item: any) => {
-                const found = serviceReviews.find((r: any) => r.reviewItemId === item.id);
-                return { ...item, checked: found ? found.value === 1 : false };
-            }),
-        }));
-    } else {
-        reviewData.value = [];
-    }
-
     internalVisible.value = true;
 }
 
-async function saveAndClose() {
-    isSavingReview.value = true;
-    const serviceId = selectedServiceInfo.value?.id || '';
-    const message = reviewComment.value;
-    const reviewItemsPayload: { reviewItemId: string; value: boolean }[] = [];
-
-    reviewData.value.forEach((cls: any) => {
-        cls.reviewItems.forEach((item: any) => {
-            reviewItemsPayload.push({ reviewItemId: item.id, value: !!item.checked });
-        });
-    });
-
-    if (serviceId) {
-        let finishLocation: any = {};
-        if (userStore.userData?.roleId === '7') {
-            try {
-                finishLocation = await captureLocation();
-            } catch {
-                // location failed — submit without finish coords
-            }
-        }
-        await CalendarServices.postServiceReview({
-            serviceId,
-            message,
-            reviewItems: reviewItemsPayload,
-            ...finishLocation,
-        });
-    }
-
+function onReviewSubmitted() {
     reset();
-    isSavingReview.value = false;
     emit('review-saved');
+    emit('update:visible', false);
+}
+
+function close() {
+    reset();
     emit('update:visible', false);
 }
 
@@ -212,8 +144,6 @@ function onHide() {
 function reset() {
     internalVisible.value = false;
     selectedServiceInfo.value = null;
-    reviewComment.value = '';
-    reviewData.value = [];
 }
 
 function formatDate(date: string | Date): string {
@@ -252,16 +182,5 @@ function formatDate(date: string | Date): string {
 
 .info-group strong {
     color: var(--ink-700);
-}
-
-.review-section {
-    border-left: 3px solid var(--accent-500);
-    padding-left: 1rem;
-}
-
-.review-section h4 {
-    margin-bottom: 0.75rem;
-    font-weight: 600;
-    color: var(--accent-600);
 }
 </style>
