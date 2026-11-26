@@ -12,6 +12,8 @@ export interface User {
     phoneNumber: string;
     roleId:      string;
     isActive:    boolean;
+    /** Cleaners: tiene zona de trabajo (comunidades, compañías o geocerca). */
+    hasWorkZone?: boolean;
     createdAt:   Date;
     role:        Role;
     /** Un admin pidió que cree una clave nueva (pendiente). */

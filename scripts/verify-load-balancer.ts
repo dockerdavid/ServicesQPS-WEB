@@ -258,3 +258,23 @@ test('mes grande: reparte de forma pareja', () => {
   // Nadie recibe dos servicios que choquen el mismo dia.
   assert.ok(result.suggestions.every((s) => (s.chosen?.clashes ?? 0) === 0));
 });
+
+test('zona de trabajo: isEligible restringe los candidatos por servicio', () => {
+  const services: BalancerService[] = [
+    { id: 's1', date: '2099-01-05', schedule: '09:00:00', userId: null, statusId: '1', communityId: 'oak' },
+    { id: 's2', date: '2099-01-05', schedule: '11:00:00', userId: null, statusId: '1', communityId: 'pine' },
+  ];
+  const zone: Record<string, Set<string>> = { oak: new Set(['b']), pine: new Set() };
+  const r = suggestAssignments({
+    services,
+    cleaners,
+    fromDate: null,
+    isEligible: (cleanerId, s) => zone[String(s.communityId)].has(cleanerId),
+  });
+  const s1 = r.suggestions.find((s) => s.serviceId === 's1')!;
+  const s2 = r.suggestions.find((s) => s.serviceId === 's2')!;
+  assert.equal(s1.cleanerId, 'b');
+  assert.deepEqual(s1.candidates.map((c) => c.cleanerId), ['b']);
+  assert.equal(s2.cleanerId, null);
+  assert.match(s2.reason, /zona de trabajo/);
+});

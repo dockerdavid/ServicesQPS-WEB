@@ -13,6 +13,7 @@ import { TypesServices } from '../types/types.services';
 import { StatusesServices } from '../statuses/statuses.services';
 import { ExtrasServices } from '../extras/extras.services';
 import { UsersServices } from '../users/users.services';
+import { useEligibleAssignees } from '../users/composables/useEligibleAssignees';
 import { RecurringServicesServices } from './recurring-services.services';
 import type { TypeByCommunity } from '../../interfaces/services/services.interface';
 import type { Community } from '../../../src/interfaces/communities/communities.interface';
@@ -236,10 +237,15 @@ const loadOptions = async () => {
   hasLoadedOptions.value = true;
 };
 
+// Zona de trabajo: solo cleaners elegibles para la comunidad (desde
+// CLEANER_ZONE_ENFORCE_FROM; antes salen todas).
+const originalUserId = ref<string>('');
+const zoneFilter = useEligibleAssignees(computed(() => updatedRecurring.value.communityId), originalUserId);
+
 watch(
-  () => cleaners.value.data,
+  [() => cleaners.value.data, zoneFilter.eligibleIds],
   () => {
-    assigneeOptions.value = [...cleaners.value.data]
+    assigneeOptions.value = zoneFilter.filterAssignees([...cleaners.value.data])
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((cleaner) => ({ label: cleaner.name, value: cleaner.id }));
   },
@@ -266,6 +272,7 @@ const fillInitialData = (recurring: RecurringService) => {
   };
 
   startDateValue.value = recurring.startDate;
+  originalUserId.value = recurring.userId || '';
   scheduleDate.value = moment(recurring.schedule || '00:00:00', 'HH:mm:ss').toDate();
 };
 

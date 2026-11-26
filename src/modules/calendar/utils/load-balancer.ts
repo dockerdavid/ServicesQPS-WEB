@@ -133,6 +133,11 @@ export interface SuggestOptions {
   /** Solo se sugieren servicios con fecha >= fromDate (YYYY-MM-DD). */
   fromDate?: string | null;
   weights?: Partial<BalancerWeights>;
+  /**
+   * Zona de trabajo: si se pasa, solo son candidatos para un servicio los
+   * cleaners para los que devuelve true (el API decide la elegibilidad).
+   */
+  isEligible?: (cleanerId: string, service: BalancerService) => boolean;
 }
 
 export interface SuggestResult {
@@ -415,7 +420,8 @@ export function suggestAssignments(options: SuggestOptions): SuggestResult {
 
   const suggestions: AssignmentSuggestion[] = targets.map((s) => {
     const isSkipped = skipped.has(s.id);
-    const candidates = pool.map((c) => scoreCandidate(state, c, s, w)).sort(compareCandidates);
+    const eligiblePool = options.isEligible ? pool.filter((c) => options.isEligible!(c.id, s)) : pool;
+    const candidates = eligiblePool.map((c) => scoreCandidate(state, c, s, w)).sort(compareCandidates);
     const pinnedId = pinned[s.id];
     const pinnedCandidate = pinnedId ? candidates.find((c) => c.cleanerId === pinnedId) ?? null : null;
     const chosen = pinnedCandidate ?? candidates[0] ?? null;
@@ -433,7 +439,9 @@ export function suggestAssignments(options: SuggestOptions): SuggestResult {
         ? 'Excluido: no se asignará'
         : chosen
           ? describeCandidate(chosen, s, Boolean(pinnedCandidate))
-          : 'No hay cleaners activos disponibles',
+          : pool.length && !eligiblePool.length
+            ? 'Ninguna cleaner tiene esta comunidad en su zona de trabajo'
+            : 'No hay cleaners activos disponibles',
       pinned: Boolean(pinnedCandidate),
       skipped: isSkipped,
     };
