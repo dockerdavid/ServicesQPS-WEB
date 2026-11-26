@@ -31,7 +31,33 @@ export interface CalendarInterface {
     kdsWeekOf?:  string | null;
     qaFlagged?:  boolean;
     assignmentExpiredAt?: string | null;
+    refreshCount?: number | null;
+    /** Fotos de la ultima revision de QA (0 si no mando fotos). */
+    refreshPhotosCount?: number | null;
 }
+
+/** Respuesta de POST /reviews/photos/upload. */
+export interface RefreshPhotoUpload {
+    photoPath: string;
+    url: string;
+}
+
+/** Ronda de refresh por fotos (GET /reviews/service/:id/refresh-photos). */
+export interface RefreshPhotosRound {
+    round: number;
+    createdAt: string;
+    qaUser: { id: string; name: string } | null;
+    message: string | null;
+    photos: Array<{ id: string; url: string }>;
+}
+
+/** La API puede devolver la URL relativa (/uploads/...) si no tiene base publica. */
+export const resolveApiFileUrl = (url: string | null | undefined): string => {
+    if (!url) return '';
+    if (/^(https?:|blob:|data:)/i.test(url)) return url;
+    const baseUrl = ((import.meta.env.VITE_API_URL as string) ?? '').replace(/\/$/, '');
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
 export interface Community {
     id:            string;
