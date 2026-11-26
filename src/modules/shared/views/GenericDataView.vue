@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { IconField, InputIcon, InputText, useToast } from 'primevue';
 import BaseLayout from '../../../layouts/BaseLayout.vue';
 import { showToast } from "../../../utils/show-toast";
@@ -37,6 +37,10 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const forwardedSlotNames = computed(() =>
+    Array.from(new Set(props.headers.map((header) => header.slotName).filter((name): name is string => Boolean(name)))),
+);
 
 const toast = useToast();
 const dataList = ref({
@@ -193,8 +197,9 @@ onMounted(async () => {
                 :lockEdit="lockEdit" :hide-delete="hideDelete" @page-change="handlePageChange" :total-records="dataList.meta.totalCount"
                 :edit-route="editRoute" :page-reset-key="pageResetKey" :show-export-button="props.showExportButton"
                 :export-start-date="props.exportStartDate" :export-end-date="props.exportEndDate">
-                <template #isActive="slotProps">
-                    <slot name="isActive" v-bind="slotProps" />
+                <!-- Reenvía las celdas personalizadas (isActive, etc.) que la vista padre defina. -->
+                <template v-for="slotName in forwardedSlotNames" :key="slotName" #[slotName]="slotProps">
+                    <slot :name="slotName" v-bind="slotProps" />
                 </template>
             </DataTable>
 

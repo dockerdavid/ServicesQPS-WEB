@@ -14,6 +14,8 @@ export interface User {
     isActive:    boolean;
     createdAt:   Date;
     role:        Role;
+    /** Un admin pidió que cree una clave nueva (pendiente). */
+    mustChangePassword?: boolean;
 }
 
 export interface Role {
