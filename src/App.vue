@@ -3,6 +3,7 @@ import { onMounted } from 'vue';
 import { Toast, useToast } from 'primevue';
 import { setGlobalToast } from './utils/global-toast';
 import { requestLocationPermission } from './composables/useGeolocation';
+import ForcePasswordChangeDialog from './modules/auth/components/ForcePasswordChangeDialog.vue';
 
 setGlobalToast(useToast());
 
@@ -29,6 +30,7 @@ onMounted(() => {
 <template>
   <Toast />
   <RouterView />
+  <ForcePasswordChangeDialog />
 </template>
 
 <style scoped lang="scss"></style>

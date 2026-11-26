@@ -134,4 +134,27 @@ export class UsersServices {
         }
     }
 
+    /** Pide a un usuario que cree una clave nueva en su próximo uso. */
+    static async requirePasswordChange(userId: string) {
+        const { data } = await apiServicesQps.post(`/users/${userId}/require-password-change`);
+        return data;
+    }
+
+    static async cancelPasswordChange(userId: string) {
+        const { data } = await apiServicesQps.delete(`/users/${userId}/require-password-change`);
+        return data;
+    }
+
+    /** Todos los usuarios ACTIVOS del rol (ej. '4' = cleaners). Devuelve { affected } o 202 de aprobación. */
+    static async requirePasswordChangeForRole(roleId: string): Promise<{ affected?: number; roleName?: string; pendingApproval?: boolean }> {
+        const { data } = await apiServicesQps.post('/users/require-password-change', { roleId });
+        return data;
+    }
+
+    /** Cantidad de usuarios activos de un rol (para el diálogo de confirmación). */
+    static async countActiveByRole(roleId: string): Promise<number> {
+        const params = new URLSearchParams({ page: '1', take: '1', roleId, status: 'active' });
+        const { data } = await apiServicesQps.get(`/users?${params}`);
+        return Number(data?.meta?.totalCount ?? 0);
+    }
 }
