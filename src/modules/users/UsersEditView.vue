@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
 import { useToast } from 'primevue';
+import { onMounted, ref } from 'vue';
 import GenericEditForm from '../shared/views/GenericEditForm.vue';
+import CleanerWorkZoneEditor from './components/CleanerWorkZoneEditor.vue';
 import { UsersServices } from './users.services';
 import type { NewUser, UserRoles, User, Role } from '../../interfaces/users/users.interface';
 import type { InputConfig } from '../../interfaces/input-config.interface';
@@ -9,6 +11,17 @@ import type { InputConfig } from '../../interfaces/input-config.interface';
 const route = useRoute();
 const toast = useToast();
 const userId = route.params.id as string;
+
+/** La zona de trabajo solo aplica a cleaners (rol 4). */
+const isCleaner = ref(false);
+onMounted(async () => {
+    try {
+        const user = await UsersServices.getUserById(userId);
+        isCleaner.value = String(user.role?.id ?? user.roleId) === '4';
+    } catch {
+        isCleaner.value = false;
+    }
+});
 
 const breadcrumbRoutes = [
     { label: 'Users', to: { name: 'users-default' } },
@@ -57,4 +70,7 @@ const updateEntity = async (id: string, data: NewUser) => {
             phoneNumber: '',
             roleId: '',
         }" :key-value-map="keyValueMap" />
+    <div v-if="isCleaner" class="px-4 pb-8">
+        <CleanerWorkZoneEditor :user-id="userId" />
+    </div>
 </template>

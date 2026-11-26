@@ -12,6 +12,7 @@ import { TypesServices } from '../types/types.services';
 import { StatusesServices } from '../statuses/statuses.services';
 import { ExtrasServices } from '../extras/extras.services';
 import { UsersServices } from '../users/users.services';
+import { useEligibleAssignees } from '../users/composables/useEligibleAssignees';
 import { RecurringServicesServices } from './recurring-services.services';
 import type { TypeByCommunity } from '../../interfaces/services/services.interface';
 import type { Community } from '../../../src/interfaces/communities/communities.interface';
@@ -227,15 +228,25 @@ const loadOptions = async () => {
   hasLoadedOptions.value = true;
 };
 
+// Zona de trabajo: solo cleaners elegibles para la comunidad (desde
+// CLEANER_ZONE_ENFORCE_FROM; antes salen todas).
+const zoneFilter = useEligibleAssignees(computed(() => newRecurring.value.communityId));
+
 watch(
-  () => cleaners.value.data,
+  [() => cleaners.value.data, zoneFilter.eligibleIds],
   () => {
-    assigneeOptions.value = [...cleaners.value.data]
+    assigneeOptions.value = zoneFilter.filterAssignees([...cleaners.value.data])
       .sort((a, b) => a.name.localeCompare(b.name))
       .map((cleaner) => ({ label: cleaner.name, value: cleaner.id }));
   },
   { immediate: true, deep: true },
 );
+
+watch(zoneFilter.eligibleIds, () => {
+  if (newRecurring.value.userId && !zoneFilter.isAllowed(newRecurring.value.userId)) {
+    newRecurring.value.userId = '';
+  }
+});
 
 watch(
   () => newRecurring.value.communityId,

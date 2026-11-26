@@ -6,6 +6,7 @@ import { TypesServices } from '../types/types.services';
 import { StatusesServices } from '../statuses/statuses.services';
 import { ExtrasServices } from '../extras/extras.services';
 import { UsersServices } from '../users/users.services';
+import { useEligibleAssignees } from '../users/composables/useEligibleAssignees';
 import { CleanersServices } from './services.services';
 import moment from 'moment-timezone';
 import MyInputGroup from '../shared/components/MyInputGroup.vue';
@@ -54,6 +55,7 @@ const fillInitialData = (service: Service) => {
     userComment: service.userComment || '',
     userId: service.userId || '',
   };
+  originalUserId.value = service.userId || '';
 
   scheduleDate.value = moment(service.schedule || '00:00:00', 'HH:mm:ss').toDate();
 };
@@ -116,8 +118,13 @@ const extrasOptions = computed(() => {
   });
 });
 
+// Zona de trabajo: solo cleaners elegibles para la comunidad (desde
+// CLEANER_ZONE_ENFORCE_FROM). El ya asignado se mantiene visible.
+const originalUserId = ref<string>('');
+const zoneFilter = useEligibleAssignees(computed(() => updatedService.value.communityId), originalUserId);
+
 const cleanerOptions = computed(() =>
-  [...cleaners.value.data]
+  zoneFilter.filterAssignees([...cleaners.value.data])
     .sort((a, b) => a.name.localeCompare(b.name))
     .map((cleaner) => ({ label: cleaner.name, value: cleaner.id })),
 );

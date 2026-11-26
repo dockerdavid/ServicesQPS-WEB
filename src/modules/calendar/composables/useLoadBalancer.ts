@@ -4,6 +4,7 @@ import type { CalendarInterface } from '../../../interfaces/calendar/calendar.in
 import type { User } from '../../../interfaces/users/users.interface';
 import { UsersServices } from '../../users/users.services';
 import { CalendarServices } from '../calendar.services';
+import { CleanerZonesServices } from '../../users/cleaner-zones.services';
 import {
   computeBalance,
   computeWorkloads,
@@ -128,6 +129,32 @@ export function useLoadBalancer(events: Ref<CalendarInterface[]>) {
     skipped.value = new Set();
   };
 
+  // Zona de trabajo: communityId -> ids elegibles. null = sin filtro
+  // (periodo de gracia o el API no respondio; el API valida igual al asignar).
+  const eligibleByCommunity = ref<Record<string, Set<string>> | null>(null);
+
+  const loadEligibility = async () => {
+    const ids = [...new Set(balancerServices.value
+      .filter(isUnassignedService)
+      .map((s) => s.communityId)
+      .filter((id): id is string => Boolean(id)))];
+    if (!ids.length) {
+      eligibleByCommunity.value = null;
+      return;
+    }
+    const response = await CleanerZonesServices.getEligibleByCommunities(ids);
+    eligibleByCommunity.value = response?.enforced
+      ? Object.fromEntries(Object.entries(response.eligibleByCommunity).map(([k, v]) => [k, new Set(v.map(String))]))
+      : null;
+  };
+
+  const isEligible = (cleanerId: string, service: BalancerService) => {
+    const map = eligibleByCommunity.value;
+    if (!map || !service.communityId) return true;
+    const allowed = map[String(service.communityId)];
+    return allowed ? allowed.has(String(cleanerId)) : true;
+  };
+
   const result = computed<SuggestResult | null>(() => {
     if (!suggestionsActive.value) return null;
     return suggestAssignments({
@@ -136,6 +163,7 @@ export function useLoadBalancer(events: Ref<CalendarInterface[]>) {
       pinned: { ...pinned },
       skipped: skipped.value,
       fromDate: includePast.value ? null : todayYYYYMMDD(),
+      isEligible: eligibleByCommunity.value ? isEligible : undefined,
     });
   });
 
@@ -149,8 +177,9 @@ export function useLoadBalancer(events: Ref<CalendarInterface[]>) {
 
   const applicable = computed(() => result.value?.suggestions.filter((s) => !s.skipped && s.cleanerId) ?? []);
 
-  const startSuggestions = () => {
+  const startSuggestions = async () => {
     resetOverrides();
+    await loadEligibility();
     suggestionsActive.value = true;
   };
 
@@ -202,6 +231,15 @@ export function useLoadBalancer(events: Ref<CalendarInterface[]>) {
     }
     return { ok: queue.length - failed.length, failed };
   };
+
+  // Si cambian las comunidades pendientes (otro mes) con sugerencias abiertas,
+  // se recarga la elegibilidad para no proponer cleaners fuera de zona.
+  const pendingCommunitiesKey = computed(() => [...new Set(balancerServices.value
+    .filter(isUnassignedService)
+    .map((s) => s.communityId ?? ''))].sort().join(','));
+  watch(pendingCommunitiesKey, () => {
+    if (suggestionsActive.value) loadEligibility();
+  });
 
   // Si el mes cambia y ya no hay nada que sugerir, se apagan las sugerencias.
   watch(unassignedCount, (count) => {
